@@ -1,4 +1,4 @@
-import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, planCommit, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count } from '@dayli/core';
+import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, planCommit, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -8,9 +8,9 @@ import Animated from 'react-native-reanimated';
 
 import { AddedMoment } from '@/components/AddedMoment';
 import { CategoryDot, SectionTitle, StatusPill, TextButton } from '@/components/Controls';
-import { DateField, TimeField } from '@/components/Native';
+import { InlinePicker } from '@/components/Native';
 import { Press } from '@/components/Press';
-import { ReviewDisclosure, ReviewGlyph, ReviewPickerSlot, ReviewPill, ReviewPillRow, ReviewRow } from '@/components/ReviewRow';
+import { ReviewDisclosure, ReviewGlyph, ReviewPill, ReviewPillRow, ReviewRow } from '@/components/ReviewRow';
 import { Button, Sheet } from '@/components/Sheet';
 import { SourcePreview } from '@/components/SourcePreview';
 import { COLUMN, useWebLayout } from '@/lib/layout';
@@ -20,7 +20,7 @@ import { T } from '@/components/Text';
 import { WeekChart, compactRange, type WeekBlock, type WeekDay } from '@/components/WeekChart';
 import { track } from '@/lib/analytics';
 import { feedback } from '@/lib/feedback';
-import { layout } from '@/lib/motion';
+import { enter, exit, layout } from '@/lib/motion';
 import { requestNotifications, syncReminders } from '@/lib/notifications';
 import { noteConfirmedImport } from '@/lib/store-review';
 import { usePlusAccess } from '@/lib/plus-access';
@@ -207,44 +207,42 @@ export default function ReviewScreen() {
     return before ?? timed[0]!;
   };
 
+  /** A pill opens its picker under the row in one tap, and closes it on the next. */
+  const togglePicker = (id: string) => setPicker((open) => (open === id ? null : id));
+  const opened = (node: ReactNode) => <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout}>{node}</Animated.View>;
+
   const timeEditor = (d: DatedDraft) => {
     const donor = !d.start || !d.end ? donorFor(d) : null;
     const field = (f: 'start' | 'end') => {
       const id = `${d.key}:${f}`;
-      if (picker === id) {
-        return (
-          <ReviewPickerSlot key={f}>
-            <TimeField date={d.date} time={d[f]} onChange={(v) => edit(d.key, { [f]: v || null })} />
-          </ReviewPickerSlot>
-        );
-      }
       const v = d[f];
-      return <ReviewPill key={f} label={v ? formatTime(v) : f === 'start' ? 'Start' : 'End'} muted={!v} accessibilityLabel={`${f === 'start' ? 'Start' : 'End'} time, ${v ? formatTime(v) : 'not set'}`} onPress={() => setPicker(id)} />;
+      return <ReviewPill key={f} label={v ? formatTime(v) : f === 'start' ? 'Start' : 'End'} muted={!v} open={picker === id} accessibilityLabel={`${f === 'start' ? 'Start' : 'End'} time, ${v ? formatTime(v) : 'not set'}`} onPress={() => togglePicker(id)} />;
     };
+    const open = (['start', 'end'] as const).find((f) => picker === `${d.key}:${f}`);
     return (
-      <ReviewPillRow>
-        {field('start')}
-        {field('end')}
-        {donor ? <TextButton label={`Same as ${weekdayLong(donor.date)}`} onPress={() => edit(d.key, { start: donor.start, end: donor.end })} /> : null}
-      </ReviewPillRow>
+      <>
+        <ReviewPillRow>
+          {field('start')}
+          {field('end')}
+          {donor ? <TextButton label={`Same as ${weekdayLong(donor.date)}`} onPress={() => edit(d.key, { start: donor.start, end: donor.end })} /> : null}
+        </ReviewPillRow>
+        {open ? opened(<InlinePicker mode="time" date={d.date} time={d[open]} onChange={(v) => edit(d.key, { [open]: v || null })} />) : null}
+      </>
     );
   };
 
-  const datePicker = (d: Draft) => (
-    <ReviewPickerSlot>
-      <DateField date={d.date} time={d.start} onChange={(date) => edit(d.key, { date: date || null })} />
-    </ReviewPickerSlot>
-  );
-
   /** The trailing control of a dated-draft row: its date pill, or the amber ask. */
   const dateTrailing = (d: Draft, exam: boolean) => {
-    if (!isLocalDate(d.date)) return picker === `${d.key}:date` ? datePicker(d) : <AskPill label="Add a date" tone="amber" onPress={() => setPicker(`${d.key}:date`)} />;
-    if (d.kind === 'event' && !d.start && !exam) {
-      return picker === `${d.key}:start` ? (
-        <ReviewPickerSlot><TimeField date={d.date} time={d.start} onChange={(v) => edit(d.key, { start: v || null })} /></ReviewPickerSlot>
-      ) : <AskPill label="Add a time" tone="amber" onPress={() => setPicker(`${d.key}:start`)} />;
-    }
-    return picker === `${d.key}:date` ? datePicker(d) : <ReviewPill label={`${weekdayShort(d.date)}, ${monthDay(d.date)}`} onPress={() => setPicker(`${d.key}:date`)} />;
+    if (!isLocalDate(d.date)) return <AskPill label="Add a date" tone="amber" onPress={() => togglePicker(`${d.key}:date`)} />;
+    if (d.kind === 'event' && !d.start && !exam) return <AskPill label="Add a time" tone="amber" onPress={() => togglePicker(`${d.key}:start`)} />;
+    return <ReviewPill label={`${weekdayShort(d.date)}, ${monthDay(d.date)}`} open={picker === `${d.key}:date`} onPress={() => togglePicker(`${d.key}:date`)} />;
+  };
+
+  /** The picker a dated-draft row's pill opened, under the row. */
+  const datePicker = (d: Draft) => {
+    if (picker === `${d.key}:date`) return opened(<InlinePicker mode="date" date={d.date} time={d.start} onChange={(date) => edit(d.key, { date: date || null })} />);
+    if (picker === `${d.key}:start` && isLocalDate(d.date)) return opened(<InlinePicker mode="time" date={d.date} time={d.start} onChange={(v) => edit(d.key, { start: v || null })} />);
+    return null;
   };
 
   // ---- Confirm and close ----------------------------------------------------------
@@ -347,7 +345,11 @@ export default function ReviewScreen() {
 
   const newHours = shifts.reduce((m, d) => m + spanMinutes(d.start, d.end), 0);
   const oldHours = diff ? [...diff.changed.map((ch) => ch.before), ...diff.unchanged.map((u) => u.before), ...diff.removed].reduce((m, i) => m + spanMinutes(i.start, i.end), 0) : 0;
-  const seriesCount = included.filter((d) => d.seriesId).length;
+  const repeating = included.filter((d) => d.seriesId);
+  const seriesCount = repeating.length;
+  // Repeating items are named by kind ("32 classes · 64 events"): a gym routine is not a class.
+  const seriesKinds = seriesCount ? planCount(repeating) : '';
+  const seriesBig = seriesKinds.includes(' · ') || seriesKinds.endsWith(' plans') ? count(seriesCount, 'plan') : seriesKinds;
 
   const big = isUpdate
     ? count(changes, 'change')
@@ -355,7 +357,7 @@ export default function ReviewScreen() {
       ? count(shifts.length, 'shift')
       : nonSeries.length > 0 || seriesCount === 0
         ? count(nonSeries.length, 'date')
-        : count(seriesCount, 'class', 'classes');
+        : seriesBig;
 
   let line: string;
   if (isSchedule && shifts.length > 0) {
@@ -375,8 +377,9 @@ export default function ReviewScreen() {
     const tests = [exams.length - quizzes || !quizzes ? count(exams.length - quizzes, 'exam') : null, quizzes ? count(quizzes, 'quiz', 'quizzes') : null];
     const parts = isSyllabus
       ? [...tests, count(due, 'due date')].filter(Boolean)
-      : [...(exams.length ? tests : []), todos ? count(todos, 'to-do') : null, events ? count(events, 'event') : null, seriesCount ? count(seriesCount, 'class', 'classes') : null].filter(Boolean);
-    line = parts.length ? `${span} · ${parts.join(', ')}` : span;
+      : [...(exams.length ? tests : []), todos ? count(todos, 'to-do') : null, events ? count(events, 'event') : null, ...(seriesKinds ? seriesKinds.split(' · ') : [])].filter(Boolean);
+    // Only repeating items: the big number already counts them, so the line does not repeat it.
+    line = parts.length && parts.join(' · ') !== big ? `${span} · ${parts.join(', ')}` : span;
   } else {
     line = undated.length ? 'Nothing has a date yet' : 'Nothing to add';
   }
@@ -485,18 +488,17 @@ export default function ReviewScreen() {
       <ReviewRow key={s.id} glyph={<ReviewGlyph />} title={`${s.first.title} · ${when}`}
         sub={unknown ? `The ${docNoun} doesn't say when the term ends` : `Until ${monthDay(end?.date ?? s.last.date)}`}
         trailing={unknown ? <StatusPill label="Until when?" tone="amber" /> : <StatusPill label={monthDay(end?.date ?? s.last.date)} />}
-        below={unknown ? (
+        below={unknown ? (<>
           <ReviewPillRow>
             <ReviewPill label={suggested.label} selected={end?.mode !== 'pick'} onPress={() => setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'suggested', date: suggested.date } }))} />
-            {end?.mode === 'pick' ? (
-              <ReviewPickerSlot>
-                <DateField date={end.date} time={null} onChange={(date) => { if (isLocalDate(date)) setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date } })); }} />
-              </ReviewPickerSlot>
-            ) : (
-              <ReviewPill label="Pick a date" onPress={() => { feedback('select'); setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date: end?.date ?? suggested.date } })); }} />
-            )}
+            {end?.mode === 'pick'
+              ? <ReviewPill label={monthDay(end.date)} selected open={picker === `${s.id}:end`} onPress={() => togglePicker(`${s.id}:end`)} />
+              : <ReviewPill label="Pick a date" onPress={() => { setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date: end?.date ?? suggested.date } })); setPicker(`${s.id}:end`); }} />}
           </ReviewPillRow>
-        ) : null} />
+          {end?.mode === 'pick' && picker === `${s.id}:end`
+            ? opened(<InlinePicker mode="date" date={end.date} time={null} onChange={(date) => { if (isLocalDate(date)) setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date } })); }} />)
+            : null}
+        </>) : null} />
     );
   };
 
@@ -504,7 +506,7 @@ export default function ReviewScreen() {
     const exam = exams.includes(d as DatedDraft);
     const evidence = d.evidence.trim();
     const sub = (d.kind === 'event' || exam) && !d.start ? `Time not in the ${docNoun}` : evidence || d.courseCode || null;
-    return <ReviewRow key={d.key} glyph={<ReviewGlyph kind={exam ? 'ring' : 'dot'} />} title={d.title} sub={sub} trailing={dateTrailing(d, exam)} />;
+    return <ReviewRow key={d.key} glyph={<ReviewGlyph kind={exam ? 'ring' : 'dot'} />} title={d.title} sub={sub} trailing={dateTrailing(d, exam)} below={datePicker(d)} />;
   };
 
   const undatedNoun = undated.length && undated.every((d) => d.icon === 'book') ? ['reading', 'readings'] : ['item', 'items'];
@@ -625,7 +627,7 @@ function AskPill({ label, tone, onPress }: { label: string; tone: 'amber' | 'gre
 type Dated = Draft & { date: string };
 type Series = { id: string; first: Dated; last: Dated; weekdays: string; count: number };
 
-/** Repeating classes grouped by series, in date order, with their weekday list ("Tue, Thu"). */
+/** Repeating items grouped by series, in date order, with their weekday list ("Tue, Thu"). */
 function groupSeries(drafts: Draft[]): Series[] {
   const by = new Map<string, Draft[]>();
   for (const d of drafts) if (d.seriesId && d.date) by.set(d.seriesId, [...(by.get(d.seriesId) ?? []), d]);

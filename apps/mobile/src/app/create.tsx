@@ -3,9 +3,10 @@ import type { Category } from '@dayli/schema';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { CategoryDot, Chip, GroupLabel } from '@/components/Controls';
-import { DateField, NativeToggle, TimeField } from '@/components/Native';
+import { InlinePicker, NativeToggle } from '@/components/Native';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
 import { Press } from '@/components/Press';
 import { Segmented } from '@/components/Segmented';
@@ -13,6 +14,7 @@ import { Button, Sheet } from '@/components/Sheet';
 import { T } from '@/components/Text';
 import { track } from '@/lib/analytics';
 import { feedback } from '@/lib/feedback';
+import { enter, exit, layout } from '@/lib/motion';
 import { usePlusAccess } from '@/lib/plus-access';
 import { buildManualItem, defaultManualTimes, type ManualDraft } from '@/lib/manual-item';
 import { courseTint, useCourseList, useStore } from '@/store';
@@ -75,10 +77,22 @@ export default function CreateScreen() {
     focus === name ? { backgroundColor: c.surface, borderColor: c.inkPrimary } : { backgroundColor: c.row, borderColor: 'transparent' },
   ];
 
+  /** A pill opens its picker under the row in one tap, and closes it on the next. */
+  const toggle = (which: Picker) => setPicker((open) => (open === which ? null : which));
   const timeControl = (which: 'start' | 'end' | 'time') => {
     const key = which === 'end' ? 'end' : 'start';
-    if (picker === which) return <TimeField date={draft.date} time={draft[key]} onChange={(value) => patch({ [key]: value })} />;
-    return <FieldPill label={formatTime(draft[key])} accessibilityLabel={`${which === 'end' ? 'Ends' : which === 'start' ? 'Starts' : 'Time'}, ${formatTime(draft[key])}`} onPress={() => setPicker(which)} />;
+    return <FieldPill label={formatTime(draft[key])} open={picker === which} accessibilityLabel={`${which === 'end' ? 'Ends' : which === 'start' ? 'Starts' : 'Time'}, ${formatTime(draft[key])}`} onPress={() => toggle(which)} />;
+  };
+  const inlinePicker = (which: Picker) => {
+    if (picker !== which) return null;
+    const key = which === 'end' ? 'end' : 'start';
+    return (
+      <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout}>
+        {which === 'date'
+          ? <InlinePicker mode="date" date={draft.date} time={draft.start} onChange={(date) => patch({ date })} />
+          : <InlinePicker mode="time" date={draft.date} time={draft[key]} onChange={(value) => patch({ [key]: value })} />}
+      </Animated.View>
+    );
   };
 
   return (
@@ -94,17 +108,18 @@ export default function CreateScreen() {
 
         <View style={styles.rows}>
           <FieldRow label="Date">
-            {picker === 'date'
-              ? <DateField date={draft.date} time={draft.start} onChange={(date) => patch({ date })} />
-              : <FieldPill label={`${weekdayShort(draft.date)}, ${monthDay(draft.date)}`} accessibilityLabel={`Date, ${weekdayShort(draft.date)} ${monthDay(draft.date)}`} onPress={() => setPicker('date')} />}
+            <FieldPill label={`${weekdayShort(draft.date)}, ${monthDay(draft.date)}`} open={picker === 'date'} accessibilityLabel={`Date, ${weekdayShort(draft.date)} ${monthDay(draft.date)}`} onPress={() => toggle('date')} />
           </FieldRow>
+          {inlinePicker('date')}
           {event ? (
             <>
               <FieldRow label="All day"><NativeToggle label="All day" value={draft.allDay} onChange={(allDay) => patch({ allDay })} /></FieldRow>
               {!draft.allDay ? (
                 <>
                   <FieldRow label="Starts">{timeControl('start')}</FieldRow>
+                  {inlinePicker('start')}
                   <FieldRow label="Ends" last={draft.end >= draft.start}>{timeControl('end')}</FieldRow>
+                  {inlinePicker('end')}
                   {draft.end < draft.start ? <T token="caption" color={c.inkSecondary} style={styles.rowNote}>Ends the next day.</T> : null}
                 </>
               ) : null}
@@ -114,6 +129,7 @@ export default function CreateScreen() {
               <FieldRow label="Deadline"><NativeToggle label="Deadline" value={draft.isDeadline} onChange={(isDeadline) => patch({ isDeadline })} /></FieldRow>
               <FieldRow label="Set a time" last={!draft.hasDueTime}><NativeToggle label="Set a time" value={draft.hasDueTime} onChange={(hasDueTime) => patch({ hasDueTime })} /></FieldRow>
               {draft.hasDueTime ? <FieldRow label="Time" last>{timeControl('time')}</FieldRow> : null}
+              {draft.hasDueTime ? inlinePicker('time') : null}
             </>
           )}
         </View>
@@ -169,11 +185,12 @@ function FieldRow({ label, children, last }: { label: string; children: ReactNod
   );
 }
 
-/** The 36-high grey pill that opens a native date or time picker. */
-function FieldPill({ label, onPress, accessibilityLabel }: { label: string; onPress: () => void; accessibilityLabel?: string }) {
+/** The 36-high grey pill that opens a native date or time picker; white with an ink ring while it is open. */
+function FieldPill({ label, open, onPress, accessibilityLabel }: { label: string; open: boolean; onPress: () => void; accessibilityLabel?: string }) {
   const { c } = useTheme();
   return (
-    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} haptic="select" onPress={onPress} style={[styles.pill, { backgroundColor: c.row }]}>
+    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ expanded: open }} haptic="select" onPress={onPress}
+      style={[styles.pill, open ? { backgroundColor: c.surface, borderColor: c.inkPrimary } : { backgroundColor: c.row, borderColor: 'transparent' }]}>
       <T token="subhead" tabular numberOfLines={1}>{label}</T>
     </Press>
   );
@@ -188,6 +205,6 @@ const styles = StyleSheet.create({
   section: { gap: space.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   courseChip: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, height: 40, borderRadius: 999 },
-  pill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  pill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   notes: { minHeight: 96, paddingVertical: space.sm, paddingHorizontal: space.md, ...corner(radius.field), borderWidth: 1.5, textAlignVertical: 'top' },
 });

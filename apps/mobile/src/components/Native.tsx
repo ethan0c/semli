@@ -18,6 +18,10 @@ export interface DateFieldProps {
   disabled?: boolean;
 }
 
+export interface InlinePickerProps extends DateFieldProps {
+  mode: 'date' | 'time';
+}
+
 export interface ToggleProps {
   value: boolean;
   onChange: (value: boolean) => void;
@@ -78,6 +82,11 @@ export function DateField({ date, onChange, disabled }: DateFieldProps) {
 export function TimeField({ time, onChange, disabled }: DateFieldProps) {
   if (Platform.OS === 'web') return <WebField type="time" value={time} onChange={onChange} disabled={disabled} label="Time" />;
   return <Field value={time} placeholder="HH:MM" onChange={onChange} valid={!!disabled || time === null || isLocalTime(time)} width={68} disabled={disabled} />;
+}
+
+/** Off iOS the opened pill shows the same field a row would. */
+export function InlinePicker({ mode, ...field }: InlinePickerProps) {
+  return mode === 'date' ? <DateField {...field} /> : <TimeField {...field} />;
 }
 
 export function NativeToggle({ value, onChange, label, activeColor }: ToggleProps) {

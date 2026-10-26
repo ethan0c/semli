@@ -92,10 +92,12 @@ const count = (n: number, one: string, many: string) => (n > 0 ? `${n} ${n === 1
 const isTest = (it: Item) => assessment(it.title) !== null;
 
 /**
- * The summary's day: what kinds of things are on it, then what is due by name, since it stands
- * in for the morning deadline reminders. "2 classes and 1 shift. Due today: Lab report."
+ * The summary's day: what kinds of things are on it and the first one still ahead, then what is
+ * due by name, since it stands in for the morning deadline reminders.
+ * "2 classes and 1 shift, starting with Psych lecture at 9 am. Due today: Lab report.", or
+ * "Café shift at 4 pm." when that is all there is.
  */
-function dayLine(items: Item[], date: string): string {
+function dayLine(items: Item[], date: string, from: string): string {
   const todays = items.filter((i) => i.date === date && !i.done);
   if (todays.length === 0) return '';
   const due = todays.filter((i) => i.isDeadline && !isTest(i));
@@ -110,8 +112,11 @@ function dayLine(items: Item[], date: string): string {
     count(events.length - classes - shifts, 'event', 'events'),
     count(rest.length - events.length, 'to-do', 'to-dos'),
   ].filter(Boolean));
+  const first = events.filter((i) => i.start && i.start >= from).sort((a, b) => a.start!.localeCompare(b.start!))[0];
+  const at = first ? `${first.title} at ${formatTime(first.start!)}` : '';
+  const lead = !first ? kinds : rest.length === 1 ? at : `${kinds}, starting with ${at}`;
   return [
-    kinds ? `${kinds[0]!.toUpperCase()}${kinds.slice(1)}.` : '',
+    lead ? `${lead[0]!.toUpperCase()}${lead.slice(1)}.` : '',
     tests.length ? `Today: ${titleList(tests)}.` : '',
     due.length ? `Due today: ${titleList(due)}.` : '',
   ].filter(Boolean).join(' ');
@@ -190,12 +195,14 @@ export function planReminders(items: Item[], prefs: ReminderPrefs, now: { date: 
   if (prefs.briefing) {
     for (let d = 0; d < BRIEFING_DAYS; d++) {
       const date = addDays(now.date, d);
-      const line = dayLine(items, date);
+      const line = dayLine(items, date, prefs.briefingAt);
       const nextDeadline = items
         .filter((i) => i.isDeadline && !i.done && i.date > date && diffDays(date, i.date) <= 3)
         .sort((a, b) => a.date.localeCompare(b.date))[0];
       if (!line && !nextDeadline) continue;
-      const body = [line, nextDeadline ? `Next: ${nextDeadline.title} on ${weekdayLong(nextDeadline.date)}.` : ''].filter(Boolean).join(' ');
+      // A later day's deadline, said as one so it never reads as today's next event.
+      const ahead = nextDeadline ? `${isTest(nextDeadline) ? '' : 'Due '}${weekdayLong(nextDeadline.date)}: ${nextDeadline.title}.` : '';
+      const body = [line, ahead].filter(Boolean).join(' ');
       push({ id: `brief-${date}`, title: 'Today’s schedule', body, itemId: null, kind: 'briefing', url: '/' }, toAbs(date, prefs.briefingAt));
     }
   }

@@ -11,7 +11,7 @@ import { ItemDetail } from '@/components/ItemDetail';
 import { Segmented } from '@/components/Segmented';
 import { WeekBoard } from '@/components/WeekBoard';
 import { ItemRow } from '@/components/ItemRow';
-import { TimeField } from '@/components/Native';
+import { InlinePicker } from '@/components/Native';
 import { Button } from '@/components/Sheet';
 import { PlanMonthCalendar, PlanMonthTitle, TodayPill } from '@/components/PlanCalendar';
 import { Press } from '@/components/Press';
@@ -125,8 +125,8 @@ function PlanScreen() {
     updateSelected(date);
     setCalendarOpen(false);
   }, []);
-  /** Which untimed shifts have a time picker open, per field. */
-  const [timing, setTiming] = useState<Record<string, { start?: boolean; end?: boolean }>>({});
+  /** Untimed shifts being given a time, and which of their pickers is open under the row. */
+  const [timing, setTiming] = useState<Record<string, 'start' | 'end' | null>>({});
   const week = useMemo(() => weekOf(selected), [selected]);
   const weekStart = week[0]!;
   const weekEnd = week[6]!;
@@ -259,8 +259,20 @@ function PlanScreen() {
   );
 
   const renderShift = (it: Item) => {
-    const open = timing[it.id] ?? {};
+    const open = timing[it.id] ?? null;
     const copy = sameAs(it);
+    // One tap fills in a first guess and opens the picker under the row; the next closes it.
+    const timePill = (f: 'start' | 'end') => {
+      const v = it[f];
+      const name = f === 'start' ? 'Start' : 'End';
+      return (
+        <Press accessibilityRole="button" accessibilityLabel={`${name} time, ${v ? formatTime(v) : 'not set'}`} accessibilityState={{ expanded: open === f }} haptic="select"
+          onPress={() => { if (!it.start || (f === 'end' && !it.end)) updateItem(it.id, defaultTimes(it, copy)); setTiming((t) => ({ ...t, [it.id]: t[it.id] === f ? null : f })); }}
+          style={[styles.timePill, open === f ? { backgroundColor: c.surface, borderColor: c.inkPrimary } : { backgroundColor: c.row, borderColor: 'transparent' }]}>
+          <T token="subhead" tabular>{v ? formatTime(v) : name}</T>
+        </Press>
+      );
+    };
     return (
       <View style={[styles.shift, { borderBottomColor: c.line }]}>
         <ListRow title={it.title} sub={it.start ? where(it) : `${where(it)} · No time yet, so no reminder`} chevron={false} last
@@ -268,27 +280,18 @@ function PlanScreen() {
           trailing={it.start ? <StatusPill label={formatTime(it.start)} /> : <StatusPill label="Add a time" tone="amber" tabular={false} />}
           onPress={() => openItem(it.id)} />
         <View style={styles.timeRow}>
-          {open.start ? (
-            <TimeField date={it.date} time={it.start} onChange={(start) => updateItem(it.id, { start })} />
-          ) : (
-            <Press accessibilityRole="button" accessibilityLabel={it.start ? `Start time, ${formatTime(it.start)}` : 'Start time, not set'} haptic="select"
-              onPress={() => { if (!it.start) updateItem(it.id, defaultTimes(it, copy)); setTiming((t) => ({ ...t, [it.id]: { ...t[it.id], start: true } })); }} style={[styles.timePill, { backgroundColor: c.row }]}>
-              <T token="subhead" tabular>{it.start ? formatTime(it.start) : 'Start'}</T>
-            </Press>
-          )}
-          {open.end ? (
-            <TimeField date={it.date} time={it.end} onChange={(end) => updateItem(it.id, { end })} />
-          ) : (
-            <Press accessibilityRole="button" accessibilityLabel={it.end ? `End time, ${formatTime(it.end)}` : 'End time, not set'} haptic="select"
-              onPress={() => { if (!it.start || !it.end) updateItem(it.id, defaultTimes(it, copy)); setTiming((t) => ({ ...t, [it.id]: { ...t[it.id], end: true } })); }} style={[styles.timePill, { backgroundColor: c.row }]}>
-              <T token="subhead" tabular>{it.end ? formatTime(it.end) : 'End'}</T>
-            </Press>
-          )}
+          {timePill('start')}
+          {timePill('end')}
           {copy ? (
             <TextButton label={`Same as ${weekdayLong(copy.date)}`} style={{ marginLeft: space.snug }} accessibilityLabel={`Same times as ${weekdayLong(copy.date)}`}
               onPress={() => updateItem(it.id, { start: copy.start, end: copy.end })} />
           ) : null}
         </View>
+        {open ? (
+          <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.timePicker}>
+            <InlinePicker mode="time" date={it.date} time={it[open]} onChange={(v) => updateItem(it.id, { [open]: v })} />
+          </Animated.View>
+        ) : null}
       </View>
     );
   };
@@ -333,7 +336,7 @@ function PlanScreen() {
               : relativeDay(now.date, shown)} />
           {dayItems.length ? dayItems.map((it) => (
             <Animated.View key={it.id} layout={layout} entering={enter.fade} exiting={exit.fade}>
-              {isUntimedEvent(it) || timing[it.id] ? renderShift(it) : (
+              {isUntimedEvent(it) || it.id in timing ? renderShift(it) : (
                 <ItemRow item={it} today={now.date} conflict={conflicts.has(it.id)}
                   onPress={() => openItem(it.id)}
                   onToggle={() => { feedback(it.done ? 'uncomplete' : 'complete'); if (!it.done) settle(it.id); toggleDone(it.id); }}
@@ -420,7 +423,8 @@ const styles = StyleSheet.create({
   shift: { borderBottomWidth: StyleSheet.hairlineWidth },
   lead: { width: 22, alignItems: 'center', justifyContent: 'center' },
   timeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.xs, paddingLeft: space.xxl, paddingBottom: space.sm },
-  timePill: { height: size.pill, borderRadius: radius.pill, paddingHorizontal: space.sm, alignItems: 'center', justifyContent: 'center' },
+  timePill: { height: size.pill, borderRadius: radius.pill, borderWidth: 1.5, paddingHorizontal: space.sm, alignItems: 'center', justifyContent: 'center' },
+  timePicker: { paddingLeft: space.xxl, paddingBottom: space.sm },
 });
 
 export default steadyScreen(PlanScreen);

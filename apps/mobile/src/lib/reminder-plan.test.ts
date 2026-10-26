@@ -18,7 +18,7 @@ describe('planReminders', () => {
     const real = item({ id: 'real', title: 'Real shift', category: 'work', date: '2026-10-20', start: '16:00', end: '22:00', sourceId: 'schedule.jpg' });
     const plan = planReminders([example, real], DEFAULT_REMINDERS, now);
     expect(plan.some((notification) => notification.itemId === 'demo')).toBe(false);
-    expect(plan.find((notification) => notification.kind === 'briefing')?.body).toBe('1 shift.');
+    expect(plan.find((notification) => notification.kind === 'briefing')?.body).toBe('Real shift at 4:00 pm.');
     expect(plan.some((notification) => notification.itemId === 'real')).toBe(true);
   });
 
@@ -63,6 +63,20 @@ describe('planReminders', () => {
     expect(plan.filter((p) => p.kind === 'briefing').length).toBeGreaterThan(0);
   });
 
+  it('leads with today and says a later deadline is due then, not next', () => {
+    const plan = planReminders(
+      [
+        item({ id: 'gym', title: 'Morning cardio', category: 'personal', date: '2026-10-20', start: '07:00', end: '07:45' }),
+        item({ id: 'work', title: 'Work', category: 'work', date: '2026-10-20', start: '09:00', end: '16:30' }),
+        item({ id: 'run', title: 'Afternoon cardio', category: 'personal', date: '2026-10-20', start: '16:30', end: '17:30' }),
+        item({ id: 'reg', kind: 'task', title: 'Class registration', date: '2026-10-21', isDeadline: true }),
+      ],
+      { ...DEFAULT_REMINDERS, enabled: false },
+      now,
+    );
+    expect(plan.find((p) => p.id === 'brief-2026-10-20')!.body).toBe('1 shift and 2 events, starting with Work at 9:00 am. Due Wednesday: Class registration.');
+  });
+
   it('writes a briefing from the day and the next deadline', () => {
     const plan = planReminders(
       [
@@ -75,7 +89,7 @@ describe('planReminders', () => {
     );
     const b = plan.find((p) => p.id === 'brief-2026-10-20')!;
     expect(b.time).toBe('08:00');
-    expect(b.body).toBe('1 class and 1 to-do. Next: Stats exam on Thursday.');
+    expect(b.body).toBe('1 class and 1 to-do, starting with Psych lecture at 9:00 am. Thursday: Stats exam.');
     expect(plan.some((p) => p.id === 'brief-2026-10-25')).toBe(false);
   });
 
@@ -133,7 +147,7 @@ describe('planReminders', () => {
     );
     const byId = Object.fromEntries(plan.map((p) => [p.id, p]));
     expect(byId['ev-shift']?.body).toBe('Starts at 4:00 pm. Ends at 10:00 pm.');
-    expect(byId['brief-2026-10-21']?.body).toBe('1 shift. Today: Stats exam. Due today: Lab report.');
+    expect(byId['brief-2026-10-21']?.body).toBe('Café shift at 4:00 pm. Today: Stats exam. Due today: Lab report.');
     const alone = planReminders([item({ id: 'quiz', title: 'Bio quiz', date: '2026-10-21', start: '09:00', isDeadline: true })], { ...DEFAULT_REMINDERS, briefing: false }, now);
     expect(alone.filter((p) => p.kind === 'deadline').map((p) => p.body)).toEqual(['Wednesday at 9:00 am.', 'Today at 9:00 am.']);
   });

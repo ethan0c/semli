@@ -11,8 +11,8 @@ import { useTheme, radius, size, space } from '@/theme';
 
 /*
  * The small parts of the review screen: a hairline row with a glyph column, the 36-high
- * pill that opens a native picker, the slot that holds the picker while it is open, and
- * the caption-sized disclosure that expands a list. Rows highlight, pills act.
+ * pill that opens a native picker under its row, and the caption-sized disclosure that
+ * expands a list. Rows highlight, pills act.
  */
 
 /** The 22-wide glyph column: a 6px dot, or a 12px ring for an exam. */
@@ -74,23 +74,20 @@ export function ReviewRow({ glyph, title, sub, trailing, struck, below, onPress,
   );
 }
 
-/** The 36-high pill that opens a picker: grey at rest, ink when it is the chosen option, muted when unset. */
-export function ReviewPill({ label, onPress, selected, muted, accessibilityLabel }: {
-  label: string; onPress: () => void; selected?: boolean; muted?: boolean; accessibilityLabel?: string;
+/**
+ * The 36-high pill that opens a picker: grey at rest, white with a 1.5 ink ring while its picker
+ * is open, ink when it is the chosen option, muted when unset.
+ */
+export function ReviewPill({ label, onPress, selected, open, muted, accessibilityLabel }: {
+  label: string; onPress: () => void; selected?: boolean; open?: boolean; muted?: boolean; accessibilityLabel?: string;
 }) {
   const { c } = useTheme();
   return (
-    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ selected: !!selected }} haptic="select" onPress={onPress}
-      style={[styles.pill, { backgroundColor: selected ? c.inkPrimary : c.row }]}>
+    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ selected: !!selected, ...(open !== undefined ? { expanded: open } : null) }} haptic="select" onPress={onPress}
+      style={[styles.pill, selected ? { backgroundColor: c.inkPrimary, borderColor: c.inkPrimary } : open ? { backgroundColor: c.surface, borderColor: c.inkPrimary } : { backgroundColor: c.row, borderColor: 'transparent' }]}>
       <T token="subhead" color={selected ? c.onPrimary : muted ? c.inkSecondary : c.inkPrimary} tabular numberOfLines={1}>{label}</T>
     </Press>
   );
-}
-
-/** Holds a native picker in the open-pill look: white with a 1.5 ink ring. */
-export function ReviewPickerSlot({ children }: { children: ReactNode }) {
-  const { c } = useTheme();
-  return <View style={[styles.slot, { backgroundColor: c.surface, borderColor: c.inkPrimary }]}>{children}</View>;
 }
 
 /** A row of pills and text buttons under a review row, indented to the text column. */
@@ -118,7 +115,6 @@ const styles = StyleSheet.create({
   ring: { width: 12, height: 12, borderRadius: 6, borderWidth: 2 },
   below: { paddingLeft: space.xxl, paddingBottom: space.sm },
   pills: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.xs },
-  pill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  slot: { minHeight: size.pill, paddingHorizontal: space.xxs, borderRadius: radius.pill, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  pill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   disclosure: { minHeight: size.target, flexDirection: 'row', alignItems: 'center', gap: space.xs },
 });

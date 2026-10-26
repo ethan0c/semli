@@ -1,9 +1,9 @@
 import { localParts } from '@dayli/core';
 import { Button as SwiftButton, DatePicker, Host, Toggle } from '@expo/ui/swift-ui';
 import type { ComponentProps } from 'react';
-import { accessibilityLabel, buttonBorderShape, buttonStyle, controlSize, datePickerStyle, tint } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel, buttonBorderShape, buttonStyle, controlSize, datePickerStyle, labelsHidden, tint } from '@expo/ui/swift-ui/modifiers';
 
-import type { DateFieldProps, NativeButtonProps, ToggleProps } from '@/components/Native';
+import type { DateFieldProps, InlinePickerProps, NativeButtonProps, ToggleProps } from '@/components/Native';
 import { useTheme, size } from '@/theme';
 
 function toDate(date: string | null, time: string | null): Date {
@@ -34,6 +34,24 @@ export function TimeField({ date, time, onChange }: DateFieldProps) {
         displayedComponents={['hourAndMinute']}
         onDateChange={(d) => onChange(localParts(d).time)}
         modifiers={[datePickerStyle('compact')]}
+      />
+    </Host>
+  );
+}
+
+/**
+ * The picker a pill opens in place, under its row, the way Calendar does: a wheel for a time, the
+ * month for a date. It is showing as soon as the pill is tapped; a compact picker behind a pill
+ * needed a second tap for its popover.
+ */
+export function InlinePicker({ mode, date, time, onChange }: InlinePickerProps) {
+  return (
+    <Host style={{ width: '100%' }} matchContents={{ vertical: true }}>
+      <DatePicker
+        selection={toDate(date, time)}
+        displayedComponents={[mode === 'date' ? 'date' : 'hourAndMinute']}
+        onDateChange={(d) => onChange(mode === 'date' ? localParts(d).date : localParts(d).time)}
+        modifiers={[datePickerStyle(mode === 'date' ? 'graphical' : 'wheel'), labelsHidden()]}
       />
     </Host>
   );
