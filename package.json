@@ -13,7 +13,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dev:web": "npm run dev --workspace web",
     "dev:mobile": "npm run start --workspace mobile",
-    "email": "node emails/cli.mjs"
+    "email": "node emails/cli.mjs",
+    "store:changes": "node apps/mobile/scripts/store-notes.mjs changes",
+    "store:check": "node apps/mobile/scripts/store-notes.mjs check"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

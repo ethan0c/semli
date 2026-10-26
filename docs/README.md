@@ -9,6 +9,7 @@ Start with the [repository README](../README.md) for the current implementation 
 | [Launch checklist](launch-checklist.md) | Beta and public-launch tasks, verification, and rollout |
 | [Environment variables](env.md) | Local environment files, EAS/Vercel production values, and tooling secrets |
 | [App Store Connect](app-store-connect.md) | Listing fields, privacy declarations, production environment, and submission |
+| [App Store listing log](aso-log.md) | Every keyword, promotional text, title and subtitle change, with why; weekly notes via `npm run store:changes` and `store:check` |
 | [Developer checklist](todo.md) | Implementation follow-ups and device checks; confirm dated status notes against current code |
 | [RevenueCat offerings](revenuecat-offerings-brief.md) | Student / regular products, monthly / six-month / yearly terms, and trial setup |
 | [Database migrations](../supabase/migrations) | Accounts, plan backup, import quotas, and beta waitlist |
