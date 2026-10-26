@@ -104,6 +104,14 @@ describe('planReminders', () => {
     expect(planReminders(items, { ...prefs, classReminders: true }, now).map((p) => p.id)).toEqual(['ev-lec', 'ev-lab', 'ev-shift']);
   });
 
+  it('drops the evening or the morning deadline reminder when it is turned off', () => {
+    const essay = [item({ id: 'essay', kind: 'task', title: 'Essay', date: '2026-10-21', isDeadline: true })];
+    const prefs = { ...DEFAULT_REMINDERS, briefing: false };
+    expect(planReminders(essay, prefs, now).map((p) => p.id)).toEqual(['dl1-essay', 'dl2-essay']);
+    expect(planReminders(essay, { ...prefs, dayBefore: false }, now).map((p) => p.id)).toEqual(['dl2-essay']);
+    expect(planReminders(essay, { ...prefs, morning: false }, now).map((p) => p.id)).toEqual(['dl1-essay']);
+  });
+
   it('groups deadlines on the same day into one reminder that opens Today', () => {
     const plan = planReminders(
       [
