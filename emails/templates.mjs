@@ -90,14 +90,14 @@ export const emails = {
 
   'app-store-launch': {
     segment: EVERYONE,
-    plan: 'Jan 5, 2027, after the listing is public',
+    plan: 'Tue Nov 3, 2026, 10 am Eastern, once the listing is public (released early, Oct 26 plan)',
     subject: 'Semli is on the App Store',
     preheader: 'Your classes, shifts, and deadlines in one plan.',
     heading: 'Semli is on the ~App Store~.',
     greeting: HI,
     before: [
       'Thanks for following along. Semli is now available for iPhone.',
-      'Bring your syllabi, work schedule and class messages into one plan. Calendar, to-dos, reminders and three imports a month are free.',
+      'Bring your syllabi, work schedule and class messages into one plan. Calendar, to-dos and reminders are free, with five imports to start.',
     ],
     action: { label: 'Get Semli on iPhone', url: APP_STORE_URL },
     after: ["If you tried the beta, thank you for helping me get here. I'd love to hear how Semli fits into your week. Just reply here."],
@@ -106,9 +106,27 @@ export const emails = {
     unsubscribe: true,
   },
 
+  'spring-schedule': {
+    segment: EVERYONE,
+    plan: 'Tue Nov 17, 2026, 10 am Eastern: spring registration is open at most schools (Nov 2 to 23)',
+    subject: 'Registered for spring? Add your classes now',
+    preheader: 'One screenshot of your schedule fills the whole term.',
+    heading: 'Spring, ~already planned~.',
+    greeting: HI,
+    before: [
+      "If you've registered for spring, your new class times are already in your school's portal.",
+      'Take a screenshot of that schedule and add it in Semli. Your classes repeat through the term, and you check each one before it saves.',
+    ],
+    action: { label: 'Get Semli on iPhone', url: APP_STORE_URL, note: 'Already have Semli? Open the app and tap Add.' },
+    after: ['When your syllabi arrive in January, add them too, and the exams land on the same plan.'],
+    signoff: 'Good luck with registration,',
+    reason: 'You signed up for Semli updates.',
+    unsubscribe: true,
+  },
+
   'semester-reminder': {
     segment: EVERYONE,
-    plan: 'Around the recipient’s semester start, after public release; Jan 11, 2027 for the campus campaign',
+    plan: 'Tue Jan 5, 2027, 10 am Eastern: the week before most spring terms start (Jan 11 to 20)',
     subject: 'Got your new syllabus yet?',
     preheader: 'Start with one syllabus or a week of shifts.',
     heading: 'New semester, ~one plan~.',

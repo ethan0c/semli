@@ -54,8 +54,11 @@ All marketing emails live as data in `emails/templates.mjs` and render through t
 | `survey-invite` | Survey | An update on that student planner survey | Nov 3, once the Survey TestFlight link accepts testers |
 | `public-beta-invite` | Waitlist | Your Semli beta invite is here | When the Beta group has room; link is `semli.app/beta?r=email-waitlist` so clicks are logged |
 | `tester-check-in` | Testers | Had a chance to try Semli? | 3 to 5 days after someone installs; `npm run email add testers a@b.edu` first |
-| `app-store-launch` | Survey + Waitlist | Semli is on the App Store | Jan 5, 2027, after the listing is public |
-| `semester-reminder` | Survey + Waitlist | Got your new syllabus yet? | Around the recipient's semester start, after release; Jan 11, 2027 for the campus campaign |
+| `app-store-launch` | Survey + Waitlist | Semli is on the App Store | Tue Nov 3, 2026, once the listing is public |
+| `spring-schedule` | Survey + Waitlist | Registered for spring? Add your classes now | Tue Nov 17, 2026: spring registration is open at most schools |
+| `semester-reminder` | Survey + Waitlist | Got your new syllabus yet? | Tue Jan 5, 2027: the week before most spring terms start |
+
+**When to send (decided Oct 26, 2026).** Tuesday or Wednesday at 10 am Eastern (7 am Pacific): student and general benchmarks put opens best at 9:30 to 11:30 am on those days and worst at 7 pm to 2 am. Compare your own open rates after two sends. Nothing the week of Thanksgiving (Nov 24 to 29), during finals (Dec 7 to 18) or over the break (Dec 19 to Jan 3); no broadcasts after add/drop closes (about Jan 20). A finals email ("finals, spread out") on Tue Dec 1 and a day-one syllabus email on Tue Jan 12 are the two optional sends. Add an App Store campaign token to each email's link once the provider token is known (App Store Connect → App Analytics → Campaigns), so installs per email show there.
 | `feedback-thank-you` | one person | Thanks for the Semli feedback | `npm run email send feedback --to … --name … --about "…" --reply "…"` |
 
 Groups are Resend segments, and the free plan allows three. Survey = waitlist rows tagged `Survey`, any case; Waitlist = every other row; Testers = confirmed installs, added by hand. The launch and semester emails go to everyone as two broadcasts, one to Survey and one to Waitlist. The two never overlap, so nobody gets two copies. `npm run email sync` reads the Supabase `waitlist` table through the CLI (`npx supabase login` first) and creates or refreshes the contacts and their groups. It never re-subscribes anyone.
