@@ -22,7 +22,8 @@ export type ComposerVoice = {
  * The Add composer: a white rounded rectangle with the attachments inside it and a primary send
  * circle. Shared by the Add screen and the "Now, your week" onboarding step. With `voice`, a mic
  * joins the toolbar and, while listening, the transcript takes the input's place: settled words
- * in primary ink, the phrase still being worked out in secondary.
+ * in primary ink, the phrase still being worked out in secondary. The mic turns into a stop
+ * button while it listens, and send stays available: it stops listening, then sends.
  */
 export const Composer = forwardRef<ComponentRef<typeof TextInput>, {
   value: string;
@@ -77,19 +78,20 @@ export const Composer = forwardRef<ComponentRef<typeof TextInput>, {
         <IconButton icon="file" label="Add a PDF" tone="bare" size={40} disabled={busy || listening} onPress={onPickPdf} />
         <View style={{ flex: 1 }} />
         {voice ? <Mic voice={voice} disabled={!!busy} /> : null}
-        <IconButton icon="send" label="Read it" tone="primary" size={40} disabled={!canSend || listening} haptic="ready" onPress={onSend} />
+        <IconButton icon="send" label="Read it" tone="primary" size={40} disabled={!canSend || voice?.state === 'stopping'} haptic="ready" onPress={onSend} />
       </View>
     </View>
   );
 });
 
 function Mic({ voice, disabled }: { voice: ComposerVoice; disabled: boolean }) {
-  const listening = voice.state === 'listening';
+  // Stopping stays tappable: a second tap ends a session Apple is slow to close.
+  const on = voice.state !== 'idle';
   const grow = useAnimatedStyle(() => ({ transform: [{ scale: interpolate(voice.level.value, [0, 1], [1, 1 + MIC_GROWTH]) }] }));
   return (
     <Animated.View style={grow}>
-      <IconButton icon="mic" tone={listening ? 'ink' : 'bare'} size={40} haptic="select" disabled={disabled || voice.state === 'stopping'}
-        label={listening ? 'Stop listening' : 'Speak what’s coming up'} onPress={listening ? voice.onStop : voice.onStart} />
+      <IconButton icon={on ? 'stop' : 'mic'} tone={on ? 'ink' : 'bare'} size={40} haptic="select" disabled={disabled}
+        label={on ? 'Stop listening' : 'Speak what’s coming up'} onPress={on ? voice.onStop : voice.onStart} />
     </Animated.View>
   );
 }

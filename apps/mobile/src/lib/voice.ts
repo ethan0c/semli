@@ -28,6 +28,8 @@ export const VOICE_AVAILABLE = Platform.OS === 'ios';
 const MAX_CHARS = 2000;
 const LEVEL_FLOOR = 0;
 const LEVEL_CEIL = 10;
+/** How long a stop may wait for Apple's last result before the session is ended anyway. */
+const STOP_GRACE_MS = 1500;
 
 export const VOICE_ERRORS = {
   denied: 'Allow microphone and speech recognition access in Settings to add plans by voice.',
@@ -56,7 +58,8 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
   level: SharedValue<number>;
   error: string | null;
   start: () => Promise<void>;
-  stop: () => void;
+  /** Resolves once listening has ended and the last words are in the text. */
+  stop: () => Promise<void>;
   clearError: () => void;
 } {
   const [state, setState] = useState<VoiceState>('idle');
@@ -64,6 +67,7 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
   const [error, setError] = useState<string | null>(null);
   const level = useSharedValue(0);
   const session = useRef({ prefix: '', last: '', startedAt: 0, active: false });
+  const stopped = useRef<{ timer: ReturnType<typeof setTimeout> | null; waiting: (() => void)[] }>({ timer: null, waiting: [] });
 
   const emit = useCallback((spoken: string) => {
     const head = session.current.prefix.trim();
@@ -71,6 +75,9 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
   }, [onText]);
 
   const finish = useCallback((reason: 'stop' | 'end' | 'error') => {
+    if (stopped.current.timer) clearTimeout(stopped.current.timer);
+    stopped.current.timer = null;
+    for (const resolve of stopped.current.waiting.splice(0)) resolve();
     if (!session.current.active) return;
     session.current.active = false;
     const words = session.current.last.trim() ? session.current.last.trim().split(/\s+/).length : 0;
@@ -110,11 +117,13 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
 
   // A call, Siri, or leaving the app ends the session; the words stay in the composer.
   useEffect(() => {
+    const pending = stopped.current;
     const sub = AppState.addEventListener('change', (next) => {
       if (next !== 'active' && session.current.active) ExpoSpeechRecognitionModule.stop();
     });
     return () => {
       sub.remove();
+      if (pending.timer) clearTimeout(pending.timer);
       if (session.current.active) ExpoSpeechRecognitionModule.abort();
     };
   }, []);
@@ -153,11 +162,18 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
     }
   }, [prefix]);
 
+  // Stop asks Apple for the last result. If it never answers, or the person taps stop again, the
+  // session is aborted so the mic can never stay stuck on; the words so far stay in the composer.
   const stop = useCallback(() => {
-    if (!session.current.active) return;
+    if (!session.current.active) return Promise.resolve();
+    const done = new Promise<void>((resolve) => stopped.current.waiting.push(resolve));
+    const force = () => { ExpoSpeechRecognitionModule.abort(); finish('stop'); };
+    if (stopped.current.timer) { force(); return done; }
     setState('stopping');
     ExpoSpeechRecognitionModule.stop();
-  }, []);
+    stopped.current.timer = setTimeout(force, STOP_GRACE_MS);
+    return done;
+  }, [finish]);
 
   return { state, transcript, level, error, start, stop, clearError: () => setError(null) };
 }

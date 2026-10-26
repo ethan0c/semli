@@ -108,6 +108,13 @@ export function AddScreen() {
   };
 
   const canSend = text.trim().length > 0 && !busy;
+  /** Send while listening stops first, then sends with the last words in. */
+  async function send() {
+    const listening = voice.state !== 'idle';
+    if (listening) await voice.stop();
+    const latest = (listening ? useStore.getState().captureDraft : text).trim();
+    if (latest) await run({ kind: 'text', text: latest }, spoke.current ? 'Voice' : 'Message');
+  }
   const shownError = error ?? voice.error;
 
   /** A tapped screenshot thumbnail; an empty uri means "open the photo picker". */
@@ -177,8 +184,8 @@ export function AddScreen() {
           onPickImage={() => void pick(() => pickImageInput(false))}
           onCamera={Platform.OS === 'web' ? undefined : () => void pick(() => pickImageInput(true))}
           onPickPdf={() => void pick(pickPdfInput)}
-          onSend={() => void run({ kind: 'text', text: text.trim() }, spoke.current ? 'Voice' : 'Message')}
-          voice={VOICE_AVAILABLE ? { state: voice.state, transcript: voice.transcript, level: voice.level, onStart: () => { spoke.current = true; setError(null); void voice.start(); }, onStop: voice.stop } : undefined}
+          onSend={() => void send()}
+          voice={VOICE_AVAILABLE ? { state: voice.state, transcript: voice.transcript, level: voice.level, onStart: () => { spoke.current = true; setError(null); void voice.start(); }, onStop: () => void voice.stop() } : undefined}
         />
 
         {shownError ? (

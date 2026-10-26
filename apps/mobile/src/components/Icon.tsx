@@ -10,6 +10,7 @@ export type IconKey =
   | 'image'
   | 'file'
   | 'mic'
+  | 'stop'
   | 'chevronLeft'
   | 'chevronRight'
   | 'undo'
@@ -57,6 +58,7 @@ const GLYPHS: Record<IconKey, El[]> = {
   image: [{ rect: [3, 3, 18, 18, 3] }, { circle: [8.5, 8.5, 1.5] }, { d: 'M21 15l-5-5L5 21' }],
   file: [{ d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }, { d: 'M14 2v6h6' }],
   mic: [{ d: 'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z' }, { d: 'M19 10v2a7 7 0 0 1-14 0v-2M12 19v4' }],
+  stop: [{ rect: [7, 7, 10, 10, 2] }],
   chevronLeft: [{ d: 'm15 18-6-6 6-6' }],
   chevronRight: [{ d: 'm9 18 6-6-6-6' }],
   share: [{ d: 'M12 15V3m-4 4 4-4 4 4M7 10H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2' }],
