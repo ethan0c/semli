@@ -5,7 +5,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Composer } from "@/components/Composer";
-import { Radio } from "@/components/Controls";
+import { PickerPill, Radio } from "@/components/Controls";
+import { InlinePicker } from "@/components/Native";
 import { RecentShots } from "@/components/RecentShots";
 import { File } from "expo-file-system";
 import { Press } from "@/components/Press";
@@ -36,7 +37,7 @@ import { normalizeFeedUrl, CANVAS_MESSAGES } from "@/lib/canvas";
 import { useCourseList, useItemList, useStore, type DeadlineSource, type Pending, type Plate } from "@/store";
 import { sampleWeek } from "@/store/sample";
 import { motion, palettes } from "@dayli/tokens";
-import { localParts, monthDay, relativeDay, termSummary, weekOf, weekdayLong } from "@dayli/core";
+import { formatTime, localParts, monthDay, relativeDay, termSummary, weekOf, weekdayLong } from "@dayli/core";
 
 import { SCREEN_GUTTER, corner, radius, textStyle, useTheme, size, iconSize, space } from '@/theme';
 
@@ -778,15 +779,25 @@ function ResultStep({ sample, onNext }: { sample: boolean; onNext: () => void })
 /* ---------- A reminder they choose: our question first, the system prompt only on yes ---------- */
 
 const REMIND = [
-  { id: "evening", label: "The night before at 8 pm", patch: { dayBeforeAt: "20:00" } },
-  { id: "morning", label: "The day it’s due at 8 am", patch: { morningAt: "08:00", briefingAt: "08:00" } },
+  { id: "evening", label: "The night before", time: "20:00" },
+  { id: "morning", label: "The morning it’s due", time: "08:00" },
 ] as const;
+type RemindId = (typeof REMIND)[number]["id"];
+
+/** The one deadline reminder they chose, at their time; the other is off. The morning one shares the summary's time. */
+function remindPatch(choice: RemindId, time: string) {
+  return choice === "evening"
+    ? { dayBefore: true, dayBeforeAt: time, morning: false }
+    : { morning: true, morningAt: time, briefingAt: time, dayBefore: false };
+}
 
 function RemindStep({ onDone }: { onDone: () => void }) {
   const { c } = useTheme();
   const items = useItemList();
   const setSettings = useStore((s) => s.setSettings);
-  const [choice, setChoice] = useState<(typeof REMIND)[number]["id"]>("evening");
+  const [choice, setChoice] = useState<RemindId>("evening");
+  const [times, setTimes] = useState<Record<RemindId, string>>({ evening: REMIND[0].time, morning: REMIND[1].time });
+  const [picking, setPicking] = useState<RemindId | null>(null);
   const [asking, setAsking] = useState(false);
   const today = localParts(new Date()).date;
   const first = useMemo(() => termSummary(items, today).first, [items, today]);
@@ -794,10 +805,9 @@ function RemindStep({ onDone }: { onDone: () => void }) {
     setAsking(true);
     setSettings({ remindersAsked: true });
     const granted = await requestNotifications().catch(() => false);
-    track("remind_choice", { time: choice, granted });
+    track("remind_choice", { time: choice, at: times[choice], granted });
     if (granted) {
-      const picked = REMIND.find((r) => r.id === choice)!;
-      setSettings({ reminders: { ...useStore.getState().settings.reminders, enabled: true, briefing: true, ...picked.patch } });
+      setSettings({ reminders: { ...useStore.getState().settings.reminders, enabled: true, briefing: true, ...remindPatch(choice, times[choice]) } });
       await syncReminders().catch(() => {});
     }
     setAsking(false);
@@ -813,16 +823,26 @@ function RemindStep({ onDone }: { onDone: () => void }) {
       <View style={styles.titleBlock}>
         <T token="displaySm" accessibilityRole="header">When would you like a reminder?</T>
         <T token="callout" color={c.inkSecondary}>
-          {first ? `Next due: ${first.title}, ${relativeDay(today, first.date).toLowerCase()}. Change the times in You → Reminders.` : "Get reminders before deadlines. Change the times in You → Reminders."}
+          {first ? `Next due: ${first.title}, ${relativeDay(today, first.date).toLowerCase()}. ` : "One reminder before each deadline. "}A summary of your day comes each morning too. Change any of it in You → Reminders.
         </T>
       </View>
       <View accessibilityRole="radiogroup">
         {REMIND.map((r) => (
-          <Press key={r.id} haptic="select" scale={1} accessibilityRole="radio" accessibilityState={{ selected: choice === r.id }} onPress={() => setChoice(r.id)}
-            style={[styles.choice, { minHeight: size.row, borderBottomColor: c.line }]}>
-            <T token="body" style={{ flex: 1 }}>{r.label}</T>
-            <Radio on={choice === r.id} />
-          </Press>
+          <View key={r.id} style={[styles.remindRow, { borderBottomColor: c.line }]}>
+            <Press haptic="select" scale={1} accessibilityRole="radio" accessibilityState={{ selected: choice === r.id }} onPress={() => setChoice(r.id)}
+              style={[styles.remindChoice, { minHeight: size.row }]}>
+              <T token="body" style={{ flex: 1 }}>{r.label}</T>
+              {/* The time is theirs to set here: one tap opens the wheel under the row. */}
+              <PickerPill label={formatTime(times[r.id])} open={picking === r.id} accessibilityLabel={`${r.label}, at ${formatTime(times[r.id])}`}
+                onPress={() => { setChoice(r.id); setPicking((open) => (open === r.id ? null : r.id)); }} />
+              <Radio on={choice === r.id} />
+            </Press>
+            {picking === r.id ? (
+              <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.remindPicker}>
+                <InlinePicker mode="time" date={null} time={times[r.id]} onChange={(time) => setTimes((t) => ({ ...t, [r.id]: time }))} />
+              </Animated.View>
+            ) : null}
+          </View>
         ))}
       </View>
       <View style={[styles.footer, { alignItems: "center" }]}>
@@ -880,6 +900,9 @@ const styles = StyleSheet.create({
   // On a wide web window the actions follow the content at the right, as desktop forms do.
   footer: WIDE ? { paddingTop: space.xl, gap: space.xs, alignSelf: "stretch", alignItems: "flex-end" } : { marginTop: "auto", paddingTop: space.xl, gap: space.xs, alignSelf: "stretch" },
   choice: { flexDirection: "row", alignItems: "center", gap: space.sm, borderBottomWidth: StyleSheet.hairlineWidth },
+  remindRow: { borderBottomWidth: StyleSheet.hairlineWidth },
+  remindChoice: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  remindPicker: { paddingBottom: space.sm },
   box: { width: 22, height: 22, ...corner(radius.mark), borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   fact: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.md, minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   input: { height: size.control, borderRadius: radius.pill, paddingHorizontal: space.lg },

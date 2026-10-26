@@ -18,7 +18,7 @@ import { enter, exit, layout } from '@/lib/motion';
 import { usePlusAccess } from '@/lib/plus-access';
 import { buildManualItem, defaultManualTimes, type ManualDraft } from '@/lib/manual-item';
 import { courseTint, useCourseList, useStore } from '@/store';
-import { SCREEN_GUTTER, corner, radius, textStyle, useTheme, size, space } from '@/theme';
+import { SCREEN_GUTTER, corner, radius, textStyle, useTheme, space } from '@/theme';
 
 const categories: { key: Category; label: string }[] = [
   { key: 'personal', label: 'Personal' }, { key: 'school', label: 'School' }, { key: 'work', label: 'Work' },

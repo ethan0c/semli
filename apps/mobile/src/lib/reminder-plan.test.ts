@@ -74,7 +74,7 @@ describe('planReminders', () => {
       { ...DEFAULT_REMINDERS, enabled: false },
       now,
     );
-    expect(plan.find((p) => p.id === 'brief-2026-10-20')!.body).toBe('1 shift and 2 events, starting with Work at 9:00 am. Due Wednesday: Class registration.');
+    expect(plan.find((p) => p.id === 'brief-2026-10-20')!.body).toBe('A shift and 2 events. First up: Work at 9:00 am. Due Wednesday: Class registration.');
   });
 
   it('writes a briefing from the day and the next deadline', () => {
@@ -89,7 +89,7 @@ describe('planReminders', () => {
     );
     const b = plan.find((p) => p.id === 'brief-2026-10-20')!;
     expect(b.time).toBe('08:00');
-    expect(b.body).toBe('1 class and 1 to-do, starting with Psych lecture at 9:00 am. Thursday: Stats exam.');
+    expect(b.body).toBe('A class and a to-do. First up: Psych lecture at 9:00 am. Thursday: Stats exam.');
     expect(plan.some((p) => p.id === 'brief-2026-10-25')).toBe(false);
   });
 
@@ -115,8 +115,8 @@ describe('planReminders', () => {
       now,
     );
     expect(plan.map((p) => [p.id, p.title, p.body, p.url])).toEqual([
-      ['dl1-2026-10-21', '3 due Wednesday', 'Reading quiz, Lab report and Problem set.', '/'],
-      ['dl2-2026-10-21', '3 due today', 'Reading quiz, Lab report and Problem set.', '/'],
+      ['dl1-2026-10-21', '3 things on Wednesday', 'Reading quiz, Lab report and Problem set.', '/'],
+      ['dl2-2026-10-21', '3 things today', 'Reading quiz, Lab report and Problem set.', '/'],
     ]);
   });
 
@@ -146,7 +146,7 @@ describe('planReminders', () => {
       now,
     );
     const byId = Object.fromEntries(plan.map((p) => [p.id, p]));
-    expect(byId['ev-shift']?.body).toBe('Starts at 4:00 pm. Ends at 10:00 pm.');
+    expect(byId['ev-shift']?.body).toBe('4–10 pm.');
     expect(byId['brief-2026-10-21']?.body).toBe('Café shift at 4:00 pm. Today: Stats exam. Due today: Lab report.');
     const alone = planReminders([item({ id: 'quiz', title: 'Bio quiz', date: '2026-10-21', start: '09:00', isDeadline: true })], { ...DEFAULT_REMINDERS, briefing: false }, now);
     expect(alone.filter((p) => p.kind === 'deadline').map((p) => p.body)).toEqual(['Wednesday at 9:00 am.', 'Today at 9:00 am.']);
@@ -165,7 +165,7 @@ describe('planReminders', () => {
     });
     expect(plan.map((p) => [p.id, p.date, p.time])).toEqual([['trial-reminder', '2026-10-24', '18:00']]);
     expect(plan[0]!.title).toBe('Your Plus trial ends on Oct 26');
-    expect(plan[0]!.body).toBe('Then $14.99 per 6 months. Manage or cancel in You → Your plan.');
+    expect(plan[0]!.body).toBe('After that, $14.99 per 6 months. Manage or cancel in You → Your plan.');
   });
 
   it('drops the trial reminder once it is in the past', () => {
