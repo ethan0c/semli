@@ -110,8 +110,10 @@ export default function RemindersScreen() {
             />
           </View>
         </View>
-        {timeRow('Evening before a deadline', 'dayBeforeAt')}
-        {timeRow('Morning of a deadline', 'morningAt', true)}
+        <ToggleRow label="Evening before a deadline" value={prefs.dayBefore !== false} onChange={(on) => { feedback('select'); update({ dayBefore: on }); }} />
+        {prefs.dayBefore !== false ? timeRow('At', 'dayBeforeAt') : null}
+        <ToggleRow label="Morning of a deadline" value={prefs.morning !== false} last={prefs.morning === false} onChange={(on) => { feedback('select'); update({ morning: on }); }} />
+        {prefs.morning !== false ? timeRow('At', 'morningAt', true) : null}
       </Group>
 
       <Group title="Quiet hours" footer="Event reminders and evening deadline reminders wait until quiet hours end, unless that would be too late. Choose your morning reminder and daily summary times separately.">

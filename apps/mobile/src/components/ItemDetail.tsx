@@ -123,10 +123,15 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
   const showDay = dayItems.some((it) => it.kind === 'event' && it.start);
 
   const lead = reminders.eventLead === 60 ? '1 hour' : `${reminders.eventLead} min`;
+  // The summary stands in for the morning reminder when it is on.
+  const morningWay = reminders.briefing ? 'in the morning summary' : reminders.morning !== false ? 'the morning of' : null;
+  const deadlineLine = reminders.dayBefore !== false
+    ? morningWay ? `Reminder the evening before${reminders.briefing ? ',' : ''} and ${morningWay}` : 'Reminder the evening before'
+    : morningWay ? `Reminder ${morningWay}` : 'No deadline reminders · Turn them on in You';
   const reminderLine = reminders.enabled
     ? isEvent && item.start
       ? isClass(item) && !reminders.classReminders ? 'No reminder before repeating classes · Turn them on in You' : `Reminder ${lead} before`
-      : item.isDeadline ? (reminders.briefing ? 'Reminder the evening before, and in the morning summary' : 'Reminder the evening before and the morning of') : 'Included in the daily summary'
+      : item.isDeadline ? deadlineLine : 'Included in the daily summary'
     : 'Reminders are off · Turn them on in You';
 
   const shorten = (date: string) => {

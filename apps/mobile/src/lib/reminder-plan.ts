@@ -1,4 +1,4 @@
-import { addDays, assessment, dayNumber, diffDays, formatTime, monthDay, toMinutes, weekdayLong, andList } from '@dayli/core';
+import { addDays, assessment, dayNumber, diffDays, formatRange, formatTime, monthDay, toMinutes, weekdayLong, andList } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 
 export interface ReminderPrefs {
@@ -9,8 +9,12 @@ export interface ReminderPrefs {
   eventLead: 10 | 30 | 60;
   /** Also remind before each repeating class. Off unless chosen: a class you attend three times a week needs no nudge. */
   classReminders?: boolean;
+  /** Remind the evening before a deadline. On unless turned off, so older settings keep it. */
+  dayBefore?: boolean;
   /** HH:mm the day before a deadline. */
   dayBeforeAt: string;
+  /** Remind on the morning of a deadline. On unless turned off. */
+  morning?: boolean;
   /** HH:mm on the morning of a deadline. */
   morningAt: string;
   quietStart: string;
@@ -87,14 +91,14 @@ function titleList(items: Item[]): string {
 }
 
 /** "2 classes", "1 shift": the count with its noun. */
-const count = (n: number, one: string, many: string) => (n > 0 ? `${n} ${n === 1 ? one : many}` : '');
+const count = (n: number, one: string, many: string) => (n > 0 ? n === 1 ? `${one === 'event' ? 'an' : 'a'} ${one}` : `${n} ${many}` : '');
 /** Exams and quizzes are on a day; everything else is due on it. */
 const isTest = (it: Item) => assessment(it.title) !== null;
 
 /**
  * The summary's day: what kinds of things are on it and the first one still ahead, then what is
  * due by name, since it stands in for the morning deadline reminders.
- * "2 classes and 1 shift, starting with Psych lecture at 9 am. Due today: Lab report.", or
+ * "2 classes and a shift. First up: Psych lecture at 9 am. Due today: Lab report.", or
  * "Café shift at 4 pm." when that is all there is.
  */
 function dayLine(items: Item[], date: string, from: string): string {
@@ -114,7 +118,7 @@ function dayLine(items: Item[], date: string, from: string): string {
   ].filter(Boolean));
   const first = events.filter((i) => i.start && i.start >= from).sort((a, b) => a.start!.localeCompare(b.start!))[0];
   const at = first ? `${first.title} at ${formatTime(first.start!)}` : '';
-  const lead = !first ? kinds : rest.length === 1 ? at : `${kinds}, starting with ${at}`;
+  const lead = !first ? kinds : rest.length === 1 ? at : `${kinds}. First up: ${at}`;
   return [
     lead ? `${lead[0]!.toUpperCase()}${lead.slice(1)}.` : '',
     tests.length ? `Today: ${titleList(tests)}.` : '',
@@ -154,7 +158,7 @@ export function planReminders(items: Item[], prefs: ReminderPrefs, now: { date: 
       if (it.kind === 'event' && it.start && (prefs.classReminders || !isClass(it))) {
         const itemAbs = toAbs(it.date, it.start);
         push(
-          { id: `ev-${it.id}`, title: it.title, body: `Starts at ${formatTime(it.start)}.${it.end ? ` Ends at ${formatTime(it.end)}.` : ''}`, itemId: it.id, kind: 'event', url: `/item/${it.id}` },
+          { id: `ev-${it.id}`, title: it.title, body: it.end ? `${formatRange(it.start, it.end)}.` : `Starts at ${formatTime(it.start)}.`, itemId: it.id, kind: 'event', url: `/item/${it.id}` },
           respectQuiet(itemAbs - prefs.eventLead, itemAbs, prefs),
           it.urgent ? 0 : 1,
         );
@@ -170,22 +174,23 @@ export function planReminders(items: Item[], prefs: ReminderPrefs, now: { date: 
       const one = due.length === 1;
       const firstAbs = first.start ? toAbs(date, first.start) : null;
       const target = one ? { itemId: first.id, url: `/item/${first.id}` } : { itemId: null, url: '/' };
+      const groupLabel = due.every((it) => !isTest(it)) ? 'deadlines' : 'things';
       const dueLabel = first.start ? `${weekdayLong(date)} at ${formatTime(first.start)}` : weekdayLong(date);
-      push(
+      if (prefs.dayBefore !== false) push(
         one
           ? { id: `dl1-${first.id}`, title: first.title, body: isTest(first) ? `${dueLabel}.` : `Due ${dueLabel}.`, kind: 'deadline', ...target }
-          : { id: `dl1-${date}`, title: `${due.length} due ${weekdayLong(date)}`, body: `${titleList(due)}.`, kind: 'deadline', ...target },
+          : { id: `dl1-${date}`, title: `${due.length} ${groupLabel} on ${weekdayLong(date)}`, body: `${titleList(due)}.`, kind: 'deadline', ...target },
         respectQuiet(toAbs(addDays(date, -1), prefs.dayBeforeAt), firstAbs, prefs),
       );
       // The daily summary names what is due today, so it replaces the morning reminder when it comes first.
       const morning = toAbs(date, prefs.morningAt);
       const summaryAbs = toAbs(date, prefs.briefingAt);
       const summaryFirst = prefs.briefing && diffDays(now.date, date) < BRIEFING_DAYS && summaryAbs > nowAbs && (firstAbs === null || summaryAbs < firstAbs);
-      if (!summaryFirst && (firstAbs === null || morning < firstAbs)) {
+      if (prefs.morning !== false && !summaryFirst && (firstAbs === null || morning < firstAbs)) {
         push(
           one
             ? { id: `dl2-${first.id}`, title: first.title, body: `${isTest(first) ? 'Today' : 'Due today'}${first.start ? ` at ${formatTime(first.start)}` : ''}.`, kind: 'deadline', ...target }
-            : { id: `dl2-${date}`, title: `${due.length} due today`, body: `${titleList(due)}.`, kind: 'deadline', ...target },
+            : { id: `dl2-${date}`, title: `${due.length} ${groupLabel} today`, body: `${titleList(due)}.`, kind: 'deadline', ...target },
           morning,
         );
       }
@@ -213,7 +218,7 @@ export function planReminders(items: Item[], prefs: ReminderPrefs, now: { date: 
       const pad = (n: number) => String(n).padStart(2, '0');
       const endDate = `${ends.getFullYear()}-${pad(ends.getMonth() + 1)}-${pad(ends.getDate())}`;
       push(
-        { id: 'trial-reminder', title: `Your Plus trial ends on ${monthDay(endDate)}`, body: `Then ${extras.trial.label}. Manage or cancel in You → Your plan.`, itemId: null, kind: 'briefing', url: '/settings/plan' },
+        { id: 'trial-reminder', title: `Your Plus trial ends on ${monthDay(endDate)}`, body: `After that, ${extras.trial.label}. Manage or cancel in You → Your plan.`, itemId: null, kind: 'briefing', url: '/settings/plan' },
         toAbs(addDays(endDate, -2), prefs.dayBeforeAt),
       );
     }

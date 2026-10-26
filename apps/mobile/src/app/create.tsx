@@ -5,7 +5,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { CategoryDot, Chip, GroupLabel } from '@/components/Controls';
+import { CategoryDot, Chip, GroupLabel, PickerPill } from '@/components/Controls';
 import { InlinePicker, NativeToggle } from '@/components/Native';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
 import { Press } from '@/components/Press';
@@ -81,7 +81,7 @@ export default function CreateScreen() {
   const toggle = (which: Picker) => setPicker((open) => (open === which ? null : which));
   const timeControl = (which: 'start' | 'end' | 'time') => {
     const key = which === 'end' ? 'end' : 'start';
-    return <FieldPill label={formatTime(draft[key])} open={picker === which} accessibilityLabel={`${which === 'end' ? 'Ends' : which === 'start' ? 'Starts' : 'Time'}, ${formatTime(draft[key])}`} onPress={() => toggle(which)} />;
+    return <PickerPill label={formatTime(draft[key])} open={picker === which} accessibilityLabel={`${which === 'end' ? 'Ends' : which === 'start' ? 'Starts' : 'Time'}, ${formatTime(draft[key])}`} onPress={() => toggle(which)} />;
   };
   const inlinePicker = (which: Picker) => {
     if (picker !== which) return null;
@@ -108,7 +108,7 @@ export default function CreateScreen() {
 
         <View style={styles.rows}>
           <FieldRow label="Date">
-            <FieldPill label={`${weekdayShort(draft.date)}, ${monthDay(draft.date)}`} open={picker === 'date'} accessibilityLabel={`Date, ${weekdayShort(draft.date)} ${monthDay(draft.date)}`} onPress={() => toggle('date')} />
+            <PickerPill label={`${weekdayShort(draft.date)}, ${monthDay(draft.date)}`} open={picker === 'date'} accessibilityLabel={`Date, ${weekdayShort(draft.date)} ${monthDay(draft.date)}`} onPress={() => toggle('date')} />
           </FieldRow>
           {inlinePicker('date')}
           {event ? (
@@ -185,17 +185,6 @@ function FieldRow({ label, children, last }: { label: string; children: ReactNod
   );
 }
 
-/** The 36-high grey pill that opens a native date or time picker; white with an ink ring while it is open. */
-function FieldPill({ label, open, onPress, accessibilityLabel }: { label: string; open: boolean; onPress: () => void; accessibilityLabel?: string }) {
-  const { c } = useTheme();
-  return (
-    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ expanded: open }} haptic="select" onPress={onPress}
-      style={[styles.pill, open ? { backgroundColor: c.surface, borderColor: c.inkPrimary } : { backgroundColor: c.row, borderColor: 'transparent' }]}>
-      <T token="subhead" tabular numberOfLines={1}>{label}</T>
-    </Press>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.sm, paddingBottom: space.xl, gap: space.xl },
   pillField: { height: 52, borderRadius: 999, paddingHorizontal: space.lg, paddingVertical: 0, borderWidth: 1.5 },
@@ -205,6 +194,5 @@ const styles = StyleSheet.create({
   section: { gap: space.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   courseChip: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, height: 40, borderRadius: 999 },
-  pill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   notes: { minHeight: 96, paddingVertical: space.sm, paddingHorizontal: space.md, ...corner(radius.field), borderWidth: 1.5, textAlignVertical: 'top' },
 });

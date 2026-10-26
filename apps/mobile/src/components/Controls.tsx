@@ -161,6 +161,17 @@ export function ListRow({ title, sub, leading, trailing, onPress, chevron = !!on
   );
 }
 
+/** The 36-high grey pill that opens a native date or time picker; white with an ink ring while it is open. */
+export function PickerPill({ label, open, onPress, accessibilityLabel }: { label: string; open: boolean; onPress: () => void; accessibilityLabel?: string }) {
+  const { c } = useTheme();
+  return (
+    <Press accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} accessibilityState={{ expanded: open }} haptic="select" onPress={onPress}
+      style={[styles.pickerPill, open ? { backgroundColor: c.surface, borderColor: c.inkPrimary } : { backgroundColor: c.row, borderColor: 'transparent' }]}>
+      <T token="subhead" tabular numberOfLines={1}>{label}</T>
+    </Press>
+  );
+}
+
 /** One choice of several: filled with a dot when chosen, an outline when not. The one radio everywhere. */
 export function Radio({ on }: { on: boolean }) {
   const { c } = useTheme();
@@ -203,6 +214,7 @@ export function itemStatus(item: Pick<Item, 'kind' | 'date' | 'start' | 'end' | 
 }
 
 const styles = StyleSheet.create({
+  pickerPill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   radio: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 7, height: 7, borderRadius: 4 },
   textBtn: { minHeight: size.target, justifyContent: 'center', paddingHorizontal: space.hair },
