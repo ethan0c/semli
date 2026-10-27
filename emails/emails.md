@@ -70,11 +70,11 @@ Let me know how it goes. I read every reply.
 ## app-store-launch
 
 To: Survey + Waitlist
-When: Tue Oct 27, 2026, the evening the listing went public (was Nov 3; the app released Oct 27)
+When: Wed Oct 28, 2026, 10 am Eastern, the morning after the listing went public (was Nov 3; the app released Oct 27)
 Subject: Semli is on the App Store
 Preview: You can now get Semli on your iPhone.
 Sign-off: Thanks,
-Footer: You asked to hear when Semli launched.
+Footer: You're getting this because you answered the Semli student survey or joined the waitlist. One email, then only the occasional update.
 
 ### Semli is on the ~App Store~.
 
@@ -82,11 +82,11 @@ Hi {name},
 
 Semli is on the App Store. Thanks for being here while I built it.
 
-Add your syllabi, work schedule, or class messages to start your plan. The calendar, to-dos, and reminders are free. You get five imports to start.
+Add your syllabi, work schedule, or class messages to start your plan. It works with Canvas and Brightspace too. The calendar, to-dos, and reminders are free, and you get five imports to start.
 
-Button: [Get Semli on iPhone](https://www.semli.app/beta?r=email-launch)
+Button: [Get Semli on iPhone](https://www.semli.app/get?r=email-launch)
 
-Tried the beta? Thank you for helping me get here. Let me know how it fits into your week.
+Reply and tell me how it fits into your week. I read every one.
 
 ## spring-schedule
 
