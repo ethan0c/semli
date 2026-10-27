@@ -125,16 +125,17 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   // so a 429 there falls back to standard speed rather than failing the import.
   // With `onItem`, the answer streams: each item is handed over as soon as it's written, and the
   // final message is parsed and validated exactly as a single response would be.
-  const watch = <T extends { on: (event: 'text', listener: (delta: string) => void) => unknown; finalMessage: () => Promise<R> }, R>(stream: T): Promise<R> => {
+  type Answer = { stop_reason: string | null; parsed_output?: Extraction | null; usage: Anthropic.Usage };
+  const watch = (stream: { on(event: 'text', listener: (delta: string, snapshot: string) => void): unknown; finalMessage(): Promise<unknown> }): Promise<Answer> => {
     const scan = itemScanner(opts.onItem!);
     stream.on('text', (delta) => scan.push(delta));
-    return stream.finalMessage();
+    return stream.finalMessage() as Promise<Answer>;
   };
-  const standard = () => (opts.onItem ? watch(client.messages.stream(params)) : client.messages.parse(params));
+  const standard = (): Promise<Answer> => (opts.onItem ? watch(client.messages.stream(params)) : client.messages.parse(params));
   const fastParams = { ...params, speed: 'fast' as const, betas: ['fast-mode-2026-02-01'] };
   // Fast mode exists only for Opus; on any other model the flag is ignored.
-  const response = opts.fast && hasFast(params.model)
-    ? await (opts.onItem ? watch(client.beta.messages.stream(fastParams)) : client.beta.messages.parse(fastParams)).catch((err: unknown) => {
+  const response: Answer = opts.fast && hasFast(params.model)
+    ? await (opts.onItem ? watch(client.beta.messages.stream(fastParams)) : (client.beta.messages.parse(fastParams) as Promise<Answer>)).catch((err: unknown) => {
       if (err instanceof Anthropic.RateLimitError) { opts.onReset?.(); return standard(); }
       throw err;
     })
