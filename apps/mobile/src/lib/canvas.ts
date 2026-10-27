@@ -6,7 +6,47 @@ import { reportError } from './errors';
  * Canvas sync through the calendar feed: the .ics link every student can copy from
  * Canvas → Calendar → Calendar feed. No token, no OAuth, no developer key, no server.
  * Read-only; each event keeps its Canvas UID so a resync moves dates instead of duplicating.
+ *
+ * Brightspace (D2L) feeds go the same way since Oct 27, 2026: UGA, one of the three January
+ * schools, runs it as eLC. Its link comes from Calendar → Subscribe. The store still calls the
+ * connection `canvas` and its items `canvas:` ids; that's the name of the slot, not the system.
  */
+
+export type FeedSystem = 'canvas' | 'brightspace';
+
+/**
+ * Where each system keeps its link, as the numbered steps on the connect screens. Brightspace's
+ * menu names are from D2L's student guides (Oct 27, 2026), not yet checked against a live eLC
+ * account; schools that turn feeds off have no Subscribe at all.
+ */
+export const FEED_STEPS: Record<FeedSystem, string[]> = {
+  canvas: ['Open Canvas in your browser.', 'Open Calendar, then choose Calendar feed in the sidebar.', 'Copy the link and paste it here.'],
+  brightspace: [
+    'Open eLC or Brightspace in your browser and go to Calendar.',
+    'Open Calendar Settings, select Enable Calendar Feeds, then Save.',
+    'Choose Subscribe, then All Calendars and Tasks. Copy the link and paste it here.',
+  ],
+};
+export const FEED_PLACEHOLDER: Record<FeedSystem, string> = {
+  canvas: 'https://…/feeds/calendars/…',
+  brightspace: 'https://…/d2l/le/calendar/feed/…',
+};
+
+const FEED_PATHS: Record<FeedSystem, RegExp> = {
+  canvas: /^https:\/\/[^\s/]+\/feeds\/calendars\/[^\s/]+\.ics(\?\S*)?$/i,
+  brightspace: /^https:\/\/[^\s/]+\/d2l\/le\/calendar\/feed\/[^\s?]+\.ics\?\S*token=\S+$/i,
+};
+
+/** Which system a feed link is from, or null when it is neither. */
+export function feedSystem(url: string): FeedSystem | null {
+  return (Object.keys(FEED_PATHS) as FeedSystem[]).find((k) => FEED_PATHS[k].test(url)) ?? null;
+}
+
+/** What the student calls it: UGA's Brightspace is eLC. */
+export function feedName(url: string | null | undefined): string {
+  if (!url || feedSystem(url) !== 'brightspace') return 'Canvas';
+  return /\.view\.usg\.edu\//i.test(url) && /uga\./i.test(url) ? 'eLC' : 'Brightspace';
+}
 
 export const CANVAS_SOURCE = 'Canvas';
 
@@ -24,11 +64,10 @@ export interface CanvasEntry {
   url: string | null;
 }
 
-/** Accepts webcal:// and https:// feed links; anything else is not a Canvas feed. */
+/** Accepts webcal:// and https:// Canvas or Brightspace feed links; anything else is not a feed. */
 export function normalizeFeedUrl(input: string): string | null {
   const raw = input.trim().replace(/^webcals?:\/\//i, 'https://');
-  if (!/^https:\/\/[^\s/]+\/feeds\/calendars\/[^\s/]+\.ics(\?\S*)?$/i.test(raw)) return null;
-  return raw;
+  return feedSystem(raw) ? raw : null;
 }
 
 interface IcsEvent {
@@ -74,23 +113,39 @@ export function icsDateTime(prop: { value: string; params: Record<string, string
   return { date: `${y}-${mo}-${d}`, time: `${h}:${mi}` };
 }
 
+/**
+ * Brightspace names a date by what happens on it: "Lab report 2 - Due", "Quiz 3 - Availability
+ * Ends". The end of a window is the deadline; its start isn't an obligation, so it is left out.
+ */
+const D2L_START = /\s+-\s+(availability\s+starts|start\s+date|starts)$/i;
+const D2L_END = /\s+-\s+(due|due\s+date|availability\s+ends|end\s+date|ends)$/i;
+
 /** Feed events → entries. Canvas UIDs say which: event-assignment-123 vs event-calendar-event-456. */
-export function canvasEntries(events: IcsEvent[]): CanvasEntry[] {
+export function canvasEntries(events: IcsEvent[], system: FeedSystem = 'canvas'): CanvasEntry[] {
   const entries: CanvasEntry[] = [];
   for (const ev of events) {
     const uid = ev.UID?.value;
-    const summary = ev.SUMMARY?.value.trim();
+    let summary = ev.SUMMARY?.value.trim();
     const start = icsDateTime(ev.DTSTART);
     if (!uid || !summary || !start) continue;
     const end = icsDateTime(ev.DTEND);
+    let due = false;
+    if (system === 'brightspace') {
+      if (D2L_START.test(summary)) continue;
+      due = D2L_END.test(summary);
+      summary = summary.replace(D2L_END, '').trim();
+    }
     const bracket = summary.match(/^(.*?)\s*\[([^\]]+)\]$/);
     const title = (bracket?.[1] || summary).trim();
-    const assignment = /assignment/i.test(uid);
+    const assignment = due || /assignment/i.test(uid);
+    // Brightspace has no [course] suffix; its course, when it says, is in LOCATION.
+    const location = ev.LOCATION?.value.trim();
+    const courseLabel = bracket?.[2]?.trim() ?? (system === 'brightspace' && location && courseCodeOf(location) ? location : null);
     entries.push({
       externalId: `canvas:${uid}`,
       kind: assignment ? 'task' : 'event',
       title,
-      courseLabel: bracket?.[2]?.trim() ?? null,
+      courseLabel,
       date: start.date,
       start: start.time,
       end: !assignment && end?.date === start.date && end.time !== start.time ? end.time : null,
@@ -199,17 +254,17 @@ export function syncSummary(p: Pick<CanvasPlan, 'added' | 'moved' | 'dropped' | 
 // Retry copy names no Plus-only step (Oct 27, 2026): a free person has no "Sync now" and no
 // sync on open, so "try again" means Connect for them and Sync now for a subscriber.
 export const CANVAS_MESSAGES = {
-  link: 'That isn’t a Canvas calendar feed link. In Canvas, open Calendar, choose Calendar feed, and copy the link.',
-  connection: 'We couldn’t reach Canvas. Your Canvas items are still here. Check your connection and try again.',
-  timeout: 'Canvas took too long to respond. Your Canvas items are still here. Try again in a moment.',
-  rejected: 'Canvas didn’t accept that link. It may have been reset; copy a fresh one from Calendar feed.',
-  format: 'Canvas sent something we couldn’t read. Your Canvas items are still here.',
+  link: 'We couldn’t use that link. Copy the calendar feed link using the steps above, then paste it here.',
+  connection: 'We couldn’t reach your class calendar. Your saved items are still here. Check your internet connection and try again.',
+  timeout: 'Your class calendar took too long to respond. Your saved items are still here. Try again in a moment.',
+  rejected: 'Your school didn’t accept that calendar link. Copy a new link from Calendar feed in Canvas, or Subscribe in Brightspace or eLC.',
+  format: 'We couldn’t read that calendar. Your saved items are still here. Copy a new calendar feed link and try again.',
   /** The web's feed goes through Semli's server, which needs a current sign-in; the link itself is fine. */
-  session: 'Sign in to Semli again to sync Canvas. You can use the same calendar feed link.',
+  session: 'Sign in to Semli again to sync your class calendar. You can use the same calendar feed link.',
   /** An import under review is replaced by any plan saved under it, so Canvas waits for it. */
-  reviewing: 'Finish or close your import review before syncing Canvas.',
+  reviewing: 'Finish or close your import review before syncing your class calendar.',
   /** Disconnected (or relinked) while the feed was loading; nothing from it was saved. */
-  disconnected: 'Your Canvas connection changed during the sync. No updates were saved. Try syncing again.',
+  disconnected: 'Your calendar connection changed during the sync. No updates were saved. Try syncing again.',
 } as const;
 
 /** How the feed is fetched: straight from Canvas on the phone, through Semli's server on the web. */
@@ -239,7 +294,7 @@ export async function fetchCanvasFeed(url: string, timeoutMs = 20_000, load: Fee
       reportError('canvas.parse', { code: 'invalid_calendar', message: 'Feed response did not contain VCALENDAR' });
       return { ok: false, error: CANVAS_MESSAGES.format };
     }
-    return { ok: true, entries: canvasEntries(parseIcs(text)) };
+    return { ok: true, entries: canvasEntries(parseIcs(text), feedSystem(url) ?? 'canvas') };
   } catch (error) {
     reportError('canvas.fetch_or_parse', error);
     return { ok: false, error: controller.signal.aborted ? CANVAS_MESSAGES.timeout : CANVAS_MESSAGES.connection };

@@ -8,7 +8,7 @@ import type { StreamedItem } from "@/lib/api";
 import { firstOf, readyLine } from "@/lib/milestones";
 
 import { Composer } from "@/components/Composer";
-import { PickerPill, Radio } from "@/components/Controls";
+import { Chip, PickerPill, Radio } from "@/components/Controls";
 import { InlinePicker } from "@/components/Native";
 import { RecentShots } from "@/components/RecentShots";
 import { File } from "expo-file-system";
@@ -36,7 +36,7 @@ import { requestNotifications, syncReminders } from "@/lib/notifications";
 import { usePlusAccess } from "@/lib/plus-access";
 import { purchaseErrorMessage } from "@/lib/revenuecat";
 import { syncCanvas } from "@/lib/canvas-sync";
-import { normalizeFeedUrl, CANVAS_MESSAGES } from "@/lib/canvas";
+import { normalizeFeedUrl, CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, type FeedSystem } from "@/lib/canvas";
 import { useCourseList, useItemList, useStore, type DeadlineSource, type Pending, type Plate } from "@/store";
 import { sampleWeek } from "@/store/sample";
 import { motion, palettes } from "@dayli/tokens";
@@ -72,7 +72,7 @@ const PLATES: { id: Plate; label: string; hint: string }[] = [
 ];
 
 const SOURCES: { id: DeadlineSource; label: string; hint: string }[] = [
-  { id: "canvas", label: "Canvas", hint: "Connect your calendar. Keep it in sync with Plus." },
+  { id: "canvas", label: "Canvas or Brightspace", hint: "Works with eLC too. Import once for free, then keep dates in sync with Plus." },
   { id: "syllabus", label: "A syllabus PDF", hint: "Import exams and due dates, then review them." },
   { id: "screenshots", label: "Screenshots and messages", hint: "Work schedules, group chats or printed schedules." },
   { id: "nowhere", label: "I’ll add them myself", hint: "Type what’s coming up, or try a sample week." },
@@ -583,7 +583,7 @@ function TermStep({ plate, onPlate, onReview, onCanvas, onType, onSample }: {
         </View>
       ) : null}
       <View style={styles.links}>
-        <Press haptic="select" accessibilityRole="button" onPress={onCanvas} scale={1}><T token="subhead" color={c.accentInk}>Connect Canvas instead</T></Press>
+        <Press haptic="select" accessibilityRole="button" onPress={onCanvas} scale={1}><T token="subhead" color={c.accentInk}>Connect your class calendar instead</T></Press>
         <Press haptic="select" accessibilityRole="button" onPress={onType} scale={1}><T token="subhead" color={c.accentInk}>Type it instead</T></Press>
       </View>
       <View style={[styles.footer, styles.footerRow]}>
@@ -642,6 +642,10 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<number | null>(null);
   const { requirePlus } = usePlusAccess();
+  // UGA runs Brightspace as eLC; the steps to its link differ from Canvas's.
+  const [system, setSystem] = useState<FeedSystem>("canvas");
+  const enteredFeed = normalizeFeedUrl(link);
+  const name = enteredFeed ? feedName(enteredFeed) : system === "canvas" ? "Canvas" : "Brightspace";
 
   const connect = async () => {
     const url = normalizeFeedUrl(link);
@@ -671,10 +675,10 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
     return (
       <View style={styles.page}>
         <Animated.View entering={enter.rise} style={styles.titleBlock}>
-          <T token="callout" color={c.inkSecondary}>From Canvas</T>
+          <T token="callout" color={c.inkSecondary}>{`From ${name}`}</T>
           <T token="displayXl" tabular>{`${added} ${added === 1 ? "item" : "items"}`}</T>
           <T token="callout" color={c.inkSecondary}>
-            {added > 0 ? "Your Canvas calendar is connected. Plus keeps it up to date when you open Semli." : "Your Canvas calendar is connected. There’s nothing to add yet. Plus checks for updates when you open Semli."}
+            {added > 0 ? `Your ${name} dates are in your plan. With Plus, Semli checks for updates when you open the app.` : `Your ${name} calendar is connected, but there are no dates to add yet. With Plus, Semli checks for updates when you open the app.`}
           </T>
         </Animated.View>
         <View style={styles.footer}>
@@ -687,11 +691,15 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
   return (
     <ScrollView contentContainerStyle={[styles.page, { gap: space.lg }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       <View style={styles.titleBlock}>
-        <T token="displaySm" accessibilityRole="header">Connect Canvas.</T>
-        <T token="callout" color={c.inkSecondary}>Paste your Canvas calendar link to add its dates to Semli. Your Canvas calendar stays unchanged.</T>
+        <T token="displaySm" accessibilityRole="header">Connect your class calendar.</T>
+        <T token="callout" color={c.inkSecondary}>Add due dates from Canvas or Brightspace, including eLC. Semli reads your calendar without changing it.</T>
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+        <Chip label="Canvas" on={system === "canvas"} onPress={() => { setSystem("canvas"); setError(null); }} />
+        <Chip label="Brightspace (eLC)" on={system === "brightspace"} onPress={() => { setSystem("brightspace"); setError(null); }} />
       </View>
       <View>
-        {["Open Canvas in your browser.", "Go to Calendar and select Calendar feed in the sidebar.", "Copy the calendar link and paste it below."].map((line, i) => (
+        {FEED_STEPS[system].map((line, i) => (
           <View key={line} style={[styles.choice, { minHeight: 52, borderBottomColor: c.line }]}>
             <T token="headline" tabular style={{ width: 18 }}>{String(i + 1)}</T>
             <T token="body" style={{ flex: 1 }}>{line}</T>
@@ -701,7 +709,7 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
       <TextInput
         value={link}
         onChangeText={(v) => { setLink(v); setError(null); }}
-        placeholder="https://…/feeds/calendars/…"
+        placeholder={FEED_PLACEHOLDER[system]}
         placeholderTextColor={c.inkTertiary}
         autoCapitalize="none"
         autoCorrect={false}
@@ -716,7 +724,7 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
         </Animated.View>
       ) : null}
       <View style={[styles.footer, { alignItems: "center" }]}>
-        <Button label={busy ? "Reading Canvas…" : "Connect Canvas"} disabled={busy || !link.trim()} onPress={() => void connect()} />
+        <Button label={busy ? `Reading ${name}…` : `Connect ${name}`} disabled={busy || !link.trim()} onPress={() => void connect()} />
         <Press haptic="select" accessibilityRole="button" disabled={busy} onPress={onInstead} style={{ minHeight: size.target, justifyContent: "center" }}>
           <T token="subhead" color={c.inkSecondary}>Add another way</T>
         </Press>
@@ -887,7 +895,7 @@ function PlusStep({ onFinish }: { onFinish: () => void }) {
     const shifts = items.filter((i) => i.category === "work" && i.kind === "event" && week.includes(i.date)).length;
     const classes = courses.length;
     const n = (k: number, one: string, many: string) => `${k} ${k === 1 ? one : many}`;
-    if (canvas) return "Keep Canvas in sync with Plus.";
+    if (canvas) return "Keep your class calendar in sync with Plus.";
     if (classes && shifts) return `Import class and work schedules without limits.`;
     if (classes) return `Unlimited imports for your ${n(classes, "class", "classes")}.`;
     if (shifts) return `Compare changes to your ${n(shifts, "shift", "shifts")} this week.`;

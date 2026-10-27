@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { ListRow } from '@/components/Controls';
+import { Chip, ListRow } from '@/components/Controls';
 import { Icon } from '@/components/Icon';
 import { FieldRow, Group, Row } from '@/components/Settings';
 import { Button } from '@/components/Sheet';
 import { T } from '@/components/Text';
-import { CANVAS_MESSAGES, normalizeFeedUrl } from '@/lib/canvas';
+import { CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, normalizeFeedUrl, type FeedSystem } from '@/lib/canvas';
 import { syncCanvas } from '@/lib/canvas-sync';
 import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
@@ -35,6 +35,9 @@ export default function CanvasScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const connected = !!canvas.feedUrl;
+  // Canvas or Brightspace (UGA's eLC): the connected one names itself; the connect form asks which.
+  const [system, setSystem] = useState<FeedSystem>('canvas');
+  const name = connected ? feedName(canvas.feedUrl) : system === 'canvas' ? 'Canvas' : 'eLC or Brightspace';
   // A sync already happened on this phone, so the free one is used: connecting again is Plus.
   const freeSyncUsed = !!canvas.lastSyncedAt;
 
@@ -71,7 +74,7 @@ export default function CanvasScreen() {
   const disconnect = () => {
     feedback('tap');
     setSettings({ canvas: { ...useStore.getState().settings.canvas, feedUrl: null, lastError: null } });
-    useStore.getState().showToast('Canvas disconnected. Your Canvas items stay in your plan.');
+    useStore.getState().showToast(`${feedName(canvas.feedUrl)} disconnected. Your imported dates are still in your plan.`);
   };
 
   const syncedLabel = (() => {
@@ -83,8 +86,8 @@ export default function CanvasScreen() {
   })();
 
   const fallback = (
-    <Group title="Can’t find the feed?" footer="If Calendar feed isn’t available, import a screenshot or PDF instead. Each uses one import.">
-      <ListRow leading={<Icon name="image" size={20} color={c.inkPrimary} />} title="Screenshot your Canvas to-do list"
+    <Group title="Can’t find the calendar link?" footer="If your school doesn’t offer a calendar link, try a screenshot or syllabus PDF. Each uses one import.">
+      <ListRow leading={<Icon name="image" size={20} color={c.inkPrimary} />} title="Screenshot your to-do list"
         sub="Semli reads the due dates from it" onPress={() => router.navigate({ pathname: '/add', params: { source: 'image', at: String(Date.now()) } })} />
       <ListRow leading={<Icon name="file" size={20} color={c.inkPrimary} />} title="Upload the syllabus PDF"
         sub="Import exams and due dates from your syllabus" last onPress={() => router.navigate({ pathname: '/add', params: { source: 'file', at: String(Date.now()) } })} />
@@ -97,10 +100,10 @@ export default function CanvasScreen() {
         <Animated.View key="on" layout={layout} entering={enter.fade} exiting={exit.fade} style={styles.stack}>
           <View style={styles.top}>
             <T token="callout" color={c.inkSecondary}>{syncedLabel}</T>
-            <T token="displayXl" tabular>{`${synced} from Canvas`}</T>
+            <T token="displayXl" tabular>{`${synced} from ${name}`}</T>
             <T token="lead" color={c.inkSecondary} style={styles.line}>{isPlus
-              ? 'Semli checks for Canvas updates when you open the app. Completed items stay completed.'
-              : 'Your Canvas due dates are imported. Automatic updates require Semli Plus.'}</T>
+              ? `Semli checks for ${name} updates when you open the app. Completed items stay completed.`
+              : `Your ${name} due dates are imported. Automatic updates require Semli Plus.`}</T>
           </View>
           {canvas.lastError ? (
             <View accessibilityRole="alert" style={styles.status}>
@@ -117,14 +120,18 @@ export default function CanvasScreen() {
       ) : (
         <Animated.View key="off" layout={layout} entering={enter.fade} exiting={exit.fade} style={styles.stack}>
           <View style={styles.top}>
-            <T token="display" accessibilityRole="header">Connect Canvas</T>
+            <T token="display" accessibilityRole="header">Connect your class calendar</T>
             <T token="lead" color={c.inkSecondary} style={styles.line}>{freeSyncUsed && !isPlus
-              ? 'You’ve used your free Canvas import. Reconnect with Semli Plus to keep your due dates up to date.'
-              : 'Bring in due dates from your Canvas calendar. With Plus, Semli checks for updates when you open the app.'}</T>
+              ? 'You’ve used your free calendar import. Reconnect with Semli Plus to keep your due dates up to date.'
+              : 'Add due dates from Canvas or Brightspace, including eLC. Your first calendar import is free. Plus keeps it in sync.'}</T>
           </View>
-          <Group title="Paste your calendar feed link"
-            footer="On the Canvas website, open Calendar, choose Calendar feed at the bottom of the sidebar, and copy the link. It only lets Semli read your calendar.">
-            <FieldRow label="Feed link" value={link} onChange={(v) => { setLink(v); setError(null); }} placeholder="https://…/feeds/calendars/…" last />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs }}>
+            <Chip label="Canvas" on={system === 'canvas'} onPress={() => { setSystem('canvas'); setError(null); }} />
+            <Chip label="Brightspace (eLC)" on={system === 'brightspace'} onPress={() => { setSystem('brightspace'); setError(null); }} />
+          </View>
+          <Group title="Paste your calendar link"
+            footer={`${FEED_STEPS[system].join(' ')} Semli reads your calendar without changing it.`}>
+            <FieldRow label="Calendar link" value={link} onChange={(v) => { setLink(v); setError(null); }} placeholder={FEED_PLACEHOLDER[system]} last />
           </Group>
           {error ? (
             <Animated.View entering={enter.drop} exiting={exit.fade} accessibilityRole="alert" style={styles.status}>
@@ -132,7 +139,7 @@ export default function CanvasScreen() {
               <T token="subhead" color={c.conflict} style={{ flex: 1 }}>{error}</T>
             </Animated.View>
           ) : null}
-          <Button label={busy ? 'Connecting…' : freeSyncUsed && !isPlus ? 'Reconnect with Plus' : 'Connect Canvas'} disabled={busy || !link.trim()} onPress={() => void connect()} />
+          <Button label={busy ? 'Connecting…' : freeSyncUsed && !isPlus ? 'Reconnect with Plus' : 'Connect calendar'} disabled={busy || !link.trim()} onPress={() => void connect()} />
           {fallback}
         </Animated.View>
       )}

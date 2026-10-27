@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Item } from '@dayli/schema';
-import { CANVAS_MESSAGES, canvasEntries, courseCodeOf, fetchCanvasFeed, normalizeFeedUrl, parseIcs, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
+import { CANVAS_MESSAGES, canvasEntries, courseCodeOf, feedName, feedSystem, fetchCanvasFeed, normalizeFeedUrl, parseIcs, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
 
 const FEED = [
   'BEGIN:VCALENDAR',
@@ -131,5 +131,32 @@ describe('fetching', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(FEED, { status: 200 })));
     const res = await fetchCanvasFeed('https://x/feeds/calendars/u.ics');
     expect(res.ok && res.entries.length).toBe(2);
+  });
+});
+
+describe('Brightspace feeds', () => {
+  const elc = 'https://uga.view.usg.edu/d2l/le/calendar/feed/user/feed.ics?token=abc123';
+  it('accepts a Brightspace subscribe link and names UGA\'s eLC', () => {
+    expect(normalizeFeedUrl(elc.replace('https://', 'webcal://'))).toBe(elc);
+    expect(feedSystem(elc)).toBe('brightspace');
+    expect(feedName(elc)).toBe('eLC');
+    expect(feedName('https://school.brightspace.com/d2l/le/calendar/feed/user/feed.ics?token=x')).toBe('Brightspace');
+    expect(feedName('https://ycp.instructure.com/feeds/calendars/user_1.ics')).toBe('Canvas');
+    expect(normalizeFeedUrl('https://uga.view.usg.edu/d2l/le/calendar/feed/user/feed.ics')).toBeNull();
+  });
+
+  it('reads due dates and leaves out window starts', () => {
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'BEGIN:VEVENT', 'UID:6606-1@d2l', 'SUMMARY:Lab report 2 - Due', 'LOCATION:BIOL 1107 - Principles of Biology', 'DTSTART:20270120T045900Z', 'END:VEVENT',
+      'BEGIN:VEVENT', 'UID:6606-2@d2l', 'SUMMARY:Quiz 3 - Availability Starts', 'DTSTART:20270118T140000Z', 'END:VEVENT',
+      'BEGIN:VEVENT', 'UID:6606-3@d2l', 'SUMMARY:Quiz 3 - Availability Ends', 'DTSTART:20270125T045900Z', 'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const entries = canvasEntries(parseIcs(ics), 'brightspace');
+    expect(entries.map((e) => [e.title, e.kind, e.isDeadline, e.courseLabel])).toEqual([
+      ['Lab report 2', 'task', true, 'BIOL 1107 - Principles of Biology'],
+      ['Quiz 3', 'task', true, null],
+    ]);
   });
 });

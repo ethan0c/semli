@@ -6,7 +6,7 @@ import { AppState, Platform } from 'react-native';
 
 import { track } from './analytics';
 import { reportError } from './errors';
-import { CANVAS_MESSAGES, CANVAS_SOURCE, courseCodeOf, fetchCanvasFeed, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
+import { CANVAS_MESSAGES, courseCodeOf, feedName, fetchCanvasFeed, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
 import { supabase } from './supabase';
 import { usePurchases } from '../providers/PurchasesProvider';
 import { newId, useStore } from '../store';
@@ -48,6 +48,7 @@ async function run(feedUrl?: string): Promise<SyncResult> {
   const connection = useStore.getState().settings.canvas.feedUrl;
   const url = feedUrl ?? connection;
   if (!url) return { ok: false, error: CANVAS_MESSAGES.link };
+  const name = feedName(url);
   const setCanvas = (patch: Partial<ReturnType<typeof useStore.getState>['settings']['canvas']>) => {
     const { settings, setSettings } = useStore.getState();
     setSettings({ canvas: { ...settings.canvas, ...patch } });
@@ -74,7 +75,7 @@ async function run(feedUrl?: string): Promise<SyncResult> {
   };
   // First pass names the missing courses; create them, then plan again so items get their ids.
   for (const label of planCanvasSync(res.entries, Object.values(state.items), today, byLabel).newCourses) {
-    newCourses.push({ id: newId(), code: courseCodeOf(label), title: label, instructor: null, sourceId: CANVAS_SOURCE });
+    newCourses.push({ id: newId(), code: courseCodeOf(label), title: label, instructor: null, sourceId: name });
   }
   const plan = planCanvasSync(res.entries, Object.values(state.items), today, byLabel);
   const summary = syncSummary(plan);
@@ -83,10 +84,10 @@ async function run(feedUrl?: string): Promise<SyncResult> {
     // applyPlan clears `pending`, which closes an import under review (Oct 27, 2026). Nothing
     // above awaits, so this is the state the plan is applied to; CanvasAutoSync retries once it closes.
     if (useStore.getState().pending) return { ok: false, error: CANVAS_MESSAGES.reviewing };
-    const batchId = state.applyPlan(plan, `Canvas · ${summary ?? 'courses added'}`, { source: CANVAS_SOURCE, courses: newCourses });
+    const batchId = state.applyPlan(plan, `${name} · ${summary ?? 'courses added'}`, { source: name, courses: newCourses });
     // Every sync after the first pull is Plus's; it says so, so a subscriber sees it working.
     const byPlus = !!state.settings.canvas.lastSyncedAt;
-    useStore.getState().showToast(`${byPlus ? 'Canvas synced with Plus' : 'Canvas synced'} · ${summary ?? 'up to date'}`, batchId);
+    useStore.getState().showToast(`${name} synced${byPlus ? ' with Plus' : ''} · ${summary ?? 'up to date'}`, batchId);
   }
   setCanvas({ feedUrl: url, lastSyncedAt: new Date().toISOString(), lastError: null });
   track('canvas_synced', { total: res.entries.length, added: plan.added, moved: plan.moved, dropped: plan.dropped });

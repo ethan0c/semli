@@ -110,6 +110,11 @@ msgstr ""
 msgid "Choose the language for Semli. Your region, dates, and school calendar stay the same. Spanish currently covers navigation and profile preferences; other screens are still in English."
 msgstr ""
 
+#: src/app/settings/_layout.tsx:42
+#: src/components/SettingsHome.tsx:106
+msgid "Class calendar"
+msgstr ""
+
 #: src/app/(tabs)/you.tsx:65
 #: src/components/ColumnHeader.tsx:38
 #: src/components/NavButtons.tsx:20

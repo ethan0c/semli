@@ -368,8 +368,8 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
               onPress={item.batchId && batch ? () => leave(`/import/${item.batchId}`) : undefined} />
           ) : null}
           {feedDiffers && item.feed ? (
-            <FieldRow label="Canvas has" value={`${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? `, ${formatTime(item.feed.start, true)}` : ''}`} last>
-              <TextButton label="Use Canvas" onPress={followFeed} accessibilityLabel="Use the date and time from Canvas" />
+            <FieldRow label="Class calendar" value={`${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? `, ${formatTime(item.feed.start, true)}` : ''}`} last>
+              <TextButton label="Use this date" onPress={followFeed} accessibilityLabel="Use the date and time from your class calendar" />
             </FieldRow>
           ) : null}
         </Animated.View>

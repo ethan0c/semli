@@ -16,7 +16,7 @@ export type PlusDestination = 'import' | 'shifts' | 'canvas';
 const FEATURES: { icon: IconKey; title: string; detail: string; to: PlusDestination }[] = [
   { icon: 'file', title: 'Unlimited imports', detail: 'Add syllabi, screenshots and messages without an import limit.', to: 'import' },
   { icon: 'work', title: 'Update your work schedule', detail: 'Upload a new schedule and review changes before saving.', to: 'shifts' },
-  { icon: 'book', title: 'Sync Canvas', detail: 'Check for new assignments and changed due dates when you open Semli.', to: 'canvas' },
+  { icon: 'book', title: 'Sync your class calendar', detail: 'Keep due dates from Canvas or Brightspace, including eLC, up to date.', to: 'canvas' },
 ];
 
 /** The Plus features as rows that open each one: ink glyphs, no tiles, a highlight on press. */

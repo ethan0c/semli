@@ -75,10 +75,10 @@ export function FirstUrgent({ item, today }: { item: Item; today: string }) {
 /** Picked Canvas in setup but never connected it. Once, not every morning. */
 export function FirstCanvas() {
   return (
-    <FirstNote kind="canvas" label="Canvas"
-      body="Add your Canvas due dates."
-      detail="Connect with your Canvas calendar link. The first import is free; automatic updates require Plus."
-      action="Connect Canvas" onAction={() => router.push('/settings/canvas')} dismiss="Not now" />
+    <FirstNote kind="canvas" label="Class calendar"
+      body="Bring your class due dates into Semli."
+      detail="Connect Canvas or Brightspace, including eLC. The first import is free; Plus keeps it in sync."
+      action="Connect calendar" onAction={() => router.push('/settings/canvas')} dismiss="Not now" />
   );
 }
 

@@ -189,7 +189,7 @@ export function PlanPicker({ onContinueFree, onComplete, onWelcome, freeImportsL
           </Animated.View>
         )}
         <T token="callout" color={c.inkSecondary} style={{ paddingTop: space.xxs }}>
-          Unlimited imports, Canvas sync, work schedule comparisons, suggested times for overlapping events, and alarms for urgent items. Your calendar, to-dos, reminders and overlap warnings are free.
+          Unlimited imports, Canvas and Brightspace sync, work schedule comparisons, suggested times for overlapping events, and alarms for urgent items. Your calendar, to-dos, reminders and overlap warnings are free.
         </T>
       </View>
 

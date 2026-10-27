@@ -103,7 +103,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
 
         <Group title={t`Preferences`}>
           <Row label={t`Reminders`} icon="bell" value={reminderStatus} onPress={() => openSetting('reminders')} />
-          <Row label="Canvas" icon="book" value={canvasStatus} onPress={() => openSetting('canvas')} />
+          <Row label={t`Class calendar`} icon="book" value={canvasStatus} onPress={() => openSetting('canvas')} />
           {LANGUAGE_PICKER ? <Row label={t`Language`} icon="globe" value={LANGUAGES.find((l) => l.id === settings.language)?.name ?? (SYSTEM_NAME === 'system' ? t`Match system` : t`Match iPhone`)} onPress={() => openSetting('language')} /> : null}
           <Row label={t`Region`} icon="globe" value={regionName(settings.region ?? deviceRegion(), i18n.locale)} onPress={() => openSetting('region')} />
           <Row label={t`Appearance`} icon="appearance" value={appearanceLabels[settings.appearance]} onPress={() => openSetting('appearance')} />

@@ -139,7 +139,9 @@ Keep this as the release scratchpad. Unchecked means work or device verification
 - The first sync is free (the onboarding value moment); auto-sync and Sync now need `semli_plus`.
 - [ ] Connect a real student's feed on a device: UTC vs TZID times, all-day assignments, course matching against an imported syllabus, a reset feed link.
 - [ ] Update the pricing and SEO pages once verified ("coming soon" today).
-- [ ] Blackboard, Brightspace and Moodle also publish iCal feeds; add them in the order the `lms` answers say.
+- Brightspace (D2L) feeds connect through the same sync since Oct 27, 2026, for UGA's eLC (`uga.view.usg.edu`). York (`ycp.instructure.com`) and Pomona (`canvas.pomona.edu`) are Canvas. Onboarding and Settings ask Canvas or eLC/Brightspace and show that system's steps.
+- [ ] Before the UGA handout: connect a real eLC feed on a device. The event names ("- Due", "- Availability Ends"), the course in LOCATION and the Subscribe menu path come from D2L's student guides, not a live feed; check UGA hasn't turned calendar feeds off.
+- [ ] Blackboard and Moodle also publish iCal feeds; add them in the order the `lms` answers say.
 
 **Urgent items and ringing alarms**
 - Events and to-dos have an explicit Urgent switch in Create and item details, with an Urgent label in lists and the hour view. Imports never infer urgency. Existing saved items remain compatible.
