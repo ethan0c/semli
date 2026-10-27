@@ -31,6 +31,7 @@ Sentry token is.
 | Variable | What it does |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | `/api/extract` reads schedules and syllabi. Secret. |
+| `EXTRACT_FAST` | Optional. `0` turns fast mode off for `/api/extract` (standard speed, half the price). Unset means fast. See `docs/import-speed.md`. |
 | `SUPABASE_URL`, `SUPABASE_KEY` | Import limits and the beta waitlist. Same project as the app. |
 | `REVENUECAT_SECRET_KEY` | Confirms a Plus subscriber before a paid import. Secret. Production only. |
 | `TESTFLIGHT_URL` | Set once the public TestFlight link exists; `semli.app/beta` then redirects there. |

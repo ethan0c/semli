@@ -16,6 +16,19 @@ The images were selected for multi-person grids, split shifts, dense spreadsheet
 
 This is a development benchmark used to tune the extractor, not an independent holdout or proof of accuracy on future customer uploads. Public vendor schedules are demonstrations. Class recurrence exceptions for holidays/online days and verbatim evidence accuracy are not scored.
 
+## Model comparison, Oct 27, 2026
+
+Prompt `2026-10-27.1` (adds the existing-plan rules), same cases, run with `--model` and `--fast`. Date/time accuracy and median latency:
+
+| Model | Typed (32) | Screenshots (10) | Syllabi (5) |
+| --- | --- | --- | --- |
+| `claude-opus-5-5` | 99.1%, 2.5 s | 100.0%, 7.9 s | 96.9%, 21.6 s; extra 2.4% |
+| `claude-opus-5-5` fast | 99.1%, 1.2 s | 100.0%, 3.4 s | 97.3%, 8.3 s; extra 3.5% |
+| `claude-sonnet-5-5` | 99.1%, 1.8 s | 100.0%, 5.1 s | 91.4%, 16.6 s; extra 2.5% |
+| `claude-haiku-5-5` | 99.1%, 2.2 s | 100.0%, 5.7 s | 91.8%, 25.1 s; extra 9.2% |
+
+The app now reads in fast mode (`docs/import-speed.md`). The syllabus extra-item rate is over the 2% gate on every model at this prompt: `pdf-east-texas-nursing` adds two items on Opus (and `pdf-njit-biology` one more in fast mode). The one typed miss is shared by all four models. Opus syllabus results come from a `--kind pdf` rerun after the API spend limit cut the first run short.
+
 ## Changes verified
 
 - User name reaches extraction context so multi-person schedules can be filtered.

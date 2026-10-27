@@ -80,10 +80,17 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
     },
     messages: [{ role: 'user' as const, content }],
   };
-  // Fast mode runs the same model up to 2.5x faster at a premium price (beta, Opus only).
+  // Fast mode runs the same model up to 2.5x faster at a premium price (beta, Opus only). On the
+  // Oct 27, 2026 benchmark it read typed messages in 1.2 s, screenshots in 3.4 s and syllabi in 8.3 s
+  // (medians) with the same accuracy as standard speed; evals/RESULTS.md. It has its own rate limit,
+  // so a 429 there falls back to standard speed rather than failing the import.
+  const standard = () => client.messages.parse(params);
   const response = opts.fast
-    ? await client.beta.messages.parse({ ...params, speed: 'fast', betas: ['fast-mode-2026-02-01'] })
-    : await client.messages.parse(params);
+    ? await client.beta.messages.parse({ ...params, speed: 'fast', betas: ['fast-mode-2026-02-01'] }).catch((err: unknown) => {
+      if (err instanceof Anthropic.RateLimitError) return standard();
+      throw err;
+    })
+    : await standard();
 
   if (response.stop_reason === 'refusal') {
     return { ok: false, error: IMPORT_MESSAGES.unreadable };

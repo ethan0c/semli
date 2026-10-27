@@ -17,9 +17,10 @@ import { useTheme, space } from '@/theme';
  * Buell & Norton 2011; uncertain waits feel longest, Maister); see docs/import-speed.md.
  */
 const STEPS = {
-  message: { lines: ['Reading your message', 'Matching it to your plan', 'Working out the times', 'Almost there'], every: 2500, usually: 'Usually about 10 seconds' },
-  image: { lines: ['Reading the schedule', 'Finding your shifts', 'Checking every day', 'Checking what changed'], every: 4000, usually: 'Usually under 20 seconds' },
-  pdf: { lines: ['Reading the document', 'Finding every due date', 'Checking the schedule tables', 'Putting your term together', 'Almost there'], every: 9000, usually: 'A long syllabus can take up to a minute' },
+  // Timings from the fast-mode benchmark (Oct 27, 2026): medians 1.2 s, 3.4 s and 8.3 s; slowest 25 s.
+  message: { lines: ['Reading your message', 'Matching it to your plan', 'Working out the times', 'Almost there'], every: 1500, usually: 'Usually a few seconds' },
+  image: { lines: ['Reading the schedule', 'Finding your shifts', 'Checking every day', 'Checking what changed'], every: 1500, usually: 'Usually under 10 seconds' },
+  pdf: { lines: ['Reading the document', 'Finding every due date', 'Checking the schedule tables', 'Putting your term together', 'Almost there'], every: 4000, usually: 'A long syllabus can take up to half a minute' },
 } as const;
 /** Past this, the screen says they can leave: about where attention runs out (Nielsen's 10 seconds). */
 const LEAVE_AFTER_MS = 10_000;

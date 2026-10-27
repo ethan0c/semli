@@ -93,12 +93,12 @@ Rules:
 - Show "$2.50/month, billed yearly" style framing everywhere; the survey anchor is monthly.
 
 ### Unit economics
-Claude Opus 5.5 at $4 / $20 per million tokens:
-- Text message import ≈ $0.01–0.02
-- Schedule screenshot ≈ $0.02–0.04
-- 10-page syllabus PDF ≈ $0.08–0.15
+Claude Opus 5.5 in fast mode since Oct 27, 2026, at $8 / $40 per million tokens (twice standard; `docs/import-speed.md`):
+- Text message import ≈ $0.02–0.04 (a 16-item request like "cardio before and after work" ≈ $0.10)
+- Schedule screenshot ≈ $0.04–0.08
+- 10-page syllabus PDF ≈ $0.16–0.30
 
-A heavy Plus user (5 syllabi + 16 weekly schedule screenshots + 40 text adds per semester) costs roughly **$1.50 per semester** in AI. Against $14.99 per semester that is a ~90% gross margin. If costs ever matter, route short text imports to Haiku 5.5 after checking accuracy against the eval set; that is a product decision to make with data, not a default.
+A heavy Plus user (5 syllabi + 16 weekly schedule screenshots + 40 text adds per semester) costs roughly **$3 per semester** in AI. Against $14.99 per semester that is a ~80% gross margin; free users' 3–5 imports a month cost a few cents. The Oct 27 benchmark (`evals/RESULTS.md`) settles the cheaper routes: Sonnet 5.5 and Haiku 5.5 match Opus on typed messages and screenshots but miss items in syllabi (91–92% against 97%). If cost ever matters more than wait, `EXTRACT_FAST=0` halves it, or Sonnet 5.5 can take typed messages and screenshots while Opus keeps PDFs.
 
 ### What 1,000 paying students looks like
 - All yearly on web: ~$29k/yr net of fees (~3%)

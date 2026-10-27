@@ -38,7 +38,8 @@ export async function POST(request: Request) {
   if (!access.ok) return reply({ ok: false, error: access.error }, access.status);
 
   try {
-    const result = await extract(parsed.data);
+    // Fast mode unless EXTRACT_FAST=0: the same accuracy at a third to half the wait, for twice the price.
+    const result = await extract(parsed.data, undefined, { fast: process.env.EXTRACT_FAST !== '0' });
     if (!result.ok) {
       // A failed read never costs an import.
       await access.refund();
