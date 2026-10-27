@@ -187,7 +187,10 @@ function SchoolScreen() {
           const nextDue = all.find((it) => it.isDeadline && !it.done && it.date >= now.date);
           const pattern = meetingPattern(all.filter((it) => it.kind === 'event' && it.seriesId));
           const status = nextDue ? itemStatus(nextDue, now.date, false, true) : { label: 'Nothing due', tone: 'grey' as const };
-          const sub = [course.title, pattern ?? course.instructor].filter(Boolean).join(' · ');
+          // A next-term course says when its classes begin (items are sorted by date).
+          const first = all.find((it) => it.kind === 'event');
+          const starts = first && first.date > now.date ? `Starts ${monthDay(first.date)}` : null;
+          const sub = [course.title, pattern ?? course.instructor, starts].filter(Boolean).join(' · ');
           return (
             <ListRow key={course.id} title={course.code ?? course.title} sub={sub} last={i === courses.length - 1}
               leading={<View style={styles.dotWell}><CategoryDot color={tintOf(course)} /></View>}

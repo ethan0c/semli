@@ -1,4 +1,4 @@
-import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, planCommit, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount } from '@dayli/core';
+import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, newCourses, planCommit, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -101,15 +101,6 @@ export default function ReviewScreen() {
     (code: string | null) => (code ? (courses.find((k) => k.code?.toLowerCase() === code.toLowerCase())?.id ?? null) : null),
     [courses],
   );
-  // A course the syllabus describes that we don't have yet. Its id is minted on confirm.
-  const newCourse = useMemo(() => {
-    const course = ex?.course;
-    if (!course) return null;
-    if (course.code && courseFor(course.code)) return null;
-    if (courses.some((k) => k.title.toLowerCase() === course.title.toLowerCase())) return null;
-    return { code: course.code, title: course.title, instructor: course.instructor };
-  }, [ex, courses, courseFor]);
-
   // A chosen term end trims the repeating class to the occurrences on or before it.
   const effective = useMemo(
     () => drafts.map((d) => {
@@ -119,17 +110,23 @@ export default function ReviewScreen() {
     [drafts, seriesEnd],
   );
 
+  // Courses the import describes that we don't have yet: a syllabus's one, or each class of a
+  // schedule. Their ids are minted on confirm.
+  const added = useMemo(() => (ex ? newCourses(ex, effective, courses) : []), [ex, effective, courses]);
+  const newCourse = added.length === 1 ? added[0]! : null;
+
   const buildPlan = useCallback(
-    (newCourseId: string): CommitPlan | null => {
+    (ids: string[]): CommitPlan | null => {
       if (!ex) return null;
-      const p = planCommit(ex, effective, existing, (code) =>
-        courseFor(code) ?? (newCourse && code && newCourse.code?.toLowerCase() === code.toLowerCase() ? newCourseId : null),
-      );
+      const p = planCommit(ex, effective, existing, (code) => {
+        const i = code ? added.findIndex((k) => k.code?.trim().toLowerCase() === code.trim().toLowerCase()) : -1;
+        return courseFor(code?.trim() ?? null) ?? (i >= 0 ? ids[i]! : null);
+      });
       return { ...p, remove: p.remove.filter((id) => !kept.has(id)) };
     },
-    [ex, effective, existing, courseFor, newCourse, kept],
+    [ex, effective, existing, courseFor, added, kept],
   );
-  const plan = useMemo(() => buildPlan('new-course'), [buildPlan]);
+  const plan = useMemo(() => buildPlan(added.map(() => 'new-course')), [buildPlan, added]);
 
   // The first comparison is explained once, here, where it is happening (see components/Firsts).
   const comparing = !!plan?.schedule?.diff && plan.schedule.diff.changed.length + plan.schedule.diff.removed.length + plan.schedule.diff.unchanged.length > 0;
@@ -289,10 +286,10 @@ export default function ReviewScreen() {
     const label = plan.schedule
       ? `Updated ${plan.schedule.employer} schedule`
       : `Added ${count(plan.create.length, 'item')}`;
-    const courseId = newId();
-    const id = applyPlan(buildPlan(courseId) ?? plan, label, {
+    const courseIds = added.map(() => newId());
+    const id = applyPlan(buildPlan(courseIds) ?? plan, label, {
       source: pending.source,
-      course: newCourse ? { id: courseId, ...newCourse, sourceId: null } : undefined,
+      courses: added.map((k, i) => ({ id: courseIds[i]!, ...k, sourceId: null })),
     });
     feedback('success');
     // The rating prompt, when it is due; quiet after a Plus gate so it never lands on the celebration.
@@ -390,6 +387,8 @@ export default function ReviewScreen() {
 
   const note = newCourse
     ? `Adds the course ${[newCourse.code, newCourse.title].filter(Boolean).join(' · ')}. You can change its color on its page.`
+    : added.length > 1
+    ? `Adds ${added.length} courses to School: ${added.map((k) => k.code ?? k.title).join(', ')}.`
     : isUpdate ? 'Reminders move with the shifts.' : 'Nothing is saved until you confirm.';
 
   // ---- Chart -----------------------------------------------------------------------

@@ -13,6 +13,7 @@ import {
   isLocalDate,
   monthDay,
   pendingDates,
+  newCourses,
   planCommit,
   relativeDay,
   toDrafts,
@@ -262,5 +263,26 @@ describe('date locale', () => {
     setDateLocale({ dayFirst: true });
     expect(monthDay('2026-10-24')).toBe('24 Oct');
     expect(fullDate('2026-10-24')).toBe('24 Oct 2026');
+  });
+});
+
+describe('newCourses', () => {
+  const draft = (title: string, courseCode: string | null, kind: 'event' | 'task' = 'event') => ({ include: true, kind, title, courseCode });
+  it('adds one course per class code in a class schedule', () => {
+    const ex = { detected_type: 'course_schedule' as const, course: null };
+    const drafts = [
+      draft('Human Anatomy', 'BIOL 201'), draft('Human Anatomy', 'BIOL 201'),
+      draft('Anatomy lab', 'biol 201 '), draft('Statistics', 'STAT 110'), draft('Quiz 1', 'CHEM 101', 'task'), draft('Club', null),
+    ];
+    expect(newCourses(ex, drafts, [{ code: 'STAT 110', title: 'Statistics' }])).toEqual([
+      { code: 'BIOL 201', title: 'Human Anatomy', instructor: null },
+    ]);
+  });
+  it('adds only the named course for a syllabus', () => {
+    const ex = { detected_type: 'syllabus' as const, course: { code: 'NUR 410', title: 'Adult Health', instructor: 'Dr. Ade' } };
+    expect(newCourses(ex, [draft('Lecture', 'NUR 410'), draft('Other', 'BIO 1')], [])).toEqual([
+      { code: 'NUR 410', title: 'Adult Health', instructor: 'Dr. Ade' },
+    ]);
+    expect(newCourses(ex, [], [{ code: 'nur 410', title: 'Something' }])).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-import type { Extraction, ExtractedItem, IconName, Item } from '@dayli/schema';
+import type { Course, Extraction, ExtractedItem, IconName, Item } from '@dayli/schema';
 import { assessment } from './assessment';
 import { WEEKDAYS, addDays, dayNumber, isLocalDate, isLocalTime, typicalTermEnd, weekdayOf } from './dates';
 import { diffSchedule, type ScheduleDiff } from './diff';
@@ -211,6 +211,32 @@ export function planCommit(
     else plan.create.push(toItem(d));
   }
   return plan;
+}
+
+/**
+ * The courses an import brings that aren't stored yet. A syllabus names its one course; a class
+ * schedule (a registration screenshot) lists several classes, each carrying its code, so each code
+ * becomes a course named after its class. Before Oct 27, 2026 only the syllabus course was added,
+ * and a whole semester's schedule landed with no courses on School.
+ */
+export function newCourses(
+  extraction: Pick<Extraction, 'detected_type' | 'course'>,
+  drafts: Pick<Draft, 'include' | 'kind' | 'title' | 'courseCode'>[],
+  stored: Pick<Course, 'code' | 'title'>[],
+): Omit<Course, 'id' | 'sourceId'>[] {
+  const out: Omit<Course, 'id' | 'sourceId'>[] = [];
+  const same = (a: string | null, b: string | null) => !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
+  const known = (code: string | null, title: string) =>
+    [...stored, ...out].some((k) => same(k.code, code) || same(k.title, title));
+  const course = extraction.course;
+  if (course && !known(course.code, course.title)) out.push({ code: course.code, title: course.title, instructor: course.instructor });
+  if (extraction.detected_type !== 'course_schedule') return out;
+  for (const d of drafts) {
+    // By code alone: two classes can share a title ("Lab") but not a code.
+    if (!d.include || d.kind !== 'event' || !d.courseCode?.trim() || [...stored, ...out].some((k) => same(k.code, d.courseCode))) continue;
+    out.push({ code: d.courseCode.trim(), title: d.title, instructor: null });
+  }
+  return out;
 }
 
 export { WEEKDAYS };
