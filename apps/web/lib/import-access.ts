@@ -56,6 +56,10 @@ export async function checkImportAccess(request: Request): Promise<Access> {
   if (!base) return { ok: true, refund: free };
 
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || null;
+  // The app always sends its RevenueCat id and a session; one arriving without a session lost it on
+  // the way (a redirect drops Authorization). Ask it to sign in again rather than counting it
+  // against the website's preview limit, whose message tells an app user to get the app.
+  if (!token && request.headers.get('x-revenuecat-app-user-id')) return { ok: false, status: 401, error: IMPORT_MESSAGES.session };
   if (!token) {
     const ipHash = createHash('sha256').update(`semli-demo:${clientIp(request)}`).digest('hex');
     const allowed = await rpc(base, 'claim_demo', { p_ip_hash: ipHash, p_limit: DEMO_PREVIEWS_PER_DAY });

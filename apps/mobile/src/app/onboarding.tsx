@@ -4,6 +4,7 @@ import { Dimensions, Platform, ScrollView, StyleSheet, TextInput, View } from "r
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Toast } from "@/components/Overlay";
+import type { StreamedItem } from "@/lib/api";
 import { firstOf, readyLine } from "@/lib/milestones";
 
 import { Composer } from "@/components/Composer";
@@ -350,6 +351,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
   const recordImport = useStore((s) => s.recordImport);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [found, setFound] = useState<StreamedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function run(input: NonNullable<Picked>["input"], source: string) {
@@ -366,8 +368,10 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
         return;
       }
       const req = { input, context: extractionContext(input) };
-      let res = await requestImport(apiUrl, req);
-      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota"))) res = await requestImport(apiUrl, req);
+      // Rows appear on the reading screen as they're read: a new student's first import shouldn't feel like a wait.
+      const hooks = { onItem: (item: StreamedItem) => setFound((rows) => [...rows, item]), onReset: () => setFound([]) };
+      let res = await requestImport(apiUrl, req, hooks);
+      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota"))) res = await requestImport(apiUrl, req, hooks);
       if (!res.ok) {
         track("import_failed", { kind: input.kind, where: "onboarding" });
         setError(res.error);
@@ -389,6 +393,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
     } finally {
       importing.current = false;
       setBusy(null);
+      setFound([]);
     }
   }
 
@@ -428,7 +433,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
           onPress={() => void pick(copy.primary === "pdf" ? pickPdfInput : () => pickImageInput(false))} />
       ) : null}
       {busy ? (
-        <Reading source={busy === "Message" ? "your message" : busy} chart={/\.pdf$/i.test(busy) ? "term" : "week"} />
+        <Reading source={busy === "Message" ? "your message" : busy} chart={/\.pdf$/i.test(busy) ? "term" : "week"} found={found} />
       ) : (
         <Composer
           value={text}

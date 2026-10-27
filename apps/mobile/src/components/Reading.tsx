@@ -1,3 +1,5 @@
+import { formatTime, monthDay, weekdayShort } from '@dayli/core';
+import type { StreamedItem } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
@@ -7,7 +9,7 @@ import { motion } from '@dayli/tokens';
 import { SkeletonReview } from '@/components/Skeleton';
 import { T } from '@/components/Text';
 import { Swap } from '@/components/Ticker';
-import { ease } from '@/lib/motion';
+import { ease, enter, exit, layout } from '@/lib/motion';
 import { useTheme, space } from '@/theme';
 
 /**
@@ -44,7 +46,19 @@ export function ProgressLine() {
  * The import loading state: a progress line, a light heading that changes, and the review
  * drawn as placeholders where the result will land. No box, no dots.
  */
-export function Reading({ source, chart = 'week' }: { source: string; chart?: 'week' | 'term' }) {
+/** One row the reader has already found, shown while the rest is still being read. */
+function FoundRow({ item }: { item: StreamedItem }) {
+  const { c } = useTheme();
+  const when = item.date ? `${weekdayShort(item.date)}, ${monthDay(item.date)}${item.start ? ` · ${formatTime(item.start)}` : ''}` : 'No date yet';
+  return (
+    <View style={[styles.found, { borderBottomColor: c.line }]}>
+      <T token="body" numberOfLines={1} style={{ flex: 1 }}>{item.title}</T>
+      <T token="callout" color={c.inkSecondary} tabular>{when}</T>
+    </View>
+  );
+}
+
+export function Reading({ source, chart = 'week', found = [] }: { source: string; chart?: 'week' | 'term'; /** Rows already read, as they arrive. */ found?: StreamedItem[] }) {
   const { c } = useTheme();
   const kind = chart === 'term' ? 'pdf' : /^your /.test(source) ? 'message' : 'image';
   const steps = STEPS[kind];
@@ -59,13 +73,21 @@ export function Reading({ source, chart = 'week' }: { source: string; chart?: 'w
     <View style={{ gap: space.md }} accessibilityLiveRegion="polite">
       <ProgressLine />
       <View style={{ gap: space.xxs }}>
-        <Swap value={`${steps.lines[line]}…`} token="display" />
+        <Swap value={found.length ? `Found ${found.length} so far…` : `${steps.lines[line]}…`} token="display" />
         <T token="callout" color={c.inkSecondary}>
           {long
             ? 'You can keep using Semli while you wait. Your review will open when it’s ready.'
             : `${source[0]?.toUpperCase() + source.slice(1)} · ${steps.usually}. You’ll review the dates before anything is added to your plan.`}
         </T>
       </View>
+      {/* What's been read so far, row by row; the placeholders below stand for the rest. */}
+      {found.length ? (
+        <View>
+          {found.map((item, i) => (
+            <Animated.View key={`${i}-${item.title}`} entering={enter.fade} exiting={exit.fade} layout={layout}><FoundRow item={item} /></Animated.View>
+          ))}
+        </View>
+      ) : null}
       <SkeletonReview chart={chart} />
     </View>
   );
@@ -74,4 +96,5 @@ export function Reading({ source, chart = 'week' }: { source: string; chart?: 'w
 const styles = StyleSheet.create({
   track: { height: 2, borderRadius: 1, overflow: 'hidden' },
   bar: { width: 160, height: 2, borderRadius: 1 },
+  found: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 48, borderBottomWidth: StyleSheet.hairlineWidth },
 });

@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IMPORT_MESSAGES, type ExtractRequest } from '@dayli/schema';
 import { requestExtraction } from './api';
 
+const expoFetch = vi.hoisted(() => ({ fetch: vi.fn() }));
+vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
+vi.mock('expo/fetch', () => expoFetch);
+
 const request: ExtractRequest = {
   input: { kind: 'text', text: 'Exam tomorrow at 9' },
   context: { today: '2026-10-19', timezone: 'America/New_York', courses: [], employers: [] },
@@ -46,5 +50,39 @@ describe('friendly import failures', () => {
   it('preserves the known actionable unreadable-file message', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ ok: false, error: IMPORT_MESSAGES.unreadable }, { status: 422 })));
     expect(await requestExtraction('https://semli.test', request)).toEqual({ ok: false, error: IMPORT_MESSAGES.unreadable });
+  });
+});
+
+describe('rows as they are read', () => {
+  const item = (title: string) => ({ kind: 'task', title, category: 'school', date: '2026-10-30', start: null, end: null, is_deadline: true, repeat_weekdays: [], repeat_until: null, course_code: null, evidence: title, confidence: 0.9, question: null });
+  const extraction = { detected_type: 'general', employer: null, course: null, covers_from: null, covers_to: null, items: [item('Quiz'), item('Essay')] };
+  /** A streamed response, its lines split across chunks the way a network delivers them. */
+  const stream = (lines: object[], cut = 7) => {
+    const text = lines.map((l) => JSON.stringify(l) + '\n').join('');
+    const bytes = new TextEncoder().encode(text);
+    return new Response(new ReadableStream({ start(c) { for (let i = 0; i < bytes.length; i += cut) c.enqueue(bytes.slice(i, i + cut)); c.close(); } }), { headers: { 'content-type': 'application/x-ndjson' } });
+  };
+  it('hands over rows as they arrive and returns the final response', async () => {
+    expoFetch.fetch.mockResolvedValue(stream([{ type: 'item', item: item('Quiz') }, { type: 'item', item: item('Essay') }, { type: 'done', status: 200, response: { ok: true, extraction } }]));
+    const seen: string[] = [];
+    const res = await requestExtraction('https://semli.test', request, {}, { onItem: (it) => seen.push(it.title) });
+    expect(seen).toEqual(['Quiz', 'Essay']);
+    expect(res).toEqual({ ok: true, extraction });
+    expect(expoFetch.fetch.mock.calls[0]![1].headers.accept).toBe('application/x-ndjson');
+  });
+  it('clears rows on a reset and reports a failed read readably', async () => {
+    expoFetch.fetch.mockResolvedValue(stream([{ type: 'item', item: item('Quiz') }, { type: 'reset' }, { type: 'done', status: 422, response: { ok: false, error: IMPORT_MESSAGES.unreadable } }]));
+    const events: string[] = [];
+    const res = await requestExtraction('https://semli.test', request, {}, { onItem: (it) => events.push(it.title), onReset: () => events.push('reset') });
+    expect(events).toEqual(['Quiz', 'reset']);
+    expect(res).toEqual({ ok: false, error: IMPORT_MESSAGES.unreadable });
+  });
+  it('treats a stream that stops early as a connection problem', async () => {
+    expoFetch.fetch.mockResolvedValue(stream([{ type: 'item', item: item('Quiz') }]));
+    expect(await requestExtraction('https://semli.test', request, {}, { onItem: () => {} })).toEqual({ ok: false, error: IMPORT_MESSAGES.connection });
+  });
+  it('reads a server that answers the old way', async () => {
+    expoFetch.fetch.mockResolvedValue(new Response(JSON.stringify({ ok: true, extraction }), { headers: { 'content-type': 'application/json' } }));
+    expect(await requestExtraction('https://semli.test', request, {}, { onItem: () => {} })).toEqual({ ok: true, extraction });
   });
 });

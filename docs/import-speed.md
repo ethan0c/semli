@@ -52,7 +52,7 @@ Opus on the text is more accurate, back under the 2% extra-item gate, and a thir
 
 **Built the same day** (`packages/extract/src/pdf-text.ts`, unpdf 1.8.1): the server rebuilds each page's layout from PDF.js text positions (rows by baseline, columns by position, a blank line wherever the page leaves vertical space between table rows) and sends that to Opus. Any page with under 80 visible characters, under 300 in all, a failed parse or a parse over 4 s sends the whole PDF instead. On the benchmark through the live path: 96.9% of dates and times (the same as whole PDFs), 97.8% of other fields (from 96.8%), $0.107 a syllabus (from $0.166), 19.8 s median. The row breaks mattered: without them a dense 20-page nursing schedule dropped to 95.7%. `EXTRACT_PDF_TEXT=0` turns it off; the route logs `[extract.pdf]` with which way each PDF was read.
 
-Also worth building: a cache of finished reads keyed by the file's hash, so a classmate's identical syllabus reads instantly and costs nothing; and rows streamed in as they're written, which is what would make a 20-second read feel instant.
+**Also built Oct 27, 2026.** A cache of finished syllabus reads (`apps/web/lib/syllabus-cache.ts`, table `syllabus_cache`): keyed by a SHA-256 of the PDF plus term, reader, prompt version and date locale; only syllabi and course schedules, never work schedules; the read, not the file; 150 days; a 1.5 s lookup budget, after which it reads normally; logged as `[extract.pdf] { via: 'cache' }`. And rows streamed as they're written: the app asks with `Accept: application/x-ndjson`, the server sends one line per item as the model finishes it, a `reset` if another reader starts over, then the same response a single request returns (`ExtractStreamLine` in `@dayli/schema`); older apps and the site get one response as before. Measured on the built server: a syllabus's first row at 11.7 s instead of the whole answer at 22.4 s, then one row about every 0.8 s; on the phone the reading screen fills in row by row ("Found 5 so far…") before review opens. Haiku with thinking switched off was tried for speed and rejected: no faster on messages, more questions, and 9.5% extra items on screenshots.
 
 ## The wait itself
 
@@ -60,5 +60,5 @@ Also worth building: a cache of finished reads keyed by the file's hash, so a cl
 
 ## Not built yet
 
-- Rows arriving as they are read (streaming the extraction), so the first row shows in about a second even on a long syllabus.
 - A push notification when an import finishes while the app is in the background.
+- A faster first row on syllabi: Opus thinks for about 11 s before writing; Plus's fast mode cuts that to about 4 to 5 s.

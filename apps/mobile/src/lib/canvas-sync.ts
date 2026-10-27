@@ -1,3 +1,4 @@
+import { apiBase } from './api';
 import { localParts, normalizeTitle } from '@dayli/core';
 import type { Course } from '@dayli/schema';
 import { useEffect } from 'react';
@@ -13,7 +14,7 @@ import { newId, useStore } from '../store';
 /** Canvas doesn't let other sites' pages read its feed, so the web asks Semli's server to fetch it. */
 const throughSemli: FeedLoader = async (url, signal) => {
   const { data } = await supabase!.auth.getSession();
-  return fetch(`${useStore.getState().settings.apiUrl}/api/canvas-feed`, {
+  return fetch(`${apiBase(useStore.getState().settings.apiUrl)}/api/canvas-feed`, {
     method: 'POST',
     signal,
     headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },

@@ -13,6 +13,7 @@ import { reportError } from './errors';
 import { posthog, track } from './analytics';
 import { accountOf, deleteReplacedGuest, supabase, useSession } from './supabase';
 import { ACCOUNT_REQUIRED, APPLE_ON_WEB } from './web';
+import { apiBase } from './api';
 import { useStore } from '../store';
 import { feedback } from './feedback';
 import { durations } from './motion';
@@ -234,7 +235,7 @@ const supabaseClient: AuthClient = {
     if (error) throw error;
     // The database queued the confirmation email; ask the site to send it now rather than at the
     // next daily run. Best effort: the cron sends it anyway.
-    void fetch(`${useStore.getState().settings.apiUrl}/api/emails`, { method: 'POST' }).catch(() => {});
+    void fetch(`${apiBase(useStore.getState().settings.apiUrl)}/api/emails`, { method: 'POST' }).catch(() => {});
     await endSession();
     await forgetAccount();
   },
@@ -264,7 +265,7 @@ async function revokeApple(accessToken: string) {
     throw error;
   }
   if (!credential.authorizationCode) throw { code: 'apple_reauth_cancelled' };
-  const res = await fetch(`${useStore.getState().settings.apiUrl}/api/account/apple-revoke`, {
+  const res = await fetch(`${apiBase(useStore.getState().settings.apiUrl)}/api/account/apple-revoke`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ code: credential.authorizationCode }),

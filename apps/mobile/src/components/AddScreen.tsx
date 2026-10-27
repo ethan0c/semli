@@ -24,6 +24,7 @@ import { COLUMN, useWebLayout } from '@/lib/layout';
 import { useNow } from '@/lib/now';
 import { purchaseErrorMessage } from '@/lib/revenuecat';
 import { hasFreeImports } from '@/lib/plans';
+import type { StreamedItem } from '@/lib/api';
 import { useStore } from '@/store';
 import { diffDays, localParts, monthDay, relativeDay , count } from '@dayli/core';
 import { NAV_INSET, SCREEN_GUTTER, useTheme, space } from '@/theme';
@@ -41,6 +42,7 @@ export function AddScreen() {
   const importing = useRef(false);
   const [text, setText] = useState(() => useStore.getState().captureDraft);
   const [busy, setBusy] = useState<string | null>(null);
+  const [found, setFound] = useState<StreamedItem[]>([]);
   const [error, setErrorText] = useState<string | null>(null);
   const setError = (message: string | null) => {
     if (message) feedback('error');
@@ -71,9 +73,11 @@ export function AddScreen() {
       // With the free allowance used up, this read is Plus's; review says so the first time.
       const plusRead = !hasFreeImports(useStore.getState().usage);
       const req = { input, context: extractionContext(input) };
-      let res = await requestImport(apiUrl, req);
+      // Rows show up on the reading screen as they're read; review still gets the whole, checked answer.
+      const hooks = { onItem: (item: StreamedItem) => setFound((rows) => [...rows, item]), onReset: () => setFound([]) };
+      let res = await requestImport(apiUrl, req, hooks);
       // The server's count wins over this phone's (a reinstall resets the local one).
-      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota'))) res = await requestImport(apiUrl, req);
+      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota'))) res = await requestImport(apiUrl, req, hooks);
       if (!res.ok) {
         track('import_failed', { kind: input.kind });
         setError(res.error);
@@ -96,6 +100,7 @@ export function AddScreen() {
     } finally {
       importing.current = false;
       setBusy(null);
+      setFound([]);
     }
   }
 
@@ -175,7 +180,7 @@ export function AddScreen() {
           ? 'Type your plans, drop a screenshot or PDF anywhere on the page, or paste one. Review the results before saving.'
           : 'Type your plans or add a screenshot or PDF. Review the results before saving.'}</T>} />
       <View style={styles.body}>
-        {busy ? <Reading source={busy === 'Message' ? 'your message' : busy === 'Voice' ? 'your voice note' : busy} chart={/\.pdf$/i.test(busy) ? 'term' : 'week'} /> : null}
+        {busy ? <Reading source={busy === 'Message' ? 'your message' : busy === 'Voice' ? 'your voice note' : busy} chart={/\.pdf$/i.test(busy) ? 'term' : 'week'} found={found} /> : null}
 
         <Composer
           ref={inputRef}
