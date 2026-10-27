@@ -24,7 +24,18 @@ The extraction benchmark (`evals/`: 32 typed messages, 10 schedule screenshots, 
 | Sonnet 5.5 | 99.1%, 1.8 s | 100%, 5.1 s | 91.4%, 16.6 s |
 | Haiku 5.5 | 99.1%, 2.2 s | 100%, 5.7 s | 91.8%, 25.1 s, 9% extra items |
 
-The 16-item cardio request: 14.0 s standard, 5.5 s fast. Only fast mode keeps Opus's accuracy at half the wait or better on every input, so imports run in fast mode (`EXTRACT_FAST=0` turns it off). Fast mode has its own rate limit; a 429 there retries at standard speed. It costs twice standard; see unit economics in `pricing-and-positioning.md`.
+The 16-item cardio request: 14.0 s on Opus, 5.5 s on Opus fast, about 7 s on Haiku with the same 16 items and times.
+
+**Decision, revised the same day on cost** (fast mode for every import made free users' month-one syllabi the largest cost in the business): each input goes to the cheapest model that holds Opus's accuracy on it.
+
+| Input | Reader | Accuracy | Median wait | Cost per import |
+|---|---|---|---|---|
+| Typed or spoken message | Haiku 5.5 | 99.1% | 2.0 s | $0.0002 |
+| Screenshot | Haiku 5.5 | 100% | 6.2 s | $0.001 |
+| Syllabus, free | Opus 5.5 | 96.9% | 21.6 s | $0.17 |
+| Syllabus, Plus | Opus 5.5 fast | 97.3% | 8.3 s | $0.34 |
+
+Haiku handing back nothing usable (a refusal, a cut-off answer) is read again by Opus. Fast mode has its own rate limit; a 429 there retries at standard speed. The readers are server settings (`EXTRACT_QUICK_MODEL`, `EXTRACT_DOCUMENT_MODEL`, `EXTRACT_FAST` in `docs/env.md`), never in the app, so a model changes with a Vercel redeploy and no release. Run the benchmark before changing one.
 
 ## The wait itself
 
