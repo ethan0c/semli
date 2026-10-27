@@ -112,3 +112,15 @@ describe('the outbox sender', () => {
     expect((await GET(new Request('https://semli.test/api/emails', { headers: { authorization: 'Bearer cron' } }))).status).toBe(200);
   });
 });
+
+describe('a host missing its email settings', () => {
+  it('says so instead of reporting nothing to send', async () => {
+    vi.stubEnv('RESEND_API_KEY', '');
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await POST();
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ ok: false, configured: false });
+    expect(error).toHaveBeenCalledWith('[emails.config]', expect.objectContaining({ code: 'emails_not_configured', resend: false }));
+    error.mockRestore();
+  });
+});

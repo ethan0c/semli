@@ -29,7 +29,7 @@ const USERS_GROUP = 'App users';
 const OTHER_GROUPS = ['Survey', 'Waitlist'];
 
 function env() {
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
+  const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL)?.replace(/\/$/, '');
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const resend = process.env.RESEND_API_KEY;
   return url && service && resend ? { url, service, resend } : null;
@@ -97,7 +97,8 @@ async function updateContacts(resend: Resend, groupIds: () => Promise<Record<str
 
 export async function flush(): Promise<{ sent: number; failed: number }> {
   const e = env();
-  if (!e) return { sent: 0, failed: 0 };
+  // Missing settings used to send nothing and report success; now it says so, by name.
+  if (!e) throw new NotConfigured();
   const headers = { apikey: e.service, authorization: `Bearer ${e.service}`, 'content-type': 'application/json' };
   const due = new Date(Date.now() - WELCOME_DELAY_MINUTES * 60_000).toISOString();
   const res = await fetch(`${e.url}/rest/v1/email_outbox?select=*&or=(kind.neq.welcome,created_at.lte.${encodeURIComponent(due)})&order=id&limit=${BATCH}`, { headers });
@@ -126,10 +127,17 @@ export async function flush(): Promise<{ sent: number; failed: number }> {
   return { sent, failed };
 }
 
+/** One of SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY or RESEND_API_KEY is missing on the host. */
+class NotConfigured extends Error {}
+
 async function handle(): Promise<Response> {
   try {
     return Response.json({ ok: true, ...(await flush()) });
   } catch (error) {
+    if (error instanceof NotConfigured) {
+      console.error('[emails.config]', { code: 'emails_not_configured', supabase: !!(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL), service: !!process.env.SUPABASE_SERVICE_ROLE_KEY, resend: !!process.env.RESEND_API_KEY });
+      return Response.json({ ok: false, configured: false }, { status: 503 });
+    }
     console.error('[emails.flush]', errorDiagnostic(error));
     return Response.json({ ok: false }, { status: 503 });
   }
