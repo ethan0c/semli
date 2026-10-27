@@ -1,4 +1,4 @@
-import { rpc, supabaseEnv } from './supabase';
+import { rpc, serviceEnv } from './supabase';
 
 /*
  * The click counter behind semli.app/get. The waitlist form and its endpoint were removed at launch
@@ -14,7 +14,8 @@ export function cleanRef(ref: unknown): string | null {
 
 /** A click on semli.app/get (or the old /beta). Never blocks the redirect; a lost row is fine. */
 export async function logBetaClick(ref: string | null): Promise<void> {
-  const base = supabaseEnv();
+  // Server-only since Oct 27, 2026, so nobody can pad the per-channel counts from outside.
+  const base = serviceEnv();
   if (!base) return;
   try {
     await rpc(base, 'log_beta_click', { p_ref: ref });

@@ -18,6 +18,7 @@ describe('/get', () => {
   beforeEach(() => {
     vi.stubEnv('SUPABASE_URL', 'https://db.test');
     vi.stubEnv('SUPABASE_KEY', 'sb_publishable_test');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service');
     vi.stubGlobal('fetch', fetchMock.mockResolvedValue(new Response(null, { status: 204 })));
   });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks(); });

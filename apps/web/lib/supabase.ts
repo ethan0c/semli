@@ -14,6 +14,16 @@ export function supabaseEnv(): SupabaseEnv | null {
   return url && key ? { url: url.replace(/\/$/, ''), key } : null;
 }
 
+/**
+ * The service role, for the counters only the server may touch (refunds, per-network limits, link
+ * clicks). Null without the key, and each caller says what that means for it.
+ */
+export function serviceEnv(): SupabaseEnv | null {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return url && key ? { url: url.replace(/\/$/, ''), key } : null;
+}
+
 /** Calls a Postgres function; a user token runs it as that user, otherwise as `anon`. */
 export async function rpc(base: SupabaseEnv, name: string, body: object, token?: string): Promise<unknown> {
   const res = await fetch(`${base.url}/rest/v1/rpc/${name}`, {

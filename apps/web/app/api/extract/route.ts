@@ -51,28 +51,39 @@ export async function POST(request: Request) {
       cached.items.forEach((item) => hooks.onItem?.(item));
       return [{ ok: true, extraction: cached }, 200];
     }
+    // Rows already sent can't be taken back, so a read that streamed any never refunds, even if it
+    // fails afterwards (Oct 27, 2026: a read made to run out mid-answer kept its rows for free).
+    let sent = 0;
+    const refund = () => (sent ? Promise.resolve() : access.refund());
+    // A read that goes into the shared cache is made without anyone's own details (name, courses,
+    // jobs, schedule): those shaped what every classmate got back, and could be used to plant
+    // instructions in a class's syllabus for 150 days (Oct 27, 2026).
+    const input = cache
+      ? { ...parsed.data, context: { ...parsed.data.context, name: undefined, courses: [], employers: [], schedule: undefined } }
+      : parsed.data;
     try {
-      const result = await extract(parsed.data, undefined, {
+      const result = await extract(input, undefined, {
         fast: !!access.plus && process.env.EXTRACT_FAST !== '0',
         readers: { quick: process.env.EXTRACT_QUICK_MODEL, document: process.env.EXTRACT_DOCUMENT_MODEL },
         pdfText: process.env.EXTRACT_PDF_TEXT !== '0',
-        ...hooks,
+        onReset: hooks.onReset,
+        onItem: hooks.onItem ? (item) => { sent++; hooks.onItem!(item); } : undefined,
       });
       // How often PDFs read as text, for the cost dashboard; no content, only the path taken.
       if (result.ok && result.via) console.info('[extract.pdf]', { via: result.via });
       if (result.ok && cache) await writeCache(cache, result.extraction);
       // A read that found nothing to add gave the student nothing, so it doesn't use a free import
       // (Oct 27, 2026: "Nothing to add" still counted against the month).
-      if (result.ok && !result.extraction.items.length) await access.refund();
+      if (result.ok && !result.extraction.items.length) await refund();
       if (!result.ok) {
-        // A failed read never costs an import.
-        await access.refund();
+        // A failed read never costs an import, unless it already sent rows.
+        await refund();
         console.error('[extract.result]', { code: Object.entries(IMPORT_MESSAGES).find(([, message]) => message === result.error)?.[0] ?? 'unknown_failure' });
         return [{ ok: false, error: friendlyImportError(result.error, 422) }, 422];
       }
       return [{ ok: true, extraction: result.extraction }, 200];
     } catch (err) {
-      await access.refund();
+      await refund();
       console.error('[extract.provider]', errorDiagnostic(err));
       // The monthly spend limit on the Anthropic account stops every import: say so, by name.
       if (err instanceof Anthropic.BadRequestError && /usage limit/i.test(err.message)) {

@@ -44,7 +44,7 @@ describe('import API errors', () => {
 });
 
 describe('import limits', () => {
-  const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'sb_publishable_test', REVENUECAT_SECRET_KEY: 'sk_test' };
+  const env = { SUPABASE_URL: 'https://db.test', SUPABASE_KEY: 'sb_publishable_test', REVENUECAT_SECRET_KEY: 'sk_test', SUPABASE_SERVICE_ROLE_KEY: 'service' };
   const withAuth = (headers: Record<string, string>) => new Request('https://semli.test/api/extract', {
     method: 'POST',
     headers,
@@ -99,7 +99,19 @@ describe('import limits', () => {
     vi.stubGlobal('fetch', fetchMock);
     vi.mocked(extract).mockRejectedValue(new Error('boom'));
     await POST(withAuth({ authorization: 'Bearer t' }));
-    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import'))).toBe(true);
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import_for'))).toBe(true);
+  });
+
+  it('never refunds a read that already streamed rows', async () => {
+    const fetchMock = vi.fn(async (url: string) => url.includes('/auth/v1/user') ? ok({ id: 'u1' }) : url.includes('claim_import') ? ok(true) : ok(null));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.mocked(extract).mockImplementation(async (_req, _key, opts) => {
+      opts?.onItem?.({ kind: 'task', title: 'Essay', category: 'school', date: '2026-10-20', start: null, end: null, is_deadline: true, repeat_weekdays: [], repeat_until: null, course_code: null, evidence: '', confidence: 0.9, question: null });
+      return { ok: false, error: IMPORT_MESSAGES.incomplete };
+    });
+    const req = withAuth({ authorization: 'Bearer t', accept: 'application/x-ndjson' });
+    await (await POST(req)).text();
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import_for'))).toBe(false);
   });
 
   it('gives the import back when the read finds nothing to add', async () => {
@@ -107,7 +119,7 @@ describe('import limits', () => {
     vi.stubGlobal('fetch', fetchMock);
     vi.mocked(extract).mockResolvedValue({ ok: true, extraction: { detected_type: 'general', employer: null, course: null, covers_from: null, covers_to: null, items: [] } } as never);
     await POST(withAuth({ authorization: 'Bearer t' }));
-    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import'))).toBe(true);
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import_for'))).toBe(true);
   });
 
   it('rejects a session the database does not know', async () => {

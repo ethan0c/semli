@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { IMPORT_MESSAGES } from '@dayli/schema';
-import { rpc, supabaseEnv } from './supabase';
+import { rpc, serviceEnv, supabaseEnv } from './supabase';
 
 /*
  * Who may spend an import. The app sends its Supabase session (guests have an anonymous
@@ -55,7 +55,22 @@ export function purchaserFor(userId: string | null, header: string | null): stri
 
 /** The platform's own header first: a client can prepend anything to x-forwarded-for. */
 function clientIp(request: Request): string {
-  return request.headers.get('x-real-ip') || request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const ip = request.headers.get('x-real-ip') || request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  return networkOf(ip);
+}
+
+/**
+ * The network an address belongs to, for the per-network limits. An IPv6 address counts by its
+ * /64, the block one home or phone is given; otherwise one connection holds billions of addresses
+ * and each would start a fresh count (Oct 27, 2026). IPv4 addresses count as they are.
+ */
+export function networkOf(ip: string): string {
+  if (!ip.includes(':')) return ip;
+  const [head, tail = ''] = ip.toLowerCase().split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  const full = ip.includes('::') ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right] : left;
+  return `${full.slice(0, 4).map((h) => h.replace(/^0+(?=.)/, '')).join(':')}::/64`;
 }
 
 export async function checkImportAccess(request: Request): Promise<Access> {
@@ -69,7 +84,10 @@ export async function checkImportAccess(request: Request): Promise<Access> {
   if (!token && request.headers.get('x-revenuecat-app-user-id')) return { ok: false, status: 401, error: IMPORT_MESSAGES.session };
   if (!token) {
     const ipHash = createHash('sha256').update(`semli-demo:${clientIp(request)}`).digest('hex');
-    const allowed = await rpc(base, 'claim_demo', { p_ip_hash: ipHash, p_limit: DEMO_PREVIEWS_PER_DAY });
+    // Server-only (Oct 27, 2026). Without the service key the preview is off, never unlimited.
+    const service = serviceEnv();
+    if (!service) return { ok: false, status: 429, error: IMPORT_MESSAGES.demoLimit };
+    const allowed = await rpc(service, 'claim_demo', { p_ip_hash: ipHash, p_limit: DEMO_PREVIEWS_PER_DAY });
     return allowed === true ? { ok: true, refund: free } : { ok: false, status: 429, error: IMPORT_MESSAGES.demoLimit };
   }
 
@@ -92,9 +110,25 @@ export async function checkImportAccess(request: Request): Promise<Access> {
   return {
     ok: true,
     refund: async () => {
-      await Promise.all([rpc(base, 'refund_import', {}, token).then(() => {}, () => {}), guest?.refund()]);
+      await Promise.all([refundImport(userId), guest?.refund()]);
     },
   };
+}
+
+/**
+ * Gives back one import for a read that failed or found nothing. Only the server can (the database
+ * caps it at five a month per person); before Oct 27, 2026 any account could call the refund itself
+ * and never run out. Without the service key nothing is refunded, which costs the person one import.
+ */
+async function refundImport(userId: string | null): Promise<void> {
+  const service = serviceEnv();
+  if (!service || !userId) {
+    console.warn('[import.refund_unconfigured]', { code: service ? 'no_user' : 'no_service_key' });
+    return;
+  }
+  await rpc(service, 'refund_import_for', { p_user: userId }).then(() => {}, (error) => {
+    console.error('[import.refund]', error instanceof Error ? error.message : 'unknown');
+  });
 }
 
 /**
@@ -103,14 +137,12 @@ export async function checkImportAccess(request: Request): Promise<Access> {
  * import goes ahead: a missing setting must never stop real students importing.
  */
 async function claimGuest(request: Request): Promise<{ ok: boolean; refund: () => Promise<void> }> {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const open = { ok: true, refund: free };
-  if (!url || !key) {
+  const service = serviceEnv();
+  if (!service) {
     console.warn('[import.guest_limit_unconfigured]', { code: 'no_service_key' });
     return open;
   }
-  const service = { url: url.replace(/\/$/, ''), key };
   const ipHash = createHash('sha256').update(`semli-guest:${clientIp(request)}`).digest('hex');
   try {
     const allowed = await rpc(service, 'claim_guest_import', { p_ip_hash: ipHash, p_limit: GUEST_IMPORTS_PER_IP_PER_DAY });

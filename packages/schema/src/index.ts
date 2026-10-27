@@ -137,16 +137,24 @@ export type ScheduleVersion = z.infer<typeof ScheduleVersion>;
 export const MAX_SCHEDULE = 200;
 const ScheduleEntry = z.object({ date: LocalDate, start: LocalTime, end: LocalTime.nullable(), title: z.string().transform((t) => t.slice(0, 120)) });
 
+/**
+ * Context is trimmed, never refused (Oct 27, 2026): a request could carry megabytes of course names
+ * and pay for a hundred imports' worth of reading as one. These are far above any real plan.
+ */
+export const MAX_CONTEXT_COURSES = 100;
+export const MAX_CONTEXT_EMPLOYERS = 50;
+const clip = (n: number) => z.string().transform((s) => s.slice(0, n));
+
 export const ExtractContext = z.object({
-  name: z.string().optional(),
+  name: clip(80).optional(),
   today: LocalDate,
-  timezone: z.string(),
+  timezone: clip(64),
   /** BCP 47 tag of the device, e.g. "en-GB". Older builds and the web demo may omit it. */
   locale: z.string().max(35).optional(),
   /** ISO 3166 region the person studies or works in, e.g. "GB". */
   region: z.string().regex(/^[A-Z]{2}$/).optional(),
-  courses: z.array(z.object({ code: z.string().nullable(), title: z.string() })),
-  employers: z.array(z.string()),
+  courses: z.array(z.object({ code: clip(30).nullable(), title: clip(120) })).transform((a) => a.slice(0, MAX_CONTEXT_COURSES)),
+  employers: z.array(clip(80)).transform((a) => a.slice(0, MAX_CONTEXT_EMPLOYERS)),
   /**
    * The person's upcoming timed events, so a typed request can be placed around them ("cardio before
    * work"). Sent with typed and dictated messages only; older builds and the web demo omit it.
