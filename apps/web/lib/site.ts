@@ -14,7 +14,7 @@ export const SITE_NAME = 'Semli';
 export const APP_STORE_ID = '6824600264';
 export const APP_STORE_URL = 'https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264';
 /** Flip when the App Store listing goes live; until then app links lead to the beta waitlist. */
-export const APP_STORE_LIVE = false;
+export const APP_STORE_LIVE = true;
 export const SUPPORT_EMAIL = 'hello@semli.app';
 
 /** Search terms the site is written to answer; used in metadata and the landing pages. */

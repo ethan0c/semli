@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { APP_STORE_URL } from '../../lib/site';
 import { GET } from './route';
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn((to: string) => { throw new Error(`REDIRECT ${to}`); }) }));
@@ -21,22 +22,15 @@ describe('/beta', () => {
   });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
 
-  it('goes to the waitlist, keeping the referral, until TestFlight is set', async () => {
-    vi.stubEnv('TESTFLIGHT_URL', '');
-    expect(await target('https://semli.app/beta')).toBe('/#beta');
-    expect(await target('https://semli.app/beta?r=jess')).toBe('/?r=jess#beta');
-  });
-
-  it('goes to TestFlight once the link exists and counts the click', async () => {
+  it('goes to the App Store listing now that it is live, and counts the click', async () => {
     vi.stubEnv('TESTFLIGHT_URL', 'https://testflight.apple.com/join/abc');
-    expect(await target('https://semli.app/beta?r=jess')).toBe('https://testflight.apple.com/join/abc');
+    expect(await target('https://semli.app/beta?r=jess')).toBe(APP_STORE_URL);
     expect(fetchMock).toHaveBeenCalledWith('https://db.test/rest/v1/rpc/log_beta_click', expect.objectContaining({ body: JSON.stringify({ p_ref: 'jess' }) }));
   });
 
   it('still redirects when the click cannot be counted', async () => {
-    vi.stubEnv('TESTFLIGHT_URL', 'https://testflight.apple.com/join/abc');
     fetchMock.mockRejectedValue(new Error('offline'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(await target('https://semli.app/beta')).toBe('https://testflight.apple.com/join/abc');
+    expect(await target('https://semli.app/beta')).toBe(APP_STORE_URL);
   });
 });
