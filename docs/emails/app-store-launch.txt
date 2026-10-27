@@ -14,7 +14,7 @@ Thanks,
 Semli
 
 --
-You answered the Semli student survey or joined the waitlist.
+You joined the Semli waitlist.
 441 Country Club Road, York, PA 17403-3651, USA
 Contact Semli: hello@semli.app
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

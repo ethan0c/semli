@@ -53,9 +53,9 @@ Every email's words live in one file, `emails/emails.md`, with a short guide at 
 
 | Email | To | Subject | When |
 | --- | --- | --- | --- |
-| `survey-invite` | Survey | An update on that student planner survey | Retired Oct 27, 2026 (no beta); `app-store-launch` went to Survey instead |
+| `survey-invite` | Survey | An update on that student planner survey | Wed Oct 28, 2026, 10 am Eastern: the launch, in the survey respondents' own email |
 | `public-beta-invite` | Waitlist | Your Semli beta invite is here | Retired Oct 27, 2026 (no beta); `app-store-launch` went to Waitlist instead |
-| `app-store-launch` | Survey + Waitlist | Semli is on the App Store | Tue Oct 27, 2026, the day the listing went public (see [launch-week.md](launch-week.md)) |
+| `app-store-launch` | Waitlist | Semli is on the App Store | Tue Oct 27, 2026, the day the listing went public (see [launch-week.md](launch-week.md)) |
 | `spring-schedule` | Survey + Waitlist + App users | Registered for spring? Add your classes now | Tue Nov 17, 2026: spring registration is open at most schools |
 | `semester-reminder` | Survey + Waitlist + App users | Got your new syllabus yet? | Tue Jan 5, 2027: the week before most spring terms start |
 
