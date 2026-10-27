@@ -65,7 +65,7 @@
     "@lingui/cli": "^6.10.0",
     "@types/react": "~19.3.0",
     "eslint-config-expo": "~58.0.4",
-    "supabase": "^2.122.0-beta.10",
+    "supabase": "^2.122.0",
     "typescript": "~6.0.3"
   },
   "scripts": {

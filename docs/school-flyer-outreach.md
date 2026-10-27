@@ -8,7 +8,7 @@ Status: Oct 27, 2026. Three schools for the January push, each with a friend who
 |---|---|---|
 | York College of PA | York | |
 | Pomona College | Pomona | |
-| Georgia Tech | Georgia Tech | |
+| University of Georgia | UGA | |
 
 Fill in the names once each friend has said yes. The deal for helpers is the ambassador deal in [launch-guide.md](launch-guide.md): Plus free for a year, $50 after 25 installs. The friend's one line at the hand-off: "It reads your syllabus. Flip it, scan it, two minutes." The hand-off is the channel; the card is what stays in the bag.
 
@@ -20,8 +20,8 @@ Made by `design/render-cards.py` into `design/cards/out/`, one PDF per line item
 |---|---|---|---|
 | `york-e` | E: "York, your syllabus is a to-do list now." | 200 | York |
 | `pomona-e` | E, Pomona wording | 200 | Pomona |
-| `gatech-e` | E, Georgia Tech wording | 200 | Georgia Tech |
-| `pile` | The sticker pile and "Buried?" only; the survey line and the flip cue are gone | 250 | 100 York, 75 Pomona, 75 Georgia Tech |
+| `uga-e` | E, UGA wording | 200 | UGA |
+| `pile` | The sticker pile and "Buried?" only; the survey line and the flip cue are gone | 250 | 100 York, 75 Pomona, 75 UGA |
 | `c` | "That assignment you forgot about is due on Thu", the rest of the word running off the trim; the back answers "Thursday." | 150 | York |
 
 - E names the school, so it is printed per school. The pile and C do not, so each is printed once and the school is known from who hands it out.
@@ -64,5 +64,5 @@ Checked and rejected Oct 26: AliExpress (2 to 4 weeks from China, order would ha
 - By Dec 1: friends confirmed, names in the table above. Order 25 proofs of `c`; scan every proof on three phones under a desk lamp and check the cut word at trim.
 - By Dec 20: the real order placed (NextDayFlyers makes it in days, so there is slack).
 - By Jan 8: postcards in each friend's hands with the one-line script.
-- Jan 11 onward: hand out in the two weeks around each school's first day. Check each school's calendar; Pomona and Georgia Tech may not start on Jan 11.
+- Jan 11 onward: hand out in the two weeks around each school's first day. Check each school's calendar; Pomona and UGA may not start on Jan 11.
 - Mon Jan 18: first read of `ref` counts. Expect 30 to 50 installs in total. Fronts with scans: reorder for February, weighted to the school that pulled. Fronts with none: the message, not the quantity. The fall push (Aug 15 to Sep 10) gets B and the post-release wording.

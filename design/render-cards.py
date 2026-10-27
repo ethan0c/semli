@@ -7,8 +7,8 @@ three fronts, one back system:
     tag        front                                     qty   who gets it
     york-e     E, "York, your syllabus is a to-do list"  200   York
     pomona-e   E, Pomona wording                         200   Pomona
-    gatech-e   E, Georgia Tech wording                   200   Georgia Tech
-    pile       the sticker pile and "Buried?" only       250   100 York, 75 Pomona, 75 Georgia Tech
+    uga-e      E, UGA wording                            200   UGA
+    pile       the sticker pile and "Buried?" only       250   100 York, 75 Pomona, 75 UGA
     c          "That assignment you forgot about is due on Thu" 150   York
 
 E names the school, so it is printed per school. The pile and C do not, so they are printed once
@@ -77,8 +77,8 @@ SS = 2  # drawn at twice the size and scaled down: Pillow does not antialias sha
 SERIF_WEIGHT = 500  # EB Garamond Medium on the cards: holds up in print, still the editorial voice (Oct 27, 2026)
 HOOK_WEIGHT = "SemiBold"  # "Buried?" and "Sorted."; small Geist labels and CTAs are Medium
 
-SCHOOLS = {"york": "York", "pomona": "Pomona", "gatech": "Georgia Tech"}  # tag stem, name on the card
-LINE_ITEMS = ["york-e", "pomona-e", "gatech-e", "pile", "c"]  # docs/school-flyer-outreach.md
+SCHOOLS = {"york": "York", "pomona": "Pomona", "uga": "UGA"}  # tag stem, name on the card
+LINE_ITEMS = ["york-e", "pomona-e", "uga-e", "pile", "c"]  # docs/school-flyer-outreach.md
 
 # Copy. The ~span~ is the accent phrase, EB Garamond Italic in lavender on paper or butter on lavender.
 E_FRONT = "{school}, your syllabus is a ~to-do list~ now."
