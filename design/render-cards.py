@@ -15,7 +15,7 @@ same on one portrait page: the pile on top, the sorted band below. The postcard 
 "Flip for the fix" and an arrow, so the two-sided concept is explicit.
 
 The brand alternative keeps the same copy and plain QR. Morning clouds fade into warm paper;
-Regular Geist headings, a serif payoff, course dots, and plain rows follow the app's design system.
+EB Garamond headlines, Geist supporting text, course dots, and plain rows follow the brand.
 Its front has a small overlapping stack of paper events; its back resolves them into rows.
 
 Oct 26, 2026, founder's call: maximalist, first-glance, the brand serif optional; only the
@@ -476,7 +476,7 @@ def brand_postcard_front() -> Image.Image:
     img = cloud_paper(f)
     d = ImageDraw.Draw(img)
     draw_wordmark(img, f.edge(8), f.edge(8), f.px(26), INK, ACCENT)
-    d.text((f.edge(7.3), f.edge(43)), HOOK, font=store.font(f.px(22), "Regular"), fill=INK, anchor="ls")
+    d.text((f.edge(7.3), f.edge(43)), HOOK, font=store.serif(f.px(26), 400), fill=INK, anchor="ls")
     text_block(img, f, STAT, 8, 56, 69, 4.2, 6)
     for i, (x, y, angle) in enumerate(((116, 30, -9), (112, 44, 5), (119, 58, -4), (113, 72, 6))):
         place(img, loose_event(f, i, 57), f, x, y, angle)
@@ -488,8 +488,8 @@ def brand_postcard_back(tag: str) -> Image.Image:
     f = POSTCARD
     img = cloud_paper(f, 0.6, 0.48)
     d = ImageDraw.Draw(img)
-    d.text((f.edge(7.3), f.edge(28)), FIX, font=store.font(f.px(22), "Regular"), fill=INK, anchor="ls")
-    d.text((f.edge(8), f.edge(37)), PAYOFF, font=store.serif(f.px(5.3), 400), fill=ACCENT, anchor="ls")
+    d.text((f.edge(7.3), f.edge(28)), FIX, font=store.serif(f.px(26), 400), fill=INK, anchor="ls")
+    d.text((f.edge(8), f.edge(37)), PAYOFF, font=store.font(f.px(4.2), "Regular"), fill=ACCENT, anchor="ls")
     agenda_rows(img, f, 8, 43, 73)
     scan_block(img, f, 118.4, 93.6, 38, 7, 6, 4.6, 3.1,
                f"{SITE_URL}/beta?r={tag}", light=True)
@@ -501,15 +501,15 @@ def brand_flyer(tag: str) -> Image.Image:
     img = cloud_paper(f, 0.9, 0.65)
     d = ImageDraw.Draw(img)
     draw_wordmark(img, f.edge(12), f.edge(12), f.px(38), INK, ACCENT)
-    d.text((f.edge(11), f.edge(75)), HOOK, font=store.font(f.px(34), "Regular"), fill=INK, anchor="ls")
+    d.text((f.edge(11), f.edge(75)), HOOK, font=store.serif(f.px(40), 400), fill=INK, anchor="ls")
     text_block(img, f, STAT, 12, 94, 109, 6.6, 9)
     for i, (x, y, angle) in enumerate(((168, 105, -6), (162, 125, 5), (169, 145, -4), (163, 165, 3))):
         place(img, loose_event(f, i, 76, 1.35), f, x, y, angle)
     band = 177
     d.rectangle((0, f.edge(band), img.width, img.height), fill=SOFT)
     d.line((0, f.edge(band), img.width, f.edge(band)), fill=LINE, width=f.px(0.2))
-    d.text((f.edge(11), f.edge(202)), FIX, font=store.font(f.px(26), "Regular"), fill=INK, anchor="ls")
-    d.text((f.edge(12), f.edge(215)), PAYOFF, font=store.serif(f.px(6.8), 400), fill=ACCENT, anchor="ls")
+    d.text((f.edge(11), f.edge(202)), FIX, font=store.serif(f.px(32), 400), fill=INK, anchor="ls")
+    d.text((f.edge(12), f.edge(215)), PAYOFF, font=store.font(f.px(5.3), "Regular"), fill=ACCENT, anchor="ls")
     agenda_rows(img, f, 12, 224, 115, 1.1, count=3)
     scan_block(img, f, 174.9, 266.4, 42, 9, 8, 5.6, 3.7,
                f"{SITE_URL}/beta?r={tag}-flyer", light=True)
