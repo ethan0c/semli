@@ -2,13 +2,15 @@
  * The one email layout. Every marketing email in docs/emails is rendered from here so the
  * brand lives in one place: paper #FAF9F6, ink #222320, secondary #686963, hairline #E5E4DE,
  * Geist if installed (system stack otherwise), ink pill for the one action, purple only on
- * the wordmark dot, the heading's accent word and links (underlined). One image, the wordmark
- * PNG (design/render-pngs.mjs) with the paper baked in; until the site serves it, the header is
- * the same wordmark set in type. No tinted cards, no uppercase.
+ * the wordmark dot, the heading's accent word and links (underlined). One image: the app icon
+ * as the header mark (design/render-pngs.mjs), because Gmail's dark mode never touches images
+ * and the dark tile reads on paper and on a darkened page alike. Until the site serves it, the
+ * header is the wordmark set in type, which dark mode recolours like any text. No tinted cards,
+ * no uppercase.
  */
 
-/** Served by the site from apps/web/public/email/wordmark.png; 252 x 79, shown at 84 px wide. */
-export const WORDMARK_URL = 'https://www.semli.app/email/wordmark.png';
+/** Served by the site from apps/web/public/email/icon.png; 120 x 120, shown at 40 px. */
+export const MARK_URL = 'https://www.semli.app/email/icon.png';
 
 export const brand = {
   paper: '#FAF9F6',
@@ -45,11 +47,11 @@ const p = (text, extra = '') => `<p style="margin:0 0 16px 0;font-size:16px;line
  * @param {string} e.reason      why they got it, one sentence
  * @param {boolean} e.unsubscribe  broadcast token in the footer
  * @param {string} postalAddress sender's postal address for the footer
- * @param {{wordmark?: string|null}} options  the wordmark image URL, once it is live
+ * @param {{mark?: string|null}} options  the header icon URL, once it is live
  */
-export function renderHtml(e, postalAddress, { wordmark = null } = {}) {
-  const header = wordmark
-    ? `<img src="${wordmark}" width="84" height="26" alt="semli." style="display:block;width:84px;height:auto;border:0;outline:none;text-decoration:none;font-family:${brand.wordmarkFont};font-size:22px;font-weight:600;color:${brand.ink};">`
+export function renderHtml(e, postalAddress, { mark = null } = {}) {
+  const header = mark
+    ? `<img src="${mark}" width="40" height="40" alt="Semli" style="display:block;width:40px;height:40px;border:0;border-radius:9px;outline:none;text-decoration:none;font-family:${brand.wordmarkFont};font-size:16px;font-weight:600;color:${brand.ink};">`
     : `semli<span style="color:${brand.accent};">.</span>`;
   const action = e.action
     ? `<tr><td style="padding:4px 0 20px 0;">

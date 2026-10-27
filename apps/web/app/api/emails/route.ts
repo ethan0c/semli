@@ -3,7 +3,7 @@ import { templateFor, type OutboxRow } from '../../../lib/transactional-email';
 
 /*
  * Sends what the database queued in `email_outbox` (supabase/migrations/20261023100000 and
- * 20261027100000), each through its published Resend template (subject, sender and words live
+ * 20261027100000) once it is due, each through its published Resend template (subject, sender and words live
  * there; see lib/transactional-email.ts). Vercel's cron calls it with CRON_SECRET; the app may also call it right after
  * deleting an account so the confirmation arrives in seconds. Calling it only sends what is
  * already queued, so an unauthenticated call can't do more than send those emails sooner.
@@ -17,6 +17,13 @@ import { templateFor, type OutboxRow } from '../../../lib/transactional-email';
 export const maxDuration = 60;
 
 const BATCH = 50;
+/**
+ * A welcome waits this long after it was queued, so it arrives once the person has had time to
+ * try an import; the database calls this route every 10 minutes when a row is due
+ * (supabase/migrations/20261027120000), so welcomes land 45 to 55 minutes after sign-up.
+ * Account emails go at once.
+ */
+export const WELCOME_DELAY_MINUTES = 45;
 const RESEND = 'https://api.resend.com';
 const USERS_GROUP = 'App users';
 const OTHER_GROUPS = ['Survey', 'Waitlist'];
@@ -92,7 +99,8 @@ export async function flush(): Promise<{ sent: number; failed: number }> {
   const e = env();
   if (!e) return { sent: 0, failed: 0 };
   const headers = { apikey: e.service, authorization: `Bearer ${e.service}`, 'content-type': 'application/json' };
-  const res = await fetch(`${e.url}/rest/v1/email_outbox?select=*&order=id&limit=${BATCH}`, { headers });
+  const due = new Date(Date.now() - WELCOME_DELAY_MINUTES * 60_000).toISOString();
+  const res = await fetch(`${e.url}/rest/v1/email_outbox?select=*&or=(kind.neq.welcome,created_at.lte.${encodeURIComponent(due)})&order=id&limit=${BATCH}`, { headers });
   if (!res.ok) throw new Error(`outbox read ${res.status}`);
   const rows = (await res.json()) as OutboxRow[];
   const resend = resendClient(e.resend);

@@ -30,7 +30,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderHtml as renderLayout, renderText, wordCount, WORDMARK_URL } from './layout.mjs';
+import { renderHtml as renderLayout, renderText, wordCount, MARK_URL } from './layout.mjs';
 import { emails, transactional, templateVariables, segments, feedbackThankYou, USERS_REASON } from './templates.mjs';
 
 const targets = (e) => (Array.isArray(e.segment) ? e.segment : [e.segment]);
@@ -67,20 +67,20 @@ function table(rows) {
   for (const r of rows) console.log('  ' + r.map((c, i) => pad(c, widths[i])).join('  '));
 }
 
-// ---------- the wordmark image ----------
+// ---------- the header icon ----------
 
-/** The PNG wordmark once the site serves it; the typeset one until then, so no email shows a broken image. */
-let wordmark = null;
-async function checkWordmark() {
+/** The icon once the site serves it; the typeset wordmark until then, so no email shows a broken image. */
+let mark = null;
+async function checkMark() {
   try {
-    const res = await fetch(WORDMARK_URL, { method: 'HEAD' });
-    wordmark = res.ok && (res.headers.get('content-type') ?? '').startsWith('image/') ? WORDMARK_URL : null;
+    const res = await fetch(MARK_URL, { method: 'HEAD' });
+    mark = res.ok && (res.headers.get('content-type') ?? '').startsWith('image/') ? MARK_URL : null;
   } catch {
-    wordmark = null;
+    mark = null;
   }
-  if (!wordmark) warn(`${WORDMARK_URL} isn't live yet (deploy the site), so the header uses the typeset wordmark. Publish again after the deploy.`);
+  if (!mark) warn(`${MARK_URL} isn't live yet (deploy the site), so the header uses the typeset wordmark. Publish again after the deploy.`);
 }
-const renderHtml = (e, postal) => renderLayout(e, postal, { wordmark });
+const renderHtml = (e, postal) => renderLayout(e, postal, { mark });
 
 // ---------- build / preview ----------
 
@@ -406,7 +406,7 @@ async function publish() {
 // ---------- main ----------
 
 const [cmd, ...rest] = args;
-const NEEDS_WORDMARK = new Set(['build', 'preview', 'publish', 'send']);
+const NEEDS_MARK = new Set(['build', 'preview', 'publish', 'send']);
 const run = {
   build: () => build(),
   preview: () => preview(),
@@ -420,5 +420,5 @@ const run = {
 if (!run) {
   console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('*/')[0].split('\n').slice(2).map((l) => l.replace(/^ \* ?/, '')).join('\n'));
 } else {
-  Promise.resolve().then(() => (NEEDS_WORDMARK.has(cmd) ? checkWordmark() : null)).then(run).catch((err) => { console.error(`\n  ${err.message}\n`); process.exit(1); });
+  Promise.resolve().then(() => (NEEDS_MARK.has(cmd) ? checkMark() : null)).then(run).catch((err) => { console.error(`\n  ${err.message}\n`); process.exit(1); });
 }

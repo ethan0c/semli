@@ -137,7 +137,7 @@ If the dates don't look right, reply and tell me what happened.
 ## welcome
 
 Kind: account
-When: The day an account first has a confirmed address (database trigger, daily cron at 15:00 UTC)
+When: 45 to 55 minutes after an account first has a confirmed address (database trigger, sent by the 10-minute database schedule)
 Subject: Welcome to Semli
 Preview: Your plan is now backed up to your account.
 Sign-off: Thanks,
