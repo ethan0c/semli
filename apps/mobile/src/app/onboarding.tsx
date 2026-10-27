@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
 import { Dimensions, Platform, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Toast } from "@/components/Overlay";
 
 import { Composer } from "@/components/Composer";
 import { PickerPill, Radio } from "@/components/Controls";
@@ -265,6 +266,8 @@ export default function OnboardingScreen() {
       {step === "remind" && <RemindStep onDone={() => go("plus")} />}
       {step === "plus" && <PlusStep onFinish={finish} />}
       </Animated.View>
+      {/* Says a sign-up worked ("Welcome to Semli… signed up with you@…") on the first step after it. */}
+      <Toast offset={120} />
     </View>
   );
 }

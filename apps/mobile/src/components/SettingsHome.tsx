@@ -97,7 +97,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
           {LANGUAGE_PICKER ? <Row label={t`Language`} icon="globe" value={LANGUAGES.find((l) => l.id === settings.language)?.name ?? (SYSTEM_NAME === 'system' ? t`Match system` : t`Match iPhone`)} onPress={() => openSetting('language')} /> : null}
           <Row label={t`Region`} icon="globe" value={regionName(settings.region ?? deviceRegion(), i18n.locale)} onPress={() => openSetting('region')} />
           <Row label={t`Appearance`} icon="appearance" value={appearanceLabels[settings.appearance]} onPress={() => openSetting('appearance')} />
-          <ToggleRow label={t`Sounds`} icon="volume" value={settings.sounds} onChange={(sounds) => { setSettings({ sounds }); feedback('select'); }} last={Platform.OS === 'web'} />
+          <ToggleRow label={t`Sounds`} sub={Platform.OS === 'web' ? undefined : t`Follow your ring and silent switch`} icon="volume" value={settings.sounds} onChange={(sounds) => { setSettings({ sounds }); feedback('select'); }} last={Platform.OS === 'web'} />
           {/* A laptop has nothing to vibrate. */}
           {Platform.OS === 'web' ? null : <ToggleRow label={t`Haptics`} icon="vibrate" value={settings.haptics} onChange={(haptics) => { setSettings({ haptics }); feedback('tap'); }} last />}
         </Group>

@@ -38,6 +38,7 @@ import { configureNotifications, useNotificationTaps, useReminderSync } from '@/
 
 import { PurchasesProvider } from '@/providers/PurchasesProvider';
 import { navigationButtonOptions } from '@/components/NavButtons';
+import { preloadSounds } from '@/lib/feedback';
 import { useStore } from '@/store';
 import { useTheme, headerTitle } from '@/theme';
 import { posthog, posthogLogs } from '@/lib/analytics';
@@ -139,6 +140,9 @@ function RootLayout() {
     const fallback = setTimeout(hideSplash, SPLASH_FALLBACK_MS);
     return () => clearTimeout(fallback);
   }, [ready]);
+
+  // Sounds load up front, so the first chime of each kind plays (lib/feedback.ts).
+  useEffect(() => { if (ready) preloadSounds(); }, [ready]);
 
   // Development: a command file in Documents seeds a state for screenshots (see lib/dev.ts).
   useEffect(() => {
@@ -248,9 +252,9 @@ function RootLayout() {
           {/* On a new install it is the first screen and takes over the splash logo, so it must not slide up. */}
           <Stack.Screen name="auth" options={{ presentation: 'fullScreenModal', animation: onboarded ? 'default' : 'none', contentStyle: { backgroundColor: c.canvas } }} />
           {/* Review is a full-screen cover: it can be reached from onboarding too, so it sits outside the guards. */}
-          <Stack.Screen name="review" options={{ presentation: 'fullScreenModal', gestureEnabled: false, headerShown: true, ...navigationButtonOptions('close'), ...(sidebar ? { contentStyle: { backgroundColor: c.canvas, ...frameStyle(twoPane, true) } } : null) }} />
+          <Stack.Screen name="review" dangerouslySingular={() => 'review'} options={{ presentation: 'fullScreenModal', gestureEnabled: false, headerShown: true, ...navigationButtonOptions('close'), ...(sidebar ? { contentStyle: { backgroundColor: c.canvas, ...frameStyle(twoPane, true) } } : null) }} />
           <Stack.Screen name="paywall" options={{ presentation: 'fullScreenModal', headerShown: true, headerTransparent: true, headerStyle: { backgroundColor: 'transparent' }, contentStyle: { backgroundColor: palettes.dark.canvas, width: '100%' }, title: '', headerTintColor: palettes.dark.inkPrimary, ...navigationButtonOptions('close') }} />
-          <Stack.Screen name="account" options={sidebar ? dialogScreen : { presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
+          <Stack.Screen name="account" dangerouslySingular={() => 'account'} options={sidebar ? dialogScreen : { presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
           <Stack.Protected guard={!onboarded && !webGuest}>
             {/* No sidebar here, so the steps sit in a centred column rather than the app's frame. */}
             <Stack.Screen name="onboarding" options={{ animation: 'fade', contentStyle: { backgroundColor: c.canvas, ...(sidebar ? centred : null) } }} />
@@ -261,14 +265,16 @@ function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: c.canvas } }} />
             {/* Legacy capture links redirect to Add without presenting an empty modal. */}
             <Stack.Screen name="capture" />
-            {/* Flows slide up as full-screen covers with an X; detail screens push with a back chevron. */}
-            <Stack.Screen name="create" options={sidebar ? dialogScreen : { presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
-            <Stack.Screen name="share-schedule" options={{ presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
-            <Stack.Screen name="item/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
-            <Stack.Screen name="repeat/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
-            <Stack.Screen name="course/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
-            <Stack.Screen name="employer/[name]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
-            <Stack.Screen name="import/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
+            {/* Flows slide up as full-screen covers with an X; detail screens push with a back chevron.
+                Every one is singular: opening a screen already in the stack brings that one to the top, so
+                item → course → item, two overlapping items, a double tap or a second "n" never stack copies. */}
+            <Stack.Screen name="create" dangerouslySingular={() => 'create'} options={sidebar ? dialogScreen : { presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
+            <Stack.Screen name="share-schedule" dangerouslySingular={() => 'share-schedule'} options={{ presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
+            <Stack.Screen name="item/[id]" dangerouslySingular options={{ headerShown: true, ...navigationButtonOptions('back') }} />
+            <Stack.Screen name="repeat/[id]" dangerouslySingular options={{ headerShown: true, ...navigationButtonOptions('back') }} />
+            <Stack.Screen name="course/[id]" dangerouslySingular options={{ headerShown: true, ...navigationButtonOptions('back') }} />
+            <Stack.Screen name="employer/[name]" dangerouslySingular options={{ headerShown: true, ...navigationButtonOptions('back') }} />
+            <Stack.Screen name="import/[id]" dangerouslySingular options={{ headerShown: true, ...navigationButtonOptions('back') }} />
             {/* Settings frames its own screens, so its Semli Plus page can run the photo full width. */}
             <Stack.Screen name="settings" options={{ contentStyle: { backgroundColor: c.canvas } }} />
           </Stack.Protected>

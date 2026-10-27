@@ -47,9 +47,9 @@ export function Row({ label, value, onPress, selected, destructive, last, icon }
   );
 }
 
-export function ToggleRow({ label, value, onChange, last, icon }: { label: string; value: boolean; onChange: (v: boolean) => void; last?: boolean; icon?: IconKey }) {
+export function ToggleRow({ label, sub, value, onChange, last, icon }: { label: string; sub?: string; value: boolean; onChange: (v: boolean) => void; last?: boolean; icon?: IconKey }) {
   const { c } = useTheme();
-  return <ListRow title={label} last={last} chevron={false} leading={icon ? <Icon name={icon} size={20} color={c.inkPrimary} /> : undefined} trailing={<NativeToggle value={value} onChange={onChange} label={label} />} />;
+  return <ListRow title={label} sub={sub} last={last} chevron={false} leading={icon ? <Icon name={icon} size={20} color={c.inkPrimary} /> : undefined} trailing={<NativeToggle value={value} onChange={onChange} label={label} />} />;
 }
 
 /** A labelled one-line field inside a settings group. */

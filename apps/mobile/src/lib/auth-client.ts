@@ -14,6 +14,8 @@ import { posthog, track } from './analytics';
 import { accountOf, deleteReplacedGuest, supabase, useSession } from './supabase';
 import { ACCOUNT_REQUIRED, APPLE_ON_WEB } from './web';
 import { useStore } from '../store';
+import { feedback } from './feedback';
+import { durations } from './motion';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -50,13 +52,43 @@ async function signedIn(): Promise<SignInResult> {
     }
   }
 
-  const { restored } = await restoreFromCloud().catch((error: unknown) => {
+  const result = await restoreFromCloud().catch((error: unknown) => {
     reportError('cloud.restore_after_sign_in', error);
     const { settings, setSettings } = useStore.getState();
     setSettings({ cloud: { ...settings.cloud, error: 'You’re signed in, but we couldn’t restore your backup. Check your connection and try again. Your plan on this phone is still here.' } });
     return { restored: false };
   });
+  const restored = result.restored;
+  if (user && !user.is_anonymous) {
+    const fullName = user.user_metadata?.full_name;
+    welcome = {
+      first: (typeof fullName === 'string' ? fullName : useStore.getState().settings.name).trim().split(/\s+/)[0] || null,
+      email: user.email ?? null,
+      apple: user.app_metadata?.provider === 'apple',
+      // Made in the last few minutes: this sign-in is the account's first.
+      isNew: Date.now() - Date.parse(user.created_at) < NEW_ACCOUNT_MS,
+      restored,
+    };
+  }
   return { signedIn: true, restored };
+}
+
+/** An account this young is being signed into for the first time. */
+const NEW_ACCOUNT_MS = 10 * 60 * 1000;
+
+/** Who just signed in, said once the sign-in screens have closed (see `leaveAuth`). */
+let welcome: { first: string | null; email: string | null; apple: boolean; isNew: boolean; restored: boolean } | null = null;
+
+/**
+ * The line that tells someone their sign-in worked: who they are now, and where their plan is.
+ * Exported for tests.
+ */
+export function welcomeLine(w: NonNullable<typeof welcome>): string {
+  const name = w.first ? `, ${w.first}` : '';
+  const who = w.apple || !w.email ? 'with Apple' : `as ${w.email}`;
+  if (w.isNew) return `Welcome to Semli${name}. You’re signed up ${w.apple || !w.email ? 'with Apple' : `with ${w.email}`}, and your plan is backed up.`;
+  if (w.restored) return `Welcome back${name}. Your backed-up plan is on this iPhone.`;
+  return `Signed in ${who}. Your plan is backed up.`;
 }
 
 /** The redirect back from Google: `?code=` (PKCE) or `?error_code=`. */
@@ -278,9 +310,21 @@ export function useLeaveIfSignedIn(enabled = true) {
   }, [enabled, ready, signedIn]);
 }
 
-export function leaveAuth() {
+/**
+ * Closes the sign-in screens. After a sign-in it says so, with the success sound: a sign-in that
+ * only closed a screen left people unsure it had worked. `message` replaces the line (a new password).
+ */
+export function leaveAuth(message?: string) {
   // The web has no cover to dismiss: the callback page, or a typed URL, may be the only screen.
   if (Platform.OS === 'web') router.replace(useStore.getState().settings.onboarded ? '/' : '/onboarding?step=role');
   else if (useStore.getState().settings.onboarded) router.dismissTo('/');
   else router.replace('/onboarding?step=role');
+  const line = message ?? (welcome ? welcomeLine(welcome) : null);
+  welcome = null;
+  if (!line) return;
+  // Once the cover has gone, so the toast rises on the screen they land on.
+  setTimeout(() => {
+    feedback('success');
+    useStore.getState().showToast(line);
+  }, durations.slow);
 }

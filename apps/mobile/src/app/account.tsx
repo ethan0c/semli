@@ -73,8 +73,8 @@ export default function AccountScreen() {
             <T token="body" color={c.inkSecondary}>Create a free account to back up your plan and access it on a new phone.</T>
           </View>
           <Group>
-            <Row label="Back up your plan" onPress={() => router.push('/auth/signup')} />
-            <Row label="Sign in" onPress={() => router.push('/auth/login')} last />
+            <Row label="Back up your plan" onPress={() => router.replace('/auth/signup')} />
+            <Row label="Sign in" onPress={() => router.replace('/auth/login')} last />
           </Group>
         </ScrollView>
       </Sheet>

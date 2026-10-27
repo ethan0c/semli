@@ -47,6 +47,20 @@ function player(name: Sound): AudioPlayer {
   return (players[name] ??= Object.assign(createAudioPlayer(SOURCES[name]), { volume: 0.6 }));
 }
 
+/**
+ * Loads every sound once the plan is ready. A player made on first use was still loading when
+ * play() ran, so the first chime of each kind was silent, and most kinds are rare enough that
+ * people heard almost none. Sounds still follow the ring/silent switch, as Apple asks of app sounds.
+ */
+export function preloadSounds() {
+  if (!useStore.getState().settings.sounds) return;
+  try {
+    (Object.keys(SOURCES) as Sound[]).forEach((name) => player(name));
+  } catch (error) {
+    reportError('feedback.audio_preload', error);
+  }
+}
+
 /** Play a cue, honoring the Sounds and Haptics switches in You → Preferences. */
 export function feedback(cue: Cue) {
   const { sounds, haptics } = useStore.getState().settings;
