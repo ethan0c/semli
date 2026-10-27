@@ -114,7 +114,8 @@ export function CourseDetail({ id, onClose }: { id?: string; onClose?: () => voi
 
   // From a syllabus, October 12
   const batch = course.batchId ? batches.find((b) => b.id === course.batchId) : undefined;
-  const sourceLine = batch ? `From ${sourceName(batch.source ?? batch.label, 'a syllabus')}, ${longMonthDay(batch.createdAt.slice(0, 10))}` : 'Added by hand';
+  // An import older than the undo history keeps (store/undo.ts) is still an import, not a course added by hand.
+  const sourceLine = batch ? `From ${sourceName(batch.source ?? batch.label, 'a syllabus')}, ${longMonthDay(batch.createdAt.slice(0, 10))}` : course.batchId ? 'From an import' : 'Added by hand';
 
   // This term: every deadline on one line from the first dated thing to the last.
   const from = all[0]?.date;

@@ -18,7 +18,7 @@ import { accountOf, useSession } from '@/lib/supabase';
 import { useCourseList, useItemList, useScheduleList, useStore, type Batch } from '@/store';
 import { THIS_DEVICE } from '@/lib/web';
 import { testFortnight } from '@/store/sample';
-import { undoQuestion } from '@/store/undo';
+import { EDIT_DAYS, IMPORT_DAYS, undoQuestion } from '@/store/undo';
 import { useTheme, screen, space, size } from '@/theme';
 
 const RECENT = 3;
@@ -128,7 +128,7 @@ export default function DataScreen() {
         <ListRow title="Add to Calendar" sub="Export events to Apple or Google Calendar" onPress={() => void exportCalendar()} last />
       </Group>
 
-      <Group title="Recent changes">
+      <Group title="Recent changes" footer={batches.length ? `Edits can be undone for ${EDIT_DAYS} days, imports for ${IMPORT_DAYS}.` : undefined}>
         {batches.length === 0 ? (
           <View style={styles.empty}>
             <T token="callout" color={c.inkSecondary}>Your imports and edits will appear here, with options to undo recent changes.</T>

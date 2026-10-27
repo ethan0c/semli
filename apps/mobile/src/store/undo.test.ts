@@ -1,7 +1,7 @@
 import type { Item } from '@dayli/schema';
 import { describe, expect, it } from 'vitest';
 import type { Batch } from './index';
-import { planUndo, undoQuestion } from './undo';
+import { MAX_BATCHES, planUndo, trimBatches, undoQuestion } from './undo';
 
 const item = (id: string, over: Partial<Item> = {}): Item => ({
   id, kind: 'task', title: id, category: 'school', icon: 'book', date: '2026-10-20', start: null, end: null, isDeadline: false,
@@ -39,5 +39,23 @@ describe('planUndo', () => {
     expect(r.series).toEqual({ s1: rule });
     expect(r.courses.map((k) => k.id)).toEqual(['k']);
     expect(planUndo(batch, byId(a), {}, [{ id: 'k', code: 'BIO', title: 'Bio', instructor: null, sourceId: null, batchId: 'b' }]).courses).toEqual([]);
+  });
+});
+
+describe('trimBatches', () => {
+  const now = Date.parse('2027-03-01T12:00:00Z');
+  const daysAgo = (n: number) => new Date(now - n * 86_400_000).toISOString();
+  const b = (id: string, age: number, source?: string): Batch => ({ id, createdAt: daysAgo(age), label: id, changes: [], undone: false, source });
+
+  it('keeps edits 30 days, imports 180, and the loaded sample however old', () => {
+    const kept = trimBatches([b('edit', 10), b('old-edit', 31), b('import', 120, 'syllabus.pdf'), b('old-import', 181, 'x.pdf'), b('sample', 400, 'Sample week')], now, 'sample');
+    expect(kept.map((x) => x.id)).toEqual(['edit', 'import', 'sample']);
+  });
+
+  it('keeps the newest when there are too many', () => {
+    const many = Array.from({ length: MAX_BATCHES + 5 }, (_, i) => b(`e${i}`, 0));
+    const kept = trimBatches(many, now);
+    expect(kept).toHaveLength(MAX_BATCHES);
+    expect(kept[0]!.id).toBe('e0');
   });
 });

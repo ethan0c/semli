@@ -13,7 +13,7 @@ import { DEFAULT_API_URL } from '@/lib/api';
 import { track } from '@/lib/analytics';
 import { realRecords } from '@/lib/planner-preview';
 import { allDoneLine, firstOf } from '@/lib/milestones';
-import { planUndo } from './undo';
+import { planUndo, trimBatches } from './undo';
 import { DEFAULT_REMINDERS, type ReminderPrefs } from '@/lib/reminder-plan';
 import { plannerLoadFailed, plannerStorage } from '@/lib/storage';
 
@@ -49,6 +49,8 @@ export interface Pending {
   input?: ExtractRequest['input'];
   /** Plus paid for this read: the free allowance was used up. Review says so, the first time. */
   plus?: boolean;
+  /** When it was read, for "Finish reviewing" after Semli was closed. */
+  at?: string;
 }
 
 export type PlanId = 'monthly' | 'semester' | 'yearly';
@@ -238,7 +240,7 @@ export const useStore = create<State>()(
       usage: { month: '', imports: 0 },
 
       setHydrated: () => set({ hydrated: true }),
-      setPending: (pending) => set({ pending }),
+      setPending: (pending) => set({ pending: pending ? { at: nowIso(), ...pending } : null }),
       showToast: (message, batchId) => set({ toast: { message, batchId } }),
       showDoneToast: (done) => {
         if (!done.length) return;
@@ -607,7 +609,10 @@ export const useStore = create<State>()(
     {
       name: 'semli',
       storage: createJSONStorage(() => plannerStorage),
-      partialize: (s) => ({ items: s.items, courses: s.courses, schedules: s.schedules, batches: s.batches, settings: s.settings, usage: s.usage, taskWorkDates: s.taskWorkDates, series: s.series, suggestionDismissals: s.suggestionDismissals }),
+      partialize: (s) => ({ items: s.items, courses: s.courses, schedules: s.schedules, batches: trimBatches(s.batches, Date.now(), s.settings.sampleBatchId), settings: s.settings,
+        // A read under review survives iOS closing Semli in the background (Oct 27, 2026: the read was
+        // lost and its free import spent). The web's copy of what was read stays behind: it can be megabytes.
+        pending: s.pending ? { extraction: s.pending.extraction, source: s.pending.source, plus: s.pending.plus, at: s.pending.at } : null, usage: s.usage, taskWorkDates: s.taskWorkDates, series: s.series, suggestionDismissals: s.suggestionDismissals }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<State>;
         // Nested records gain fields over time; a stored one must not drop the new defaults.

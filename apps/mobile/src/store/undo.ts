@@ -81,3 +81,26 @@ export function undoQuestion(batch: Batch, items: Record<string, Item>, series: 
   const stay = kept ? ` Your later changes to ${n(kept)} will be kept.` : '';
   return `Undo “${batch.label}”? ${back}${stay}`;
 }
+
+/** Edits stay undoable this long: a mistake is noticed in days, not months. */
+export const EDIT_DAYS = 30;
+/** Imports stay this long, a term: "Added from" links to them, and a syllabus can be undone all semester. */
+export const IMPORT_DAYS = 180;
+/** At most this many, oldest first out, whatever their age. */
+export const MAX_BATCHES = 300;
+
+/**
+ * The undo history worth saving. Every change rewrote all of it, and each entry holds whole copies
+ * of what it touched: a semester came to about 600 KB, twice the plan itself, and on the web it
+ * shares the browser's 5 MB with the plan (Oct 27, 2026). What drops off can't be undone any more;
+ * the plan itself is untouched. The sample week stays while it's loaded, so it can still be removed.
+ */
+export function trimBatches(batches: Batch[], now: number, keepId?: string | null): Batch[] {
+  const day = 86_400_000;
+  const kept = batches.filter((b) => {
+    if (b.id === keepId) return true;
+    const age = now - Date.parse(b.createdAt);
+    return !(age > (b.source ? IMPORT_DAYS : EDIT_DAYS) * day);
+  });
+  return kept.length > MAX_BATCHES ? kept.filter((b, i) => i < MAX_BATCHES || b.id === keepId) : kept;
+}

@@ -9,6 +9,7 @@ import { Heard } from '@/components/Heard';
 import { GroupLabel, ListRow, TextButton } from '@/components/Controls';
 import { Icon } from '@/components/Icon';
 import { Reading } from '@/components/Reading';
+import { ResumeReview } from '@/components/ResumeReview';
 import { RecentShots } from '@/components/RecentShots';
 import { T } from '@/components/Text';
 import { TabHeader } from '@/components/TabHeader';
@@ -211,9 +212,10 @@ export function AddScreen() {
 
         {!busy ? (
           <View>
+            <ResumeReview style={{ paddingBottom: space.lg }} />
             <GroupLabel>Or start with</GroupLabel>
             <ListRow leading={<Icon name="file" size={20} color={c.inkPrimary} />} title="A syllabus" sub="Classes, exams and due dates for the whole term" onPress={() => void pick(pickPdfInput)} />
-            <ListRow leading={<Icon name="school" size={20} color={c.inkPrimary} />} title="Canvas" sub="Import due dates free. Keep them in sync with Plus." onPress={() => router.push('/settings/canvas')} />
+            <ListRow leading={<Icon name="school" size={20} color={c.inkPrimary} />} title="Canvas or Brightspace" sub="Import due dates free, including eLC. Keep them in sync with Plus." onPress={() => router.push('/settings/canvas')} />
             <ListRow leading={<Icon name="work" size={20} color={c.inkPrimary} />} title="A work schedule" sub="A screenshot from the scheduling app or the group chat" onPress={() => void pick(() => pickImageInput(false))} />
             <ListRow leading={<Icon name="pen" size={20} color={c.inkPrimary} />} title="Something by hand" sub="A to-do or event with the date you pick" last onPress={() => router.push({ pathname: '/create', params: { kind: 'task' } })} />
           </View>

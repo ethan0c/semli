@@ -14,6 +14,7 @@ import { Icon } from '@/components/Icon';
 import { HourView } from '@/components/HourView';
 import { TodayFirst } from '@/components/Firsts';
 import { ItemDetail } from '@/components/ItemDetail';
+import { ResumeReview } from '@/components/ResumeReview';
 import { ItemRow } from '@/components/ItemRow';
 import { PhotoHeader } from '@/components/PhotoHeader';
 import { Press, PressRow } from '@/components/Press';
@@ -408,6 +409,8 @@ function TodayScreen() {
           {nextWeekPending ? <ListRow title="Next week's shifts" sub="Not added yet" last onPress={() => router.navigate({ pathname: '/add', params: { source: 'image', at: String(Date.now()) } })} /> : null}
         </View>
       ) : null}
+
+      <ResumeReview style={styles.section} />
 
       {offerSave ? <SavePlanRow onDismiss={() => setSettings({ savePlanDismissed: true })} /> : null}
 
