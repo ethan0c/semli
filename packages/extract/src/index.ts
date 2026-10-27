@@ -23,7 +23,7 @@ export function modelFor(kind: ExtractRequest['input']['kind'], readers: Readers
 
 /** Fast mode is an Opus feature; any other model reads at its own speed. */
 const hasFast = (model: string) => model.startsWith('claude-opus');
-export const PROMPT_VERSION = '2026-10-27.1';
+export const PROMPT_VERSION = '2026-10-27.3';
 
 const SYSTEM = `You read the things busy students and shift workers send to their planner app, Semli, and turn them into calendar events and to-dos.
 
@@ -46,6 +46,8 @@ How to read them:
 - A typed or dictated request is often placed around the user's existing plan, listed below as "Existing plan". Anchor to it: "before work" or "before my shift" ends when that day's shift starts; "after work" or "after class" starts when it ends; "on my work days" means each date with a shift. Add one event for each date the anchor gives, within the plan shown, and give each a time. Use the length the user gives, otherwise a typical one for the activity (a workout or run 45 minutes, a meal 30 minutes, a study session an hour). Only when nothing in the message or the plan can place an event, leave its time null and ask one question.
 - When the user asks for something on fixed weekdays ("every weekday", "Mon, Wed and Fri", "every morning"), return one repeating event (repeat_weekdays, repeat_until) with its time, rather than separate events. Something anchored to shifts that move from week to week stays one event per shift date.
 - Titles are short and natural: "Olive Garden shift", "Stats exam 2", "Return library book". Don't repeat the date in the title.
+- Ask only when an item can't be placed without it: an event with no date, or one whose start time is genuinely unknown, or a date that is truly ambiguous. Don't ask whether something repeats unless the input suggests it might, how long something lasts, whether to leave an end time open, or when to do an undated to-do (an undated to-do is fine as it is). Each question is something the person has to stop and answer.
+- Never invent an end time: leave end null unless the input states it, or the item is being placed around the existing plan (then use a typical length, as above).
 - Write user-facing questions in plain, friendly language. Ask one specific question about the missing detail, without technical terms or blame.
 - evidence is the exact text the item came from. confidence is your honest probability that every field is right.
 - Never invent items that are not in the input. If nothing is schedulable, return an empty items list.`;

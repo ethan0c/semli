@@ -1,9 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { extract } from '@dayli/extract';
+import { extract, MODEL } from '@dayli/extract';
 import { ExtractRequest, IMPORT_MESSAGES, friendlyImportError, type ExtractResponse } from '@dayli/schema';
 import { errorDiagnostic } from '@dayli/core';
 import { checkImportAccess, type Access } from '../../../lib/import-access';
 import { cors } from '../../../lib/cors';
+import { cacheKey, readCache, writeCache } from '../../../lib/syllabus-cache';
 
 // Dense multi-page syllabi can take more than a minute to read.
 export const maxDuration = 180;
@@ -37,6 +38,14 @@ export async function POST(request: Request) {
   }
   if (!access.ok) return reply({ ok: false, error: access.error }, access.status);
 
+  // A classmate already read this exact syllabus this term: hand it back at once, for nothing.
+  const cache = cacheKey(parsed.data, process.env.EXTRACT_DOCUMENT_MODEL || MODEL);
+  const cached = cache ? await readCache(cache) : null;
+  if (cached) {
+    console.info('[extract.pdf]', { via: 'cache' });
+    return reply({ ok: true, extraction: cached });
+  }
+
   try {
     // Which model reads is the server's call, never the app's, so it changes on Vercel without a
     // release (docs/env.md): messages and screenshots on the quick reader (Haiku), documents on the
@@ -48,6 +57,7 @@ export async function POST(request: Request) {
     });
     // How often PDFs read as text, for the cost dashboard; no content, only the path taken.
     if (result.ok && result.via) console.info('[extract.pdf]', { via: result.via });
+    if (result.ok && cache) await writeCache(cache, result.extraction);
     if (!result.ok) {
       // A failed read never costs an import.
       await access.refund();

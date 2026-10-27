@@ -4,7 +4,7 @@ import { IMPORT_MESSAGES } from '@dayli/schema';
 import { extract } from '@dayli/extract';
 import { POST } from './route';
 
-vi.mock('@dayli/extract', () => ({ extract: vi.fn() }));
+vi.mock('@dayli/extract', () => ({ extract: vi.fn(), MODEL: 'claude-opus-5-5', PROMPT_VERSION: 'test' }));
 
 const request = () => new Request('https://semli.test/api/extract', {
   method: 'POST',

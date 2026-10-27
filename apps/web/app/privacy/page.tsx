@@ -40,7 +40,10 @@ export default function PrivacyPage() {
             dates, times, courses, employers, and tasks in it. Along with the content, the app sends today&apos;s date, your time zone, and
             the names of courses and employers you already have, so the result lines up with your existing plan. With a typed or dictated
             message, it also sends the titles and times of your timed events for the next three weeks, so a request like &ldquo;cardio before
-            work&rdquo; can be placed around your shifts. Screenshots and PDFs don&apos;t include them.
+            work&rdquo; can be placed around your shifts. Screenshots and PDFs don&apos;t include them. When a PDF turns out to be a
+            syllabus or course schedule, Semli keeps what it read (the dates, times and course, not the file) under a fingerprint of the
+            file for about a semester, so a classmate who imports the identical syllabus gets it at once. It isn&apos;t linked to your
+            account, and work schedules are never kept.
           </p>
           <h3>2.2 Your plan</h3>
           <p>

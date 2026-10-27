@@ -133,6 +133,10 @@ export type ScheduleVersion = z.infer<typeof ScheduleVersion>;
 // API contract between the app and /api/extract
 // ---------------------------------------------------------------------------
 
+/** At most this many upcoming events go with a typed request; more are cut, never refused. */
+export const MAX_SCHEDULE = 200;
+const ScheduleEntry = z.object({ date: LocalDate, start: LocalTime, end: LocalTime.nullable(), title: z.string().transform((t) => t.slice(0, 120)) });
+
 export const ExtractContext = z.object({
   name: z.string().optional(),
   today: LocalDate,
@@ -147,7 +151,12 @@ export const ExtractContext = z.object({
    * The person's upcoming timed events, so a typed request can be placed around them ("cardio before
    * work"). Sent with typed and dictated messages only; older builds and the web demo omit it.
    */
-  schedule: z.array(z.object({ date: LocalDate, start: LocalTime, end: LocalTime.nullable(), title: z.string().max(120) })).max(200).optional(),
+  // Lenient on purpose: this is context, never the import itself, so a bad or long entry is dropped
+  // or trimmed rather than failing the request (a future app version must not break typed imports).
+  schedule: z.array(z.unknown()).transform((entries) => entries
+    .map((e) => ScheduleEntry.safeParse(e))
+    .flatMap((r) => (r.success ? [r.data] : []))
+    .slice(0, MAX_SCHEDULE)).optional(),
 });
 export type ExtractContext = z.infer<typeof ExtractContext>;
 

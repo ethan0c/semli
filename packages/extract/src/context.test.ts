@@ -13,3 +13,20 @@ describe('contextBlock', () => {
     expect(contextBlock(ctx)).not.toContain('Existing plan');
   });
 });
+
+describe('the schedule sent with a typed request', () => {
+  it('drops bad entries and trims long ones instead of refusing the import', async () => {
+    const { ExtractContext } = await import('@dayli/schema');
+    const parsed = ExtractContext.parse({
+      ...ctx,
+      schedule: [
+        { date: '2026-10-27', start: '09:00', end: '16:30', title: 'x'.repeat(300) },
+        { date: 'tomorrow', start: '9am', end: null, title: 'Bad' },
+        ...Array.from({ length: 250 }, () => ({ date: '2026-10-28', start: '07:00', end: null, title: 'Gym' })),
+      ],
+    });
+    expect(parsed.schedule).toHaveLength(200);
+    expect(parsed.schedule![0]!.title).toHaveLength(120);
+    expect(parsed.schedule!.some((e) => e.title === 'Bad')).toBe(false);
+  });
+});
