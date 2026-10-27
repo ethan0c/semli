@@ -1,4 +1,4 @@
-import { WEEKDAYS, conflictIds, diffDays, fullDate, isFlexibleEvent, isLocalDate, isLocalTime, localParts, monthDay, relativeDay, todayItems, toMinutes, weekOf, weekdayLong, weekdayOf, weekdayShort, longMonthDay, clockTime, clockPeriod } from '@dayli/core';
+import { conflictIds, describeRule, diffDays, formatRange, formatTime, fullDate, inferRule, isFlexibleEvent, isLocalDate, isLocalTime, localParts, monthDay, relativeDay, todayItems, toMinutes, weekOf, weekdayLong, weekdayShort, longMonthDay, clockTime, clockPeriod } from '@dayli/core';
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -8,14 +8,15 @@ import { GroupLabel, SectionTitle, StatusPill, TextButton, itemStatus } from '@/
 import { Notes } from '@/components/Notes';
 import { DayBar } from '@/components/DayBar';
 import { ItemRow } from '@/components/ItemRow';
-import { DateField, NativeToggle, TimeField } from '@/components/Native';
+import { InlinePicker, NativeToggle } from '@/components/Native';
 import { OverlapNotice } from '@/components/OverlapNotice';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
 import { Press, PressRow } from '@/components/Press';
+import { Segmented } from '@/components/Segmented';
 import { Button, Sheet } from '@/components/Sheet';
 import { T } from '@/components/Text';
 import { feedback } from '@/lib/feedback';
-import { defaultTimes } from '@/lib/times';
+import { defaultTimes, plusMinutes } from '@/lib/times';
 import { enter, exit, layout } from '@/lib/motion';
 import { useNow } from '@/lib/now';
 import { isClass } from '@/lib/reminder-plan';
@@ -77,6 +78,13 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
   const [notes, setNotes] = useState(item?.notes ?? '');
   const [editing, setEditing] = useState<'time' | 'date' | 'until' | 'notes' | null>(null);
   const [scope, setScope] = useState(false);
+  // Edits live in a draft until Done, so a wheel scrolled ten times is one change and one undo.
+  const [draft, setDraft] = useState<{ start: string | null; end: string | null; date: string; until: string }>({ start: null, end: null, date: '', until: '' });
+  /** On a repeating item: this occurrence, or every one from here on. Time defaults to all; date is always this one. */
+  const [reach, setReach] = useState<'one' | 'series'>('series');
+  const applySeries = useStore((s) => s.applySeries);
+  const storedRule = useStore((s) => (item?.seriesId ? s.series[item.seriesId] : undefined));
+  const showToast = useStore((s) => s.showToast);
 
   if (!item) {
     return (
@@ -110,8 +118,8 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
   // The series this occurrence belongs to, when it repeats.
   const series = item.seriesId ? items.filter((it) => it.seriesId === item.seriesId) : [];
   const repeats = !!item.seriesId;
-  const seriesDays = WEEKDAYS.filter((d) => series.some((it) => weekdayOf(it.date) === d)).map((d) => d.charAt(0).toUpperCase() + d.slice(1));
-  const seriesEnd = series.reduce((max, it) => (it.date > max ? it.date : max), item.date);
+  const rule = repeats ? (storedRule ?? inferRule(series)) : null;
+  const seriesEnd = rule?.until ?? series.reduce((max, it) => (it.date > max ? it.date : max), item.date);
   const seriesLeft = series.filter((it) => it.date >= now.date).length;
   const fromNow = series.filter((it) => it.date >= item.date);
   const week = new Set(weekOf(item.date));
@@ -134,12 +142,61 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
       : item.isDeadline ? deadlineLine : 'Included in the daily summary'
     : 'Reminders are off · Turn them on in You';
 
-  const shorten = (date: string) => {
-    if (!isLocalDate(date) || date >= seriesEnd) return;
-    const ids = series.filter((it) => it.date > date).map((it) => it.id);
-    if (ids.length) removeItems(ids, `Shortened ${item.title}`);
-    setEditing(null);
+  const openEditor = (which: 'time' | 'date' | 'until') => {
+    feedback('select');
+    if (editing === which) { setEditing(null); return; }
+    const times = item.start ? { start: item.start, end: item.end } : defaultTimes(item);
+    setDraft({ start: times.start, end: times.end, date: item.date, until: seriesEnd });
+    setReach('series');
+    setEditing(which);
   };
+  /** The start drags the end with it, keeping the length; the end alone changes the length. */
+  const setStart = (start: string) => {
+    if (!isLocalTime(start)) return;
+    setDraft((d) => {
+      const length = d.start && d.end ? (toMinutes(d.end) - toMinutes(d.start) + 1440) % 1440 : null;
+      return { ...d, start, end: isEvent ? (length !== null ? plusMinutes(start, length) : d.end) : null };
+    });
+  };
+  const seriesLabel = (what: string) => `${what} ${count(fromNow.filter((it) => !it.done && !it.editedAt).length)}`;
+  const leftAlone = (kept: number) => (kept ? ` ${kept} you moved ${kept === 1 ? 'stays' : 'stay'}.` : '');
+  const saveTime = (times: { start: string | null; end: string | null }) => {
+    setEditing(null);
+    if (times.start === item.start && times.end === item.end) return;
+    const timeText = times.start ? (times.end ? formatRange(times.start, times.end) : formatTime(times.start, true)) : 'no time';
+    if (repeats && rule && reach === 'series') {
+      const r = applySeries(item.seriesId!, { ...rule, start: times.start, end: times.end }, item.date, now.date, seriesLabel(`Moved`) + ` to ${timeText}`);
+      // The occurrence on screen may be hand-moved itself; it follows the rule when it is the one being edited.
+      if (item.editedAt) updateItem(item.id, { start: times.start, end: times.end, editedAt: null }, { silent: true });
+      if (r.kept) showToast(`${seriesLabel('Moved')} to ${timeText}.${leftAlone(r.kept)}`, r.batchId ?? undefined);
+    } else {
+      updateItem(item.id, { start: times.start, end: times.end });
+    }
+    feedback('success');
+  };
+  const saveDate = (date: string) => {
+    setEditing(null);
+    if (!isLocalDate(date) || date === item.date) return;
+    updateItem(item.id, { date });
+    feedback('success');
+  };
+  const saveUntil = (date: string) => {
+    setEditing(null);
+    if (!rule || !isLocalDate(date) || date === rule.until || date < item.date) return;
+    const r = applySeries(item.seriesId!, { ...rule, until: date }, item.date, now.date, `${date > rule.until ? 'Extended' : 'Shortened'} ${item.title} to ${monthDay(date)}`);
+    if (r.kept) showToast(`${date > rule.until ? 'Extended' : 'Shortened'} ${item.title} to ${monthDay(date)}.${leftAlone(r.kept)}`, r.batchId ?? undefined);
+    feedback('success');
+  };
+  const followFeed = () => {
+    if (!item.feed) return;
+    updateItem(item.id, { date: item.feed.date, start: item.feed.start, end: item.feed.end, editedAt: null, feed: null }, { silent: true });
+    feedback('success');
+  };
+  const feedDiffers = !!item.editedAt && !!item.feed && (item.feed.date !== item.date || item.feed.start !== item.start || item.feed.end !== item.end);
+  const reachControl = repeats ? (
+    <Segmented size="small" label="Change which" value={reach} onChange={(next) => { feedback('select'); setReach(next); }}
+      options={[{ key: 'one', label: `This ${seriesNoun}` }, { key: 'series', label: 'Every one from now' }]} />
+  ) : null;
   const deleteAndLeave = (fn: () => void) => { fn(); if (onClose) onClose(); else router.back(); };
 
   return (
@@ -191,22 +248,38 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
           />
           {item.start ? (
             <Press accessibilityRole="button" accessibilityLabel={`Time, ${timeLabel}, tap to change`} accessibilityState={{ expanded: editing === 'time' }}
-              onPress={() => { feedback('select'); setEditing(editing === 'time' ? null : 'time'); }} scale={1} dim={fade.pressed}>
+              onPress={() => openEditor('time')} scale={1} dim={fade.pressed}>
               <T token="displayXl" tabular style={styles.time}>
                 {clockTime(item.start)}{item.end ? <T token="displayXl" color={c.inkSecondary} style={styles.time}> – </T> : null}{item.end ? clockTime(item.end) : ''}
                 <T token="titleSm" color={c.inkSecondary}> {[clockPeriod(item.end ?? item.start), endsNextDay ? 'next day' : ''].filter(Boolean).join(', ')}</T>
               </T>
             </Press>
           ) : (
-            <Press accessibilityRole="button" accessibilityLabel="Add a time" haptic="select" onPress={() => { updateItem(item.id, defaultTimes(item)); setEditing('time'); }} style={[styles.addTime, { backgroundColor: c.row }]}>
+            <Press accessibilityRole="button" accessibilityLabel="Add a time" haptic="select" onPress={() => openEditor('time')} style={[styles.addTime, { backgroundColor: c.row }]}>
               <T token="subhead">Add a time</T>
             </Press>
           )}
           {editing === 'time' ? (
-            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.pickers}>
-              <TimeField date={item.date} time={item.start} onChange={(start) => isLocalTime(start) && updateItem(item.id, { start })} />
-              {isEvent ? <TimeField date={item.date} time={item.end} onChange={(end) => isLocalTime(end) && updateItem(item.id, { end })} /> : null}
-              <TextButton label="Done" tone="muted" onPress={() => setEditing(null)} />
+            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.editor}>
+              {reachControl}
+              <View style={styles.wheels}>
+                <View style={{ flex: 1, gap: space.xxs }}>
+                  <T token="caption" color={c.inkSecondary}>{isEvent ? 'Starts' : 'Due'}</T>
+                  <InlinePicker mode="time" date={item.date} time={draft.start} onChange={setStart} />
+                </View>
+                {isEvent ? (
+                  <View style={{ flex: 1, gap: space.xxs }}>
+                    <T token="caption" color={c.inkSecondary}>{draft.start && draft.end && draft.end < draft.start ? 'Ends, next day' : 'Ends'}</T>
+                    <InlinePicker mode="time" date={item.date} time={draft.end} onChange={(end) => isLocalTime(end) && setDraft((d) => ({ ...d, end }))} />
+                  </View>
+                ) : null}
+              </View>
+              <View style={styles.editorActions}>
+                <TextButton label="No time" tone="muted" onPress={() => saveTime({ start: null, end: null })} />
+                <View style={{ flex: 1 }} />
+                <TextButton label="Cancel" tone="muted" onPress={() => setEditing(null)} />
+                <TextButton label="Done" onPress={() => saveTime({ start: draft.start, end: isEvent ? draft.end : null })} />
+              </View>
             </Animated.View>
           ) : null}
         </View>
@@ -216,12 +289,18 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
 
         <Animated.View layout={layout} style={styles.rows}>
           {editing === 'date' ? (
-            <Animated.View entering={enter.drop} style={styles.pickers}>
-              <DateField date={item.date} time={item.start} onChange={(date) => isLocalDate(date) && updateItem(item.id, { date })} />
-              <TextButton label="Done" tone="muted" onPress={() => setEditing(null)} />
+            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.editor}>
+              <T token="body">{`${weekdayLong(draft.date)}, ${longMonthDay(draft.date)}`}</T>
+              <InlinePicker mode="date" date={draft.date} time={draft.start} onChange={(date) => isLocalDate(date) && setDraft((d) => ({ ...d, date }))} />
+              {repeats ? <T token="caption" color={c.inkSecondary}>{`Moves this ${seriesNoun} only. To change the days it meets, change where it repeats below.`}</T> : null}
+              <View style={styles.editorActions}>
+                <View style={{ flex: 1 }} />
+                <TextButton label="Cancel" tone="muted" onPress={() => setEditing(null)} />
+                <TextButton label="Done" onPress={() => saveDate(draft.date)} />
+              </View>
             </Animated.View>
           ) : (
-            <Row onPress={() => setEditing('date')} accessibilityLabel={`Date, ${weekdayLong(item.date)}, ${longMonthDay(item.date)}, tap to change`}>
+            <Row onPress={() => openEditor('date')} accessibilityLabel={`Date, ${weekdayLong(item.date)}, ${longMonthDay(item.date)}, tap to change`}>
               <T token="body">{`${weekdayLong(item.date)}, ${longMonthDay(item.date)}`}{item.isDeadline ? <T token="body" color={c.inkSecondary}> · Deadline</T> : null}</T>
             </Row>
           )}
@@ -233,16 +312,26 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
               <T token="body">{source}</T>
             </Row>
           ) : null}
-          {repeats ? (
-            <Row trailing={editing === 'until' ? null : <TextButton label="Change" onPress={() => setEditing('until')} accessibilityLabel="Change when it stops repeating" />}>
-              <T token="body" style={{ flex: 1 }}>{`Repeats ${seriesDays.join(', ')} until ${monthDay(seriesEnd)} · ${seriesLeft} left`}</T>
+          {feedDiffers && item.feed ? (
+            <Row trailing={<TextButton label="Use Canvas’s" onPress={followFeed} accessibilityLabel="Use the date Canvas has" />}>
+              <T token="body" color={c.inkSecondary} style={{ flex: 1 }}>{`Canvas has this on ${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? ` at ${formatTime(item.feed.start, true)}` : ''}`}</T>
             </Row>
           ) : null}
-          {editing === 'until' ? (
-            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.pickers}>
-              <T token="callout" color={c.inkSecondary}>Last one</T>
-              <DateField date={seriesEnd} time={null} onChange={shorten} />
-              <TextButton label="Done" tone="muted" onPress={() => setEditing(null)} />
+          {repeats && rule ? (
+            <Row onPress={() => openEditor('until')} accessibilityLabel={`${describeRule(rule)} until ${monthDay(seriesEnd)}, ${seriesLeft} left, tap to change when it ends`}>
+              <T token="body" style={{ flex: 1 }}>{`${describeRule(rule)} until ${monthDay(seriesEnd)} · ${seriesLeft} left`}</T>
+            </Row>
+          ) : null}
+          {editing === 'until' && rule ? (
+            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.editor}>
+              <T token="body">{`Last one ${weekdayLong(draft.until)}, ${longMonthDay(draft.until)}`}</T>
+              <InlinePicker mode="date" date={draft.until} time={null} onChange={(date) => isLocalDate(date) && setDraft((d) => ({ ...d, until: date }))} />
+              <T token="caption" color={c.inkSecondary}>{draft.until > rule.until ? `Adds ${seriesNoun}s through ${monthDay(draft.until)}.` : draft.until < rule.until ? `Removes ${seriesNoun}s after ${monthDay(draft.until)}.` : 'Unchanged.'}</T>
+              <View style={styles.editorActions}>
+                <View style={{ flex: 1 }} />
+                <TextButton label="Cancel" tone="muted" onPress={() => setEditing(null)} />
+                <TextButton label="Done" onPress={() => saveUntil(draft.until)} />
+              </View>
             </Animated.View>
           ) : null}
           <Row trailing={<NativeToggle label="Urgent" value={!!item.urgent} onChange={(urgent) => void setUrgent(urgent)} />}>
@@ -313,7 +402,9 @@ const styles = StyleSheet.create({
   eyebrowRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
   time: { fontSize: 44, lineHeight: 48, letterSpacing: -1.4, paddingTop: space.xxs },
   addTime: { alignSelf: 'flex-start', height: size.pill, borderRadius: radius.pill, paddingHorizontal: space.sm, alignItems: 'center', justifyContent: 'center', marginTop: space.xs },
-  pickers: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingTop: space.xs, flexWrap: 'wrap' },
+  editor: { gap: space.sm, paddingTop: space.xs },
+  wheels: { flexDirection: 'row', gap: space.sm },
+  editorActions: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   rows: { gap: space.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 28, paddingHorizontal: space.xxs },
   around: { gap: space.xs, paddingTop: space.sm },
