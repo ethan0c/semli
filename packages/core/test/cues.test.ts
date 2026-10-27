@@ -42,3 +42,17 @@ describe('heard clauses', () => {
     expect(heard[1]!.label).toBe('Wed · 7 am');
   });
 });
+
+describe('voice transcript', () => {
+  it('ignores an empty result, so stopping never wipes what was said', async () => {
+    const { nextTranscript } = await import('../src');
+    expect(nextTranscript('', 'bio quiz thursday', '')).toBeNull();
+    expect(nextTranscript('', 'bio quiz thursday', '   ')).toBeNull();
+  });
+  it('keeps an earlier sentence when a pause restarts the transcript', async () => {
+    const { nextTranscript } = await import('../src');
+    expect(nextTranscript('', 'Bio quiz Thursday at nine and the lab report is due Friday', 'Working Saturday'))
+      .toEqual({ committed: 'Bio quiz Thursday at nine and the lab report is due Friday', last: 'Working Saturday' });
+    expect(nextTranscript('', 'Bio quiz', 'Bio quiz Thursday')).toEqual({ committed: '', last: 'Bio quiz Thursday' });
+  });
+});
