@@ -22,7 +22,7 @@ Made by `design/render-cards.py` into `design/cards/out/`, one PDF per line item
 | `pomona-e` | E, Pomona wording | 200 | Pomona |
 | `gatech-e` | E, Georgia Tech wording | 200 | Georgia Tech |
 | `pile` | The sticker pile and "Buried?" only; the survey line and the flip cue are gone | 250 | 100 York, 75 Pomona, 75 Georgia Tech |
-| `c` | A serif sentence whose last word runs off the trim; the back answers "Thursday." | 150 | York |
+| `c` | "That assignment you forgot about is due on Thu", the rest of the word running off the trim; the back answers "Thursday." | 150 | York |
 
 - E names the school, so it is printed per school. The pile and C do not, so each is printed once and the school is known from who hands it out.
 - Every back is lavender with the same scan block in the same place: a verb caption, a plain QR with its quiet zone, "Free iPhone beta", `semli.app`. Each back has its own headline.
@@ -31,7 +31,7 @@ Made by `design/render-cards.py` into `design/cards/out/`, one PDF per line item
 - **Stickers**, 3 in die-cut, undesigned, still in the plan: a sticker on someone's own laptop is not a posting.
 - Draft E on the board carries a per-school Plus code (the one element shown to raise keep rate in eye tracking). It is not in the print copy: it contradicts the beta's no-free-Plus rule in marketing-500.md, and the decision is open.
 
-Every QR goes through `semli.app/beta?r=<tag>`, so `select ref, count(*) from waitlist group by ref` (and `beta_clicks`) says which front and, for E, which school sent each install.
+Every QR goes through `semli.app/beta?r=<tag>`, which logs one row per scan in `beta_clicks` and then redirects, so `select ref, count(*) from beta_clicks group by ref` counts scans per front and, for E, per school. Installs are not attributed per tag while the link goes to TestFlight (Apple does not pass the tag through); signups in `waitlist` keep it only while the route points at the waitlist. If 1.0 is on the App Store by Jan 5, point the route at the App Store link with a campaign token (`ct=<tag>`) and App Store Connect reports downloads per front.
 
 The copy says "Free iPhone beta". That is right until the App Store release. If 1.0 ships Jan 5, cards handed out from Jan 11 should say "Free on iPhone": change `BETA` in the script and reprint, or accept it for the first batch and fix it on the reorder.
 
@@ -43,8 +43,8 @@ Estimates, Oct 27, 2026. NextDayFlyers prices each design in an order at its own
 |---|---|
 | Five card line items, 1,000 cards | $160 to $190 |
 | Shipping, one box | $15 to $25 |
-| Proof run, 25 of `c` only, for the cut word at trim | $15 to $20 |
 | Stickers, 100 to 150 | $50 to $70 |
+| Proof run, 25 of `c` only, for the cut word at trim | $15 to $20 |
 | Flyers | $0 |
 | Flash test, ten people | $0 |
 | Total | $240 to $305 |

@@ -9,7 +9,7 @@ three fronts, one back system:
     pomona-e   E, Pomona wording                         200   Pomona
     gatech-e   E, Georgia Tech wording                   200   Georgia Tech
     pile       the sticker pile and "Buried?" only       250   100 York, 75 Pomona, 75 Georgia Tech
-    c          a sentence that finishes on the back      150   York
+    c          "That assignment you forgot about is due on Thu" 150   York
 
 E names the school, so it is printed per school. The pile and C do not, so they are printed once
 and the school is known from who hands them out. The fronts came out of the reference research
@@ -17,19 +17,24 @@ and the school is known from who hands them out. The fronts came out of the refe
 and the one-second flash test; see the card drafts artifact linked from the outreach doc.
 
 E: paper, the wordmark, one EB Garamond line with the accent phrase in italic, as the store
-captions do. C: paper, the wordmark, a serif sentence whose last word runs off the right trim,
-Oatly's "continued on the other billboard" device; the back answers with "Thursday." Pile: the
+captions do. C: paper, the wordmark, "That assignment you forgot about is due on Thu" with the
+rest of "Thursday." running off the right trim, no ellipsis, Oatly's "continued on the other
+billboard" device; the back answers with "Thursday." (Oct 27 review: the first version carried a
+page number and a month, too much and too dated for January.) Pile: the
 previous maximalist front with the survey line and the flip cue removed, so the pile and the
 question are the only two things on it. Every back is lavender with the same scan block in the
 same place (a verb caption, a plain 38 mm QR panel with its quiet zone, the beta line and the
-URL) and its own headline. Geist Bold appears in print art only, like the italic in the store
-captions. Sentence case throughout, never caps.
+URL) and its own headline. Weights (Oct 27, 2026): serif headlines EB Garamond Medium, small Geist
+labels and CTAs Medium, "Buried?" and "Sorted." Geist SemiBold; the round badges keep Geist Bold,
+print art only, like the italic in the store captions. Sentence case throughout, never caps.
 
 Postcard: landscape 152.4 x 101.6 mm with 3 mm bleed and 5 mm safe. The C front's cut word ends
 at the trim on purpose; a 1.5 mm cut either way still reads as cut, which the proof run checks.
 
-Every QR goes to semli.app/beta?r=<tag>, so `select ref, count(*) from waitlist group by ref`
-says which front and, for E, which school sent each install.
+Every QR goes to semli.app/beta?r=<tag>, which logs the scan in beta_clicks before it redirects,
+so `select ref, count(*) from beta_clicks group by ref` counts scans per front and, for E, per
+school. Installs are only attributable per tag once the route points at an App Store link with a
+campaign token; see docs/school-flyer-outreach.md.
 
     python3 design/render-cards.py              # all five line items
     python3 design/render-cards.py pile c       # some of them
@@ -69,6 +74,8 @@ ON_ACCENT_SECONDARY = (222, 214, 245)
 BUTTER = (255, 226, 122)  # the back's accent on lavender
 MUTED = (104, 105, 99)
 SS = 2  # drawn at twice the size and scaled down: Pillow does not antialias shapes
+SERIF_WEIGHT = 500  # EB Garamond Medium on the cards: holds up in print, still the editorial voice (Oct 27, 2026)
+HOOK_WEIGHT = "SemiBold"  # "Buried?" and "Sorted."; small Geist labels and CTAs are Medium
 
 SCHOOLS = {"york": "York", "pomona": "Pomona", "gatech": "Georgia Tech"}  # tag stem, name on the card
 LINE_ITEMS = ["york-e", "pomona-e", "gatech-e", "pile", "c"]  # docs/school-flyer-outreach.md
@@ -79,12 +86,12 @@ E_FOOT = "Spring 2027 · handed to you by someone who uses it"
 E_BACK = "Every due date out of every syllabus, next to your shifts."
 E_BACK_LINE = "Drop in the PDF, screenshot your shifts. Two minutes."
 E_CTA = "Scan to set it up"
-C_FRONT = "The assignment you're about to miss is on page 4 of a syllabus you haven't opened"
-C_CUT = "since September, and it is due on "  # the last line, upright; the accent word runs off the trim
+C_FRONT = "That assignment you"  # the lead line; the cut line below must stay the longer one
+C_CUT = "forgot about is due on "  # the last line, upright; the accent word runs off the trim
 C_CUT_WORD = "Thursday."
 C_CUT_SHOW = "Thu"  # what is left of it at the trim line
 C_BACK_WORD = "Thursday."
-C_BACK = "Semli opened the syllabus for you. Every due date, your shifts, one plan."
+C_BACK = "Add your syllabus. Get your due dates in one plan."
 C_CTA = "Scan to see yours"
 HOOK = "Buried?"
 FIX = "Sorted."
@@ -233,7 +240,7 @@ def serif_block(img: Image.Image, fmt: Format, text: str, left: float, top: floa
                 size: float, color, accent, leading: float = 1.08) -> int:
     """A serif headline in mm: EB Garamond Regular, the ~accent~ in italic. Returns the next top."""
     d = ImageDraw.Draw(img)
-    f, af = store.serif(fmt.px(size), 400), store.serif(fmt.px(size), 400, italic=True)
+    f, af = store.serif(fmt.px(size), SERIF_WEIGHT), store.serif(fmt.px(size), SERIF_WEIGHT, italic=True)
     return store.rich_block(d, text, f, fmt.edge(left), fmt.edge(top), fmt.px(width), round(fmt.px(size) * leading),
                             color, accent, "left", tracking=store.SERIF_TRACKING, accent_font=af)
 
@@ -303,9 +310,9 @@ def pile(img: Image.Image, fmt: Format, k: float, cols: int, rows: int) -> None:
 
 
 def label(fmt: Format, width_mm: float, hook_mm: float, wordmark_mm: float) -> Image.Image:
-    """The paper label on the pile: the wordmark and the hook in Geist Bold, nothing else."""
+    """The paper label on the pile: the wordmark and the hook in Geist SemiBold, nothing else."""
     pad = fmt.px(6)
-    hook_f = store.font(fmt.px(hook_mm), "Bold")
+    hook_f = store.font(fmt.px(hook_mm), HOOK_WEIGHT)
     mark_h = round(wordmark_mm * 1132.05 / 3620.1)
     h = pad + fmt.px(mark_h + 4) + round(fmt.px(hook_mm) * 1.0) + pad
     shadow_pad = fmt.px(3)
@@ -343,8 +350,8 @@ def scan_block(img: Image.Image, fmt: Format, cta: str, url: str) -> None:
     d = ImageDraw.Draw(img)
     for text, baseline, size, weight, color in (
         (cta, top - lead, big, "Medium", ON_DARK),
-        (BETA, bottom - lead, small, "Regular", ON_DARK),
-        ("semli.app", bottom, small, "Regular", ON_ACCENT_SECONDARY),
+        (BETA, bottom - lead, small, "Medium", ON_DARK),
+        ("semli.app", bottom, small, "Medium", ON_ACCENT_SECONDARY),
     ):
         d.text((left, fmt.edge(baseline)), text, font=store.font(fmt.px(size), weight), fill=color, anchor="ls")
 
@@ -370,26 +377,27 @@ def named_front(school: str) -> Image.Image:
     wordmark(img, f, light=True)
     serif_block(img, f, E_FRONT.format(school=SCHOOLS[school]), INSET, 26, f.trim_w - 2 * INSET, 17, INK, ACCENT)
     d = ImageDraw.Draw(img)
-    d.text((f.edge(INSET), f.edge(f.trim_h - INSET)), E_FOOT, font=store.font(f.px(3.2), "Regular"), fill=MUTED, anchor="ls")
+    d.text((f.edge(INSET), f.edge(f.trim_h - INSET)), E_FOOT, font=store.font(f.px(3.2), "Medium"), fill=MUTED, anchor="ls")
     return img
 
 
 def continued_front() -> Image.Image:
-    """The sentence runs off the right trim mid-word. The size is solved so that the visible part of
-    the last word ends exactly on the trim line; the bleed carries the rest of the letter."""
+    """The sentence runs off the right trim mid-word, no ellipsis. The size is solved so that the
+    visible part of the last word ends exactly on the trim line; the bleed carries the rest."""
     f = POSTCARD
     img = f.canvas(PAPER)
     wordmark(img, f, light=True)
     d = ImageDraw.Draw(img)
     probe = 100
-    up, it = store.serif(probe, 400), store.serif(probe, 400, italic=True)
+    up, it = store.serif(probe, SERIF_WEIGHT), store.serif(probe, SERIF_WEIGHT, italic=True)
     width_at_probe = (store.tracked_len(d, C_CUT, up, store.SERIF_TRACKING)
                       + store.tracked_len(d, C_CUT_SHOW, it, store.SERIF_TRACKING))
     size = f.px(f.trim_w - INSET) * probe / width_at_probe  # canvas px, so the line is trim-wide
-    up, it = store.serif(round(size), 400), store.serif(round(size), 400, italic=True)
+    up, it = store.serif(round(size), SERIF_WEIGHT), store.serif(round(size), SERIF_WEIGHT, italic=True)
     lead = round(size * 1.08)
-    y = f.edge(30)
-    for line in store.wrap(d, C_FRONT, up, f.px(f.trim_w - 2 * INSET)):
+    lines = store.wrap(d, C_FRONT, up, f.px(f.trim_w - 2 * INSET))
+    y = f.edge((f.trim_h - (len(lines) + 1) * lead / f.px(1)) / 2 + 4)  # the block sits a touch below center
+    for line in lines:
         store.draw_tracked(d, f.edge(INSET), y, line, up, INK, store.SERIF_TRACKING)
         y += lead
     x = f.edge(INSET) + store.draw_tracked(d, f.edge(INSET), y, C_CUT, up, INK, store.SERIF_TRACKING)
@@ -411,7 +419,7 @@ def pile_back(tag: str) -> Image.Image:
     img = back(tag, PILE_CTA)
     left = f.edge(INSET)
     d = ImageDraw.Draw(img)
-    d.text((left - f.px(0.8), f.edge(INSET) + round(f.px(22) * 0.92)), FIX, font=store.font(f.px(22), "Bold"), fill=ON_DARK, anchor="ls")
+    d.text((left - f.px(0.8), f.edge(INSET) + round(f.px(22) * 0.92)), FIX, font=store.font(f.px(22), HOOK_WEIGHT), fill=ON_DARK, anchor="ls")
     d.text((left, f.edge(36)), PAYOFF, font=store.font(f.px(3.8), "Medium"), fill=ON_DARK, anchor="ls")
     sorted_column(img, f, 1.1, left, f.edge(38))
     return img
@@ -424,7 +432,7 @@ def named_back(tag: str) -> Image.Image:
     width = SCAN_CENTER - SCAN_PANEL / 2 - INSET - 6
     y = serif_block(img, f, E_BACK, INSET, 24, width, 9.5, ON_DARK, BUTTER)
     d = ImageDraw.Draw(img)
-    d.text((f.edge(INSET), y + f.px(8)), E_BACK_LINE, font=store.font(f.px(3.4), "Regular"), fill=ON_ACCENT_SECONDARY, anchor="ls")
+    d.text((f.edge(INSET), y + f.px(8)), E_BACK_LINE, font=store.font(f.px(3.4), "Medium"), fill=ON_ACCENT_SECONDARY, anchor="ls")
     return img
 
 
@@ -434,7 +442,7 @@ def continued_back(tag: str) -> Image.Image:
     wordmark(img, f, light=False)
     width = SCAN_CENTER - SCAN_PANEL / 2 - INSET - 6
     d = ImageDraw.Draw(img)
-    store.draw_tracked(d, f.edge(INSET - 0.5), f.edge(21), C_BACK_WORD, store.serif(f.px(22), 400, italic=True), BUTTER, store.SERIF_TRACKING)
+    store.draw_tracked(d, f.edge(INSET - 0.5), f.edge(21), C_BACK_WORD, store.serif(f.px(22), SERIF_WEIGHT, italic=True), BUTTER, store.SERIF_TRACKING)
     serif_block(img, f, C_BACK, INSET, 50, width, 8, ON_DARK, BUTTER)
     return img
 
