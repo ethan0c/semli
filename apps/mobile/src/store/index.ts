@@ -177,6 +177,12 @@ interface State {
   applySeries: (seriesId: string, rule: SeriesRule, from: string, today: string, label: string) => { created: number; updated: number; removed: number; kept: number; batchId: string | null };
   /** Make a one-off repeat: it becomes the first occurrence of a new series under `rule`. */
   startSeries: (id: string, rule: SeriesRule, today: string) => { seriesId: string; created: number; batchId: string | null };
+  /**
+   * Gives several items the same times as one undoable change: every upcoming "Morning cardio" an
+   * import made, say, whether or not they share a series. A series among them takes the times into
+   * its rule; one-offs count as hand-edited, as a single edit would.
+   */
+  retimeItems: (ids: string[], times: { start: string | null; end: string | null }, label: string) => string | null;
   removeItem: (id: string) => void;
   /** Delete several at once as one undoable batch: a week of lectures, the rest of a series. */
   removeItems: (ids: string[], label: string) => void;
@@ -289,6 +295,30 @@ export const useStore = create<State>()(
           batches: [batch('Edited ' + before.title, [{ op: 'update', before, after }]), ...get().batches],
         });
         if (moved) track('item_edited', { field: 'date' in patch ? 'date' : 'time', scope: 'one', repeats: !!before.seriesId });
+      },
+
+      retimeItems: (ids, times, label) => {
+        const items = { ...get().items };
+        const series = { ...get().series };
+        const changes: Change[] = [];
+        for (const id of ids) {
+          const before = items[id];
+          if (!before || (before.start === times.start && before.end === times.end)) continue;
+          // Series occurrences keep following their rule, so they aren't marked as moved by hand.
+          const after = { ...before, start: times.start, end: times.end, ...(before.seriesId ? {} : { editedAt: nowIso() }) };
+          items[id] = after;
+          changes.push({ op: 'update', before, after });
+          const sid = before.seriesId;
+          if (sid) {
+            const rule = series[sid] ?? inferRule(Object.values(get().items).filter((it) => it.seriesId === sid));
+            series[sid] = { ...rule, start: times.start, end: times.end };
+          }
+        }
+        if (!changes.length) return null;
+        const b = batch(label, changes);
+        set({ items, series, batches: [b, ...get().batches], toast: { message: `${label}.`, batchId: b.id } });
+        track('item_edited', { field: 'time', scope: 'similar', updated: changes.length });
+        return b.id;
       },
 
       seriesRule: (seriesId) => {

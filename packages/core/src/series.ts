@@ -120,3 +120,14 @@ export function sameRule(a: SeriesRule | null, b: SeriesRule | null): boolean {
   return a.every === b.every && a.until === b.until && a.start === b.start && a.end === b.end
     && (a.every === 0 || sorted(a.days) === sorted(b.days)) && sorted(a.skipped) === sorted(b.skipped);
 }
+
+/**
+ * Upcoming items like `item`: the same name and kind, not done, on or after its date, and still at
+ * the times it has. An import that added "Morning cardio" on every work day makes these, linked as a
+ * series or not, so one time change can cover them all.
+ */
+export function itemsAlike<T extends Pick<Item, 'id' | 'kind' | 'title' | 'date' | 'start' | 'end' | 'done'>>(item: T, items: T[]): T[] {
+  const named = (t: string) => t.trim().toLowerCase();
+  return items.filter((it) => it.id !== item.id && !it.done && it.date >= item.date && it.kind === item.kind
+    && named(it.title) === named(item.title) && it.start === item.start && it.end === item.end);
+}

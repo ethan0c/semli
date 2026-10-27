@@ -67,7 +67,7 @@ export function AddScreen() {
         setError(purchaseErrorMessage(failure));
         return;
       }
-      const req = { input, context: extractionContext() };
+      const req = { input, context: extractionContext(input) };
       let res = await requestImport(apiUrl, req);
       // The server's count wins over this phone's (a reinstall resets the local one).
       if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota'))) res = await requestImport(apiUrl, req);

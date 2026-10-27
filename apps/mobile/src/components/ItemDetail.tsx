@@ -1,4 +1,4 @@
-import { conflictIds, describeRule, diffDays, formatRange, formatTime, fullDate, inferRule, isFlexibleEvent, isLocalDate, isLocalTime, localParts, monthDay, relativeDay, todayItems, toMinutes, weekOf, weekdayLong, weekdayShort, longMonthDay, clockTime, clockPeriod } from '@dayli/core';
+import { conflictIds, describeRule, itemsAlike, diffDays, formatRange, formatTime, fullDate, inferRule, isFlexibleEvent, isLocalDate, isLocalTime, localParts, monthDay, relativeDay, todayItems, toMinutes, weekOf, weekdayLong, weekdayShort, longMonthDay, clockTime, clockPeriod } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -139,6 +139,11 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
   const thisWeek = fromNow.filter((it) => week.has(it.date));
   const seriesNoun = /lecture/i.test(item.title) ? 'lecture' : noun;
   const count = (n: number) => `${n} ${n === 1 ? seriesNoun : `${seriesNoun}s`}`;
+  // Upcoming items like this one: same name and kind, still at the times this one has. An import that
+  // added "Morning cardio" on every work day makes them, linked or not; one time change can cover them all.
+  const alike = itemsAlike(item, items);
+  const seriesOnly = alike.every((it) => repeats && it.seriesId === item.seriesId);
+  const retimeItems = useStore.getState().retimeItems;
 
   const dayItems = todayItems(items, item.date);
   const showDay = dayItems.some((it) => it.kind === 'event' && it.start);
@@ -166,12 +171,16 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
   const seriesLabel = (what: string) => `${what} ${count(fromNow.filter((it) => !it.done && !it.editedAt).length)}`;
   const leftAlone = (kept: number) => (kept ? ` ${count(kept)} you moved won't change.` : '');
 
-  /** Saves times to this occurrence, or to every one from it on. */
+  /** Saves times to this item, or to every one from it on: its series, or the items alike when they aren't one series. */
   const commitTimes = (t: Times, reach: 'one' | 'series') => {
     setTimes(null);
     setAsking(false);
     if (t.start === item.start && t.end === item.end) return;
-    if (repeats && rule && reach === 'series') {
+    if (reach === 'series' && !seriesOnly) {
+      // Items alike that aren't one series: change them together, with this series' later occurrences.
+      const ids = [...new Set([item.id, ...alike.map((it) => it.id), ...fromNow.filter((it) => !it.done && !it.editedAt).map((it) => it.id)])];
+      retimeItems(ids, t, `Moved ${ids.length} “${item.title}” to ${timeText(t)}`);
+    } else if (repeats && rule && reach === 'series') {
       const r = applySeries(item.seriesId!, { ...rule, start: t.start, end: t.end }, item.date, now.date, `${seriesLabel('Moved')} to ${timeText(t)}`);
       // The occurrence on screen may be hand-moved itself; it follows the rule when it is the one being edited.
       if (item.editedAt) updateItem(item.id, { start: t.start, end: t.end, editedAt: null }, { silent: true });
@@ -181,10 +190,10 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
     }
     feedback('success');
   };
-  /** New times are settled: saved at once on a one-off, asked about on a repeating item. */
+  /** New times are settled: saved at once on a lone item, asked about when it repeats or has others like it coming up. */
   const settleTimes = (t: Times) => {
     if (t.start === item.start && t.end === item.end) { setTimes(null); setAsking(false); return; }
-    if (repeats) { setTimes(t); setAsking(true); return; }
+    if (repeats || alike.length) { setTimes(t); setAsking(true); return; }
     commitTimes(t, 'one');
   };
   const commitDate = () => {
@@ -338,7 +347,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
                   <T token="subhead">Just this one</T>
                 </Press>
                 <Press accessibilityRole="button" haptic="select" onPress={() => commitTimes(times, 'series')} style={[styles.askPill, { backgroundColor: c.controlFill }]}>
-                  <T token="subhead" color={c.controlInk}>This and later</T>
+                  <T token="subhead" color={c.controlInk} numberOfLines={1}>{seriesOnly ? 'This and later' : `This and ${alike.length + (repeats ? fromNow.filter((it) => it.id !== item.id && !it.done && !it.editedAt && !alike.includes(it)).length : 0)} more`}</T>
                 </Press>
               </View>
               <TextButton label="Cancel time change" tone="muted" onPress={() => { feedback('select'); setTimes(null); setAsking(false); }} style={{ alignSelf: 'flex-start' }} />

@@ -1,4 +1,4 @@
-import { dateLocale, localParts } from '@dayli/core';
+import { addDays, dateLocale, localParts } from '@dayli/core';
 import { IMPORT_MESSAGES, type ExtractContext, type ExtractRequest } from '@dayli/schema';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
@@ -15,12 +15,29 @@ export const MAX_BYTES = 20 * 1024 * 1024;
 /** Thrown with a sentence the user can read. */
 export class InputError extends Error {}
 
-/** Everything the extractor needs to know about this user, from the store. */
-export function extractionContext(): ExtractContext {
-  const { settings, courses, schedules } = useStore.getState();
+/** How far ahead a typed request can see the plan, and how many events it carries at most. */
+const SCHEDULE_DAYS = 21;
+const SCHEDULE_MAX = 150;
+
+/**
+ * Everything the extractor needs to know about this user, from the store. A typed or dictated
+ * message also carries the next three weeks of timed events, so "before work" has a time to end at.
+ */
+export function extractionContext(input?: ExtractRequest['input']): ExtractContext {
+  const { settings, courses, schedules, items } = useStore.getState();
+  const today = localParts(new Date()).date;
+  const last = addDays(today, SCHEDULE_DAYS - 1);
+  const schedule = input?.kind === 'text'
+    ? realRecords(Object.values(items))
+      .filter((it) => it.kind === 'event' && !it.done && it.start && it.date >= today && it.date <= last)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.start!.localeCompare(b.start!))
+      .slice(0, SCHEDULE_MAX)
+      .map((it) => ({ date: it.date, start: it.start!, end: it.end, title: it.title.slice(0, 120) }))
+    : undefined;
   return {
+    ...(schedule?.length ? { schedule } : {}),
     name: settings.name,
-    today: localParts(new Date()).date,
+    today,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     locale: dateLocale().locale,
     region: dateLocale().region,

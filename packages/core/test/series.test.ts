@@ -1,6 +1,6 @@
 import type { SeriesRule } from '@dayli/schema';
 import { describe, expect, it } from 'vitest';
-import { anchorRule, defaultRule, describeRule, inferRule, rebuildSeries, sameRule, seriesDates } from '../src';
+import { anchorRule, defaultRule, describeRule, inferRule, itemsAlike, rebuildSeries, sameRule, seriesDates } from '../src';
 
 const rule: SeriesRule = { every: 1, days: ['mon', 'wed'], until: '2026-11-18', skipped: [], start: '09:00', end: '10:15' };
 const occ = (id: string, date: string, over: Partial<{ start: string | null; end: string | null; done: boolean; editedAt: string | null }> = {}) =>
@@ -75,5 +75,23 @@ describe('sameRule', () => {
   it('treats no rule as different from a rule', () => {
     expect(sameRule(rule, null)).toBe(false);
     expect(sameRule(null, null)).toBe(true);
+  });
+});
+
+describe('itemsAlike', () => {
+  const base = { kind: 'event' as const, title: 'Morning cardio', start: null, end: null, done: false };
+  const items = [
+    { ...base, id: 'a', date: '2026-10-26' },
+    { ...base, id: 'b', date: '2026-10-27' },
+    { ...base, id: 'c', date: '2026-11-02', title: ' morning Cardio ' },
+    { ...base, id: 'd', date: '2026-11-03', done: true },
+    { ...base, id: 'e', date: '2026-11-04', start: '07:00', end: '07:45' },
+    { ...base, id: 'f', date: '2026-11-05', title: 'Evening cardio' },
+  ];
+  it('finds upcoming items with the same name and times, linked or not', () => {
+    expect(itemsAlike(items[1]!, items).map((it) => it.id)).toEqual(['c']);
+  });
+  it('leaves out earlier, done, already-timed and differently named items', () => {
+    expect(itemsAlike(items[0]!, items).map((it) => it.id)).toEqual(['b', 'c']);
   });
 });

@@ -143,6 +143,11 @@ export const ExtractContext = z.object({
   region: z.string().regex(/^[A-Z]{2}$/).optional(),
   courses: z.array(z.object({ code: z.string().nullable(), title: z.string() })),
   employers: z.array(z.string()),
+  /**
+   * The person's upcoming timed events, so a typed request can be placed around them ("cardio before
+   * work"). Sent with typed and dictated messages only; older builds and the web demo omit it.
+   */
+  schedule: z.array(z.object({ date: LocalDate, start: LocalTime, end: LocalTime.nullable(), title: z.string().max(120) })).max(200).optional(),
 });
 export type ExtractContext = z.infer<typeof ExtractContext>;
 

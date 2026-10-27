@@ -361,7 +361,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
         setError(purchaseErrorMessage(failure));
         return;
       }
-      const req = { input, context: extractionContext() };
+      const req = { input, context: extractionContext(input) };
       let res = await requestImport(apiUrl, req);
       if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota"))) res = await requestImport(apiUrl, req);
       if (!res.ok) {

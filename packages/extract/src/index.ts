@@ -4,7 +4,7 @@ import { Extraction, IMPORT_MESSAGES, type ExtractContext, type ExtractRequest }
 import { prepareImage } from './image';
 
 export const MODEL = 'claude-opus-5-5';
-export const PROMPT_VERSION = '2026-10-21.1';
+export const PROMPT_VERSION = '2026-10-27.1';
 
 const SYSTEM = `You read the things busy students and shift workers send to their planner app, Semli, and turn them into calendar events and to-dos.
 
@@ -24,12 +24,15 @@ How to read them:
 - Read the whole syllabus, including assessment tables, general due-time policies, and schedule tables continued on later pages. Apply an explicitly stated due-time policy to the assignments it covers; a submission cutoff does not automatically apply to reading-only preparation. Readings paired with a reading-response assignment may be combined in that task. Lecture topics, optional readings or office hours, breaks/holidays, and conditional university policies are not separate obligations. Include named practice quizzes and required assessments even when they are ungraded.
 - In-class exams and assessments use that day's stated class hours unless the document gives different hours. On an irregular weekday, do not copy a different weekday's hours: leave missing times null and ask. Never invent a due time where no applicable policy exists. When only a week number or an unspecified set of Fridays is given, keep the date null and ask for the actual date; do not invent a term start or a first/last quiz date. If a quiz series has no individual dates, return one unresolved series item and one question about its schedule, rather than a separate undated task and question for every lecture topic. For a due-date window, use the last date provisionally and ask which day applies. Flag contradictory years or AM/PM labels with a specific question.
 - For a course schedule or registration screenshot, set detected_type "course_schedule" and add each class as a repeating event.
+- A typed or dictated request is often placed around the user's existing plan, listed below as "Existing plan". Anchor to it: "before work" or "before my shift" ends when that day's shift starts; "after work" or "after class" starts when it ends; "on my work days" means each date with a shift. Add one event for each date the anchor gives, within the plan shown, and give each a time. Use the length the user gives, otherwise a typical one for the activity (a workout or run 45 minutes, a meal 30 minutes, a study session an hour). Only when nothing in the message or the plan can place an event, leave its time null and ask one question.
+- When the user asks for something on fixed weekdays ("every weekday", "Mon, Wed and Fri", "every morning"), return one repeating event (repeat_weekdays, repeat_until) with its time, rather than separate events. Something anchored to shifts that move from week to week stays one event per shift date.
 - Titles are short and natural: "Olive Garden shift", "Stats exam 2", "Return library book". Don't repeat the date in the title.
 - Write user-facing questions in plain, friendly language. Ask one specific question about the missing detail, without technical terms or blame.
 - evidence is the exact text the item came from. confidence is your honest probability that every field is right.
 - Never invent items that are not in the input. If nothing is schedulable, return an empty items list.`;
 
-function contextBlock(ctx: ExtractContext): string {
+/** The facts about the user the model reads before the input. Exported for tests. */
+export function contextBlock(ctx: ExtractContext): string {
   const lines = [
     ...(ctx.name?.trim() ? [`User's name (extract only this person's shifts): ${ctx.name.trim()}`] : []),
     `Reference date: ${ctx.today}`,
@@ -37,6 +40,9 @@ function contextBlock(ctx: ExtractContext): string {
     ...(ctx.locale ? [`Locale: ${ctx.locale}${ctx.region ? `, region ${ctx.region}` : ''}`] : ctx.region ? [`Region: ${ctx.region}`] : []),
     `Known courses: ${ctx.courses.length ? ctx.courses.map((c) => [c.code, c.title].filter(Boolean).join(' ')).join('; ') : 'none yet'}`,
     `Known employers: ${ctx.employers.length ? ctx.employers.join(', ') : 'none yet'}`,
+    ...(ctx.schedule?.length
+      ? ['Existing plan (upcoming timed events):', ...ctx.schedule.map((e) => `- ${e.date} ${e.start}${e.end ? `–${e.end}` : ''} ${e.title}`)]
+      : []),
   ];
   return lines.join('\n');
 }
