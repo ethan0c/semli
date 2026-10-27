@@ -77,7 +77,7 @@ export function planUndo(
 export function undoQuestion(batch: Batch, items: Record<string, Item>, series: Record<string, SeriesRule>, courses: StoredCourse[]): string {
   const { reverted, kept } = planUndo(batch, items, series, courses);
   const n = (k: number) => (k === 1 ? '1 item' : `${k} items`);
-  const back = reverted ? `${n(reverted)} change back.` : 'Nothing left to change back.';
-  const stay = kept ? ` ${n(kept)} you’ve changed since ${kept === 1 ? 'stays' : 'stay'} as ${kept === 1 ? 'it is' : 'they are'}.` : '';
+  const back = reverted ? `This will undo changes to ${n(reverted)}.` : 'There’s nothing left to undo.';
+  const stay = kept ? ` Your later changes to ${n(kept)} will be kept.` : '';
   return `Undo “${batch.label}”? ${back}${stay}`;
 }

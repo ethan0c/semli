@@ -59,7 +59,7 @@ export default function RemindersScreen() {
       const before = await notificationPermission();
       const ok = await requestNotifications();
       setAllowed(ok);
-      if (!ok && before === 'blocked' && !(await openSystemSettings())) setError('Open your device Settings, choose Semli, then allow Notifications.');
+      if (!ok && before === 'blocked' && !(await openSystemSettings())) setError('In your device’s settings for Semli, turn on notifications.');
       return ok;
     } catch (failure) { failed(failure); return false; }
   };
@@ -94,7 +94,7 @@ export default function RemindersScreen() {
       {error ? <Group footer={error}><Row label="Retry reminder setup" onPress={() => { void syncReminders().then(() => setError(null)).catch(failed); }} last /></Group> : null}
       {WEB ? <T token="callout" color={c.inkSecondary}>Reminders ring on your iPhone. Changes you make here apply there.</T> : null}
       {allowed === false ? (
-        <Group footer="Allow notifications to receive reminders on this iPhone. If prompted, enable them in Settings → Semli → Notifications.">
+        <Group footer="To get reminders on this iPhone, allow notifications in your device’s settings for Semli.">
           <Row label="Turn on reminders" onPress={() => void enable()} last />
         </Group>
       ) : null}

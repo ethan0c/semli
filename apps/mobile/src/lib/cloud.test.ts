@@ -202,3 +202,200 @@ describe('choosing between two plans', () => {
     expect(mocks.cloud.pushRecords).not.toHaveBeenCalled();
   });
 });
+
+/** A fresh launch: the module's memory goes, what AsyncStorage and the store hold stays. */
+async function relaunch() {
+  cloud.stopSync();
+  vi.resetModules();
+  mocks.store.setState({ planChoice: null });
+  cloud = await import('./cloud');
+}
+const rule = (skipped: string[] = []) => ({ every: 1, days: ['mon'], until: '2026-12-15', skipped, start: '09:00', end: '10:15' });
+
+describe('a sign-in that didn’t settle', () => {
+  it('a launch before “You have two plans” was answered asks again instead of merging', async () => {
+    elsewhere({ kind: 'item', id: 'x', data: item('x'), deleted: false });
+    setItems({ b: item('b') });
+    await cloud.restoreFromCloud();
+    expect(mocks.store.getState().planChoice).not.toBeNull();
+    await relaunch();
+    await cloud.resumeSync('u1');
+    expect(mocks.store.getState().planChoice).not.toBeNull();
+    expect(localItems()).toEqual(['b']);
+    expect(serverItems()).toEqual(['x']);
+    expect(mocks.cloud.pushRecords).not.toHaveBeenCalled();
+  });
+
+  it('a launch after a restore that couldn’t reach the account decides again instead of merging', async () => {
+    elsewhere({ kind: 'item', id: 'x', data: item('x'), deleted: false });
+    setItems({ b: item('b') });
+    mocks.cloud.pullRecords.mockRejectedValueOnce(new Error('offline'));
+    await expect(cloud.restoreFromCloud()).rejects.toThrow('offline');
+    await relaunch();
+    await cloud.resumeSync('u1');
+    expect(mocks.store.getState().planChoice).not.toBeNull();
+    expect(serverItems()).toEqual(['x']);
+  });
+
+  it('once answered, a launch resumes sync', async () => {
+    elsewhere({ kind: 'item', id: 'x', data: item('x'), deleted: false });
+    setItems({ b: item('b') });
+    await cloud.restoreFromCloud();
+    await cloud.keepPhonePlan();
+    await relaunch();
+    await cloud.resumeSync('u1');
+    expect(mocks.store.getState().planChoice).toBeNull();
+    expect(serverItems()).toEqual(['b']);
+  });
+
+  it('keeping this device’s plan offline keeps the question up, sends nothing more, and can be tried again', async () => {
+    elsewhere({ kind: 'item', id: 'x', data: item('x'), deleted: false });
+    setItems({ b: item('b') });
+    await cloud.restoreFromCloud();
+    mocks.cloud.pushRecords.mockRejectedValueOnce(new Error('offline'));
+    await expect(cloud.keepPhonePlan()).rejects.toThrow('offline');
+    expect(mocks.store.getState().planChoice).not.toBeNull();
+    expect(serverItems()).toEqual(['x']);
+    // Nothing keeps going in the background: a change now sends nothing.
+    setItems({ b: item('b'), c: item('c') });
+    await cloud.saveToCloud();
+    expect(mocks.cloud.pushRecords).toHaveBeenCalledTimes(1);
+    await relaunch();
+    await cloud.resumeSync('u1');
+    expect(mocks.store.getState().planChoice).not.toBeNull();
+    await cloud.keepPhonePlan();
+    expect(serverItems()).toEqual(['b', 'c']);
+    expect(mocks.store.getState().planChoice).toBeNull();
+  });
+
+  it('keeping an old backup offline leaves this phone’s plan and the question', async () => {
+    mocks.cloud.readLegacyPlan.mockResolvedValue({ snapshot: { version: 1, items: [item('x')], courses: [], schedules: [], taskWorkDates: {}, settings: {} }, at: null });
+    setItems({ b: item('b') });
+    await cloud.restoreFromCloud();
+    mocks.cloud.pushRecords.mockRejectedValueOnce(new Error('offline'));
+    await expect(cloud.keepAccountPlan()).rejects.toThrow('offline');
+    expect(localItems()).toEqual(['b']);
+    expect(mocks.store.getState().planChoice).not.toBeNull();
+    await cloud.keepAccountPlan();
+    expect(localItems()).toEqual(['x']);
+    expect(serverItems()).toEqual(['x']);
+    expect(mocks.store.getState().planChoice).toBeNull();
+  });
+});
+
+describe('the onboarding sample', () => {
+  it('never goes up, and doesn’t make signing in ask', async () => {
+    elsewhere({ kind: 'item', id: 'x', data: item('x'), deleted: false });
+    mocks.store.setState({ items: { n1: item('n1', { batchId: 'b-sample', sourceId: 'Sample week' }) }, settings: { ...SETTINGS(), sampleBatchId: 'b-sample' } });
+    expect(await cloud.restoreFromCloud()).toEqual({ restored: true, outcome: 'restored' });
+    expect(mocks.store.getState().planChoice).toBeNull();
+    expect(localItems()).toEqual(['x']);
+  });
+
+  it('stays on a phone signing in to an empty account, and stays off the account', async () => {
+    mocks.store.setState({ items: { n1: item('n1', { batchId: 'b-sample' }) }, settings: { ...SETTINGS(), sampleBatchId: 'b-sample' } });
+    await cloud.restoreFromCloud();
+    expect(localItems()).toEqual(['n1']);
+    expect(serverItems()).toEqual([]);
+    setItems({ ...(mocks.store.getState().items as object), n1: item('n1', { batchId: 'b-sample', done: true }) });
+    await cloud.saveToCloud();
+    expect(serverItems()).toEqual([]);
+  });
+});
+
+describe('series rules', () => {
+  it('go up when changed and come down from another device', async () => {
+    mocks.store.setState({ items: { a: item('a', { seriesId: 's1' }) }, series: { s1: rule() } });
+    await cloud.restoreFromCloud();
+    expect(mocks.server.rows.get('series:s1')).toMatchObject({ deleted: false, data: rule() });
+    // A lecture deleted here: the rule skips that date, and the account learns it.
+    mocks.store.setState({ series: { s1: rule(['2026-10-26']) } });
+    await cloud.saveToCloud();
+    expect(mocks.server.rows.get('series:s1')!.data).toEqual(rule(['2026-10-26']));
+    mocks.live.onRow!({ new: elsewhere({ kind: 'series', id: 's1', data: rule(['2026-10-26', '2026-11-02']), deleted: false }) });
+    expect((mocks.store.getState().series as Record<string, unknown>).s1).toEqual(rule(['2026-10-26', '2026-11-02']));
+  });
+
+  it('wait, without holding up the rest, while the server doesn’t take them yet', async () => {
+    mocks.store.setState({ items: { a: item('a') }, series: { s1: rule() } });
+    const refuse = async (_user: string, records: PlanRecord[]) => {
+      if (records.some((r) => r.kind === 'series')) throw { code: '23514', message: 'violates check constraint "plan_records_kind_check"' };
+      for (const r of records) elsewhere(r);
+    };
+    mocks.cloud.pushRecords.mockImplementation(refuse);
+    await cloud.restoreFromCloud();
+    expect(serverItems()).toEqual(['a']);
+    expect(mocks.store.getState().settings).toMatchObject({ cloud: { error: null } });
+    mocks.cloud.pushRecords.mockImplementation(async (_user: string, records: PlanRecord[]) => { for (const r of records) elsewhere(r); });
+    setItems({ a: item('a'), b: item('b') });
+    await cloud.saveToCloud();
+    expect(mocks.server.rows.get('series:s1')).toMatchObject({ data: rule() });
+  });
+});
+
+describe('a deletion from another device against an edit made here offline', () => {
+  const at = (iso: string) => ({ updated_at: iso.replace('Z', '123+00:00') });
+
+  it('the deletion wins when it came after the edit', async () => {
+    setItems({ a: item('a'), b: item('b') });
+    await cloud.restoreFromCloud();
+    vi.useFakeTimers({ now: new Date('2026-10-27T09:00:00Z'), toFake: ['Date'] });
+    try {
+      mocks.cloud.pullRecords.mockRejectedValue(new Error('offline'));
+      setItems({ a: item('a'), b: item('b', { title: 'edited offline' }) });
+      await expect(cloud.saveToCloud()).rejects.toThrow('offline');
+      // Meanwhile a laptop deleted b, later.
+      const row = elsewhere({ kind: 'item', id: 'b', data: null, deleted: true });
+      Object.assign(row, at('2026-10-27T09:05:00.456Z'));
+      mocks.cloud.pullRecords.mockImplementation(async (_user: string, after: number) => [...mocks.server.rows.values()].filter((r) => r.seq > after).sort((a, b) => a.seq - b.seq));
+      await cloud.saveToCloud();
+    } finally { vi.useRealTimers(); }
+    expect(localItems()).toEqual(['a']);
+    expect(serverItems()).toEqual(['a']);
+  });
+
+  it('a deletion arriving live, in Postgres’s own time format, wins over an older unsent edit', async () => {
+    setItems({ a: item('a'), b: item('b') });
+    await cloud.restoreFromCloud();
+    vi.useFakeTimers({ now: new Date('2026-10-27T09:00:00Z'), toFake: ['Date'] });
+    try {
+      setItems({ a: item('a'), b: item('b', { title: 'edited' }) });
+    } finally { vi.useRealTimers(); }
+    mocks.live.onRow!({ new: { ...elsewhere({ kind: 'item', id: 'b', data: null, deleted: true }), updated_at: '2026-10-27 09:00:01.5+00' } });
+    expect(localItems()).toEqual(['a']);
+    await cloud.saveToCloud();
+    expect(serverItems()).toEqual(['a']);
+  });
+
+  it('the edit wins when it came after the deletion', async () => {
+    setItems({ a: item('a'), b: item('b') });
+    await cloud.restoreFromCloud();
+    vi.useFakeTimers({ now: new Date('2026-10-27T09:10:00Z'), toFake: ['Date'] });
+    try {
+      mocks.cloud.pullRecords.mockRejectedValue(new Error('offline'));
+      setItems({ a: item('a'), b: item('b', { title: 'edited offline' }) });
+      await expect(cloud.saveToCloud()).rejects.toThrow('offline');
+      const row = elsewhere({ kind: 'item', id: 'b', data: null, deleted: true });
+      Object.assign(row, at('2026-10-27T09:05:00.456Z'));
+      mocks.cloud.pullRecords.mockImplementation(async (_user: string, after: number) => [...mocks.server.rows.values()].filter((r) => r.seq > after).sort((a, b) => a.seq - b.seq));
+      await cloud.saveToCloud();
+    } finally { vi.useRealTimers(); }
+    expect(localItems()).toEqual(['a', 'b']);
+    expect(serverItems()).toEqual(['a', 'b']);
+  });
+});
+
+describe('the backup status', () => {
+  it('a launch that finds nothing left to send says backed up, for restores before Oct 27 that never did', async () => {
+    mocks.storage.set('semli.sync', JSON.stringify({ userId: 'u1', cursor: 0, pending: [] }));
+    await cloud.resumeSync('u1');
+    expect((mocks.store.getState().settings as { cloud: { backedUpAt: string | null } }).cloud.backedUpAt).not.toBeNull();
+  });
+
+  it('a clean restore is backed up, though nothing was sent', async () => {
+    elsewhere({ kind: 'item', id: 'x', data: item('x'), deleted: false });
+    await cloud.restoreFromCloud();
+    expect(mocks.cloud.pushRecords).not.toHaveBeenCalled();
+    expect((mocks.store.getState().settings as { cloud: { backedUpAt: string | null } }).cloud.backedUpAt).not.toBeNull();
+  });
+});

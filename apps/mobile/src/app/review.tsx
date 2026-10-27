@@ -228,7 +228,7 @@ export default function ReviewScreen() {
   const askOf = (d: Draft): string | null => {
     if (!d.needsInput || !d.include) return null;
     if (d.question && !HANDLED.has(d.question)) return d.question;
-    return d.question ? null : 'Semli wasn’t sure it read this right. Check the date and time.';
+    return d.question ? null : 'We couldn’t read this clearly. Please check the date and time.';
   };
   const leaveOut = (keys: string[]) => {
     feedback('select');
@@ -425,7 +425,7 @@ export default function ReviewScreen() {
   }
 
   const note = newCourse
-    ? `Adds the course ${[newCourse.code, newCourse.title].filter(Boolean).join(' · ')}. You can change its color on its page.`
+    ? `Adds ${[newCourse.code, newCourse.title].filter(Boolean).join(' · ')} to School. You can change its color there.`
     : added.length > 1
     ? `Adds ${added.length} courses to School: ${added.map((k) => k.code ?? k.title).join(', ')}.`
     : isUpdate ? 'Reminders move with the shifts.' : 'Nothing is saved until you confirm.';
@@ -513,13 +513,13 @@ export default function ReviewScreen() {
         const needs = !d.start || !d.end;
         return (
           <ReviewRow key={d.key} glyph={<ReviewGlyph />} title={shiftTitle(d)} onPress={needs ? undefined : () => toggleEditing([d.key])} ask={askOf(d)}
-            sub={needs ? `The ${docNoun} has no time for it` : `${weekdayShort(d.date)}, ${monthDay(d.date)} · ${longRange(d.start!, d.end!)}`}
+            sub={needs ? `No time listed in the ${docNoun}` : `${weekdayShort(d.date)}, ${monthDay(d.date)} · ${longRange(d.start!, d.end!)}`}
             trailing={needs ? <StatusPill label="Add a time" tone="amber" /> : <StatusPill label={compactRange(d.start!, d.end!)} />}
-            below={needs || editing.has(d.key) ? <>{timeEditor(d)}{leaveOutButton([d.key], 'Not my shift')}</> : null} />
+            below={needs || editing.has(d.key) ? <>{timeEditor(d)}{leaveOutButton([d.key], 'Skip this shift')}</> : null} />
         );
       }),
       ...out.map((d) => (
-        <ReviewRow key={d.key} glyph={<ReviewGlyph color={c.controlOutline} />} title={shiftTitle(d)} struck sub="Left out"
+        <ReviewRow key={d.key} glyph={<ReviewGlyph color={c.controlOutline} />} title={shiftTitle(d)} struck sub="Skipped"
           trailing={<TextButton label="Add back" onPress={() => addBack([d.key])} />} />
       )),
     ];
@@ -532,7 +532,7 @@ export default function ReviewScreen() {
     const unknown = s.first.seriesEndUnknown;
     const keys = drafts.filter((d) => d.seriesId === s.id).map((d) => d.key);
     if (keys.every((k) => leftOut.has(k))) {
-      return <ReviewRow key={s.id} glyph={<ReviewGlyph color={c.controlOutline} />} title={`${s.first.title} · ${when}`} struck sub="Left out"
+      return <ReviewRow key={s.id} glyph={<ReviewGlyph color={c.controlOutline} />} title={`${s.first.title} · ${when}`} struck sub="Skipped"
         trailing={<TextButton label="Add back" onPress={() => addBack(keys)} />} />;
     }
     const untimed = s.first.kind === 'event' && !s.first.start;
@@ -542,18 +542,18 @@ export default function ReviewScreen() {
       setDrafts((ds) => ds.map((d) => (d.seriesId === s.id ? { ...d, [f]: v, needsInput: false } : d)));
     const timeField = (f: 'start' | 'end') => {
       const v = s.first[f];
-      return <ReviewPill key={f} label={v ? formatTime(v) : f === 'start' ? 'Start' : 'End'} muted={!v} open={picker === `${s.id}:${f}`} onPress={() => togglePicker(`${s.id}:${f}`)} />;
+      return <ReviewPill key={f} label={v ? formatTime(v) : f === 'start' ? 'Start time' : 'End time'} muted={!v} open={picker === `${s.id}:${f}`} onPress={() => togglePicker(`${s.id}:${f}`)} />;
     };
     const openTime = (['start', 'end'] as const).find((f) => picker === `${s.id}:${f}`);
     const editor = open ? (<>
       <ReviewPillRow>{timeField('start')}{timeField('end')}</ReviewPillRow>
       {openTime ? opened(<InlinePicker mode="time" date={s.first.date} time={s.first[openTime]} onChange={(v) => setTimes(openTime, v || null)} />) : null}
-      {leaveOutButton(keys, 'Leave this class out')}
+      {leaveOutButton(keys, s.first.category === 'school' ? 'Skip this class' : 'Skip these repeats')}
     </>) : null;
     return (
       <ReviewRow key={s.id} glyph={<ReviewGlyph />} title={`${s.first.title} · ${when}`} onPress={() => toggleEditing([s.id])} ask={askOf(s.first)}
-        sub={untimed ? `The ${docNoun} has no time for it` : unknown ? `The ${docNoun} doesn't say when the term ends` : `Until ${monthDay(end?.date ?? s.last.date)}`}
-        trailing={untimed ? <StatusPill label="Add a time" tone="amber" /> : unknown ? <StatusPill label="Until when?" tone="amber" /> : <StatusPill label={monthDay(end?.date ?? s.last.date)} />}
+        sub={untimed ? `No time listed in the ${docNoun}` : unknown ? `No end date listed in the ${docNoun}` : `Through ${monthDay(end?.date ?? s.last.date)}`}
+        trailing={untimed ? <StatusPill label="Add a time" tone="amber" /> : unknown ? <StatusPill label="Last date?" tone="amber" /> : <StatusPill label={monthDay(end?.date ?? s.last.date)} />}
         below={!unknown ? editor : (<>
           {editor}
           <ReviewPillRow>
@@ -574,13 +574,13 @@ export default function ReviewScreen() {
     const evidence = d.evidence.trim();
     const sub = (d.kind === 'event' || exam) && !d.start ? `Time not in the ${docNoun}` : evidence || d.courseCode || null;
     if (leftOut.has(d.key)) {
-      return <ReviewRow key={d.key} glyph={<ReviewGlyph color={c.controlOutline} />} title={d.title} struck sub="Left out"
+      return <ReviewRow key={d.key} glyph={<ReviewGlyph color={c.controlOutline} />} title={d.title} struck sub="Skipped"
         trailing={<TextButton label="Add back" onPress={() => addBack([d.key])} />} />;
     }
     // Any picker open on the row also offers to leave it out: a wrong read no longer has to be imported to be deleted.
     const picking = !!picker?.startsWith(`${d.key}:`) && d.include;
     return <ReviewRow key={d.key} glyph={<ReviewGlyph kind={exam ? 'ring' : 'dot'} />} title={d.title} sub={sub} ask={askOf(d)} trailing={dateTrailing(d, exam)}
-      below={picking ? <>{datePicker(d)}{leaveOutButton([d.key], 'Leave this out')}</> : datePicker(d)} />;
+      below={picking ? <>{datePicker(d)}{leaveOutButton([d.key], 'Skip this item')}</> : datePicker(d)} />;
   };
 
   const undatedNoun = undated.length && undated.every((d) => d.icon === 'book') ? ['reading', 'readings'] : ['item', 'items'];
@@ -727,8 +727,8 @@ function suggestedEnd(drafts: Draft[], first: Draft): { date: string; label: str
   const final = exams.filter((d) => /final/i.test(d.title)).at(-1)
     ?? exams.filter((d) => diffDays(d.date!, guess) <= 21).sort((a, b) => a.date!.localeCompare(b.date!)).at(-1);
   return final
-    ? { date: final.date!, label: `${monthDay(final.date!)} · ${/final/i.test(final.title) ? 'The final' : 'The last exam'}` }
-    : { date: guess, label: `${monthDay(guess)} · Typical ${typicalTermEnd(first.date).name} end` };
+    ? { date: final.date!, label: `${monthDay(final.date!)} · ${/final/i.test(final.title) ? 'Final exam' : 'Last exam'}` }
+    : { date: guess, label: `${monthDay(guess)} · Estimated end of ${typicalTermEnd(first.date).name}` };
 }
 
 /** The default term end for each open-ended series. */

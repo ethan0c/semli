@@ -199,10 +199,13 @@ export async function resumeSync(userId: string): Promise<void> {
   }
   const saved = await loadSaved();
   if (saved?.userId === userId) {
-    sync = { userId, cursor: saved.cursor, pending: new Map(saved.pending.map((r) => [keyOf(r), r])), baseline: recordsOf(useStore.getState()) };
+    const s: Sync = { userId, cursor: saved.cursor, pending: new Map(saved.pending.map((r) => [keyOf(r), r])), baseline: recordsOf(useStore.getState()) };
+    sync = s;
     startLive();
     await flush();
     await pull();
+    // Caught up with nothing left to send: backed up, including after a clean restore before Oct 27, 2026 that never said so.
+    if (sync === s && !s.pending.size) noteBackedUp();
     return;
   }
   // The first sync on this device (an update from the backup-only version): join the account's
@@ -214,8 +217,12 @@ export async function resumeSync(userId: string): Promise<void> {
   await begin(userId, latestSeq(rows), [...local.values()].filter((r) => !known.has(keyOf(r))));
 }
 
-/** A time from this device or the server, to compare: Postgres sends microseconds, which not every engine parses. */
-const timeOf = (iso: string | undefined) => (iso ? Date.parse(iso.replace(/(\.\d{3})\d+/, '$1')) : NaN);
+/**
+ * A time from this device or the server, to compare. Postgres sends microseconds and, over
+ * Realtime, may send its own text form ("2026-10-27 09:05:00.123456+00"), which not every engine parses.
+ */
+const timeOf = (iso: string | undefined) =>
+  (iso ? Date.parse(iso.replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1').replace(/([+-]\d{2})$/, '$1:00')) : NaN);
 
 /**
  * Writes another device's records into the store, skipping any this device has changed since.

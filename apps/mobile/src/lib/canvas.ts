@@ -205,11 +205,11 @@ export const CANVAS_MESSAGES = {
   rejected: 'Canvas didn’t accept that link. It may have been reset; copy a fresh one from Calendar feed.',
   format: 'Canvas sent something we couldn’t read. Your Canvas items are still here.',
   /** The web's feed goes through Semli's server, which needs a current sign-in; the link itself is fine. */
-  session: 'Your Semli sign-in expired. Sign in again, then try Canvas once more. Your feed link is fine.',
+  session: 'Sign in to Semli again to sync Canvas. You can use the same calendar feed link.',
   /** An import under review is replaced by any plan saved under it, so Canvas waits for it. */
-  reviewing: 'Finish reviewing your import, then sync Canvas.',
+  reviewing: 'Finish or close your import review before syncing Canvas.',
   /** Disconnected (or relinked) while the feed was loading; nothing from it was saved. */
-  disconnected: 'Canvas was disconnected during the sync, so nothing from it was saved.',
+  disconnected: 'Your Canvas connection changed during the sync. No updates were saved. Try syncing again.',
 } as const;
 
 /** How the feed is fetched: straight from Canvas on the phone, through Semli's server on the web. */

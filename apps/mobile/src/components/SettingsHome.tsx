@@ -68,8 +68,8 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
     : notificationsOn === false ? t`Needs permission`
     : settings.reminders.briefing ? t`On, with daily summary` : t`On`;
   const canvasStatus = !settings.canvas.feedUrl ? t`Off`
-    : settings.canvas.lastError ? t`Needs a look`
-    : isPlus ? t`Syncing` : t`Imported`;
+    : settings.canvas.lastError ? t`Sync needs attention`
+    : isPlus ? t`Auto-sync on` : t`Imported once`;
   // Counts down, so the line reads as what is still yours rather than what is spent.
   const planLabel = isPlus
     ? trialEnds !== null && trialEnds > 0 && entitlement?.periodType === 'TRIAL'

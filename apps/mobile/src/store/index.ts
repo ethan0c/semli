@@ -575,7 +575,7 @@ export const useStore = create<State>()(
           courses,
           schedules: [...get().schedules.filter((s) => s.batchId !== id), ...(b.removedSchedules ?? [])],
           batches: get().batches.map((x) => (x.id === id ? { ...x, undone: true } : x)),
-          toast: kept ? { message: `Undid ${b.label}. Kept ${kept === 1 ? '1 item' : `${kept} items`} you changed since.` } : null,
+          toast: kept ? { message: `Undo complete. Your later changes to ${kept === 1 ? '1 item' : `${kept} items`} were kept.` } : null,
         });
         return { reverted, kept };
       },

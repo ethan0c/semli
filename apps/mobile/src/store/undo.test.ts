@@ -17,7 +17,7 @@ describe('planUndo', () => {
     const r = planUndo(batch, now, {}, []);
     expect(Object.keys(r.items)).toEqual(['b']);
     expect(r).toMatchObject({ reverted: 1, kept: 1 });
-    expect(undoQuestion(batch, now, {}, [])).toBe('Undo “Added 3 items”? 1 item change back. 1 item you’ve changed since stays as it is.');
+    expect(undoQuestion(batch, now, {}, [])).toBe('Undo “Added 3 items”? This will undo changes to 1 item. Your later changes to 1 item will be kept.');
     expect(Object.keys(planUndo(batch, now, {}, [], { force: true }).items)).toEqual([]);
   });
 

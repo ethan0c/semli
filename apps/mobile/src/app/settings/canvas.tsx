@@ -119,7 +119,7 @@ export default function CanvasScreen() {
           <View style={styles.top}>
             <T token="display" accessibilityRole="header">Connect Canvas</T>
             <T token="lead" color={c.inkSecondary} style={styles.line}>{freeSyncUsed && !isPlus
-              ? 'Bring in due dates from your Canvas calendar. Your free Canvas import is used; connecting again, and checking for updates when you open the app, are part of Semli Plus.'
+              ? 'You’ve used your free Canvas import. Reconnect with Semli Plus to keep your due dates up to date.'
               : 'Bring in due dates from your Canvas calendar. With Plus, Semli checks for updates when you open the app.'}</T>
           </View>
           <Group title="Paste your calendar feed link"
@@ -132,7 +132,7 @@ export default function CanvasScreen() {
               <T token="subhead" color={c.conflict} style={{ flex: 1 }}>{error}</T>
             </Animated.View>
           ) : null}
-          <Button label={busy ? 'Connecting…' : freeSyncUsed && !isPlus ? 'Connect with Plus' : 'Connect Canvas'} disabled={busy || !link.trim()} onPress={() => void connect()} />
+          <Button label={busy ? 'Connecting…' : freeSyncUsed && !isPlus ? 'Reconnect with Plus' : 'Connect Canvas'} disabled={busy || !link.trim()} onPress={() => void connect()} />
           {fallback}
         </Animated.View>
       )}

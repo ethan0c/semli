@@ -73,6 +73,10 @@ msgstr "Apariencia"
 msgid "Arts & design"
 msgstr "Arte y diseño"
 
+#: src/components/SettingsHome.tsx:72
+msgid "Auto-sync on"
+msgstr "Sincronización automática activada"
+
 #: src/components/ColumnHeader.tsx:38
 #: src/components/NavButtons.tsx:20
 #: src/components/NavButtons.tsx:53
@@ -199,8 +203,8 @@ msgid "Import a screenshot or PDF"
 msgstr "Importar una captura o un PDF"
 
 #: src/components/SettingsHome.tsx:72
-msgid "Imported"
-msgstr "Importado"
+msgid "Imported once"
+msgstr "Importado una vez"
 
 #: src/app/(tabs)/you.tsx:52
 #: src/app/settings/_layout.tsx:39
@@ -244,10 +248,6 @@ msgstr "Igual que el sistema: {phoneName}"
 #: src/components/SettingsHome.tsx:100
 msgid "Name"
 msgstr "Nombre"
-
-#: src/components/SettingsHome.tsx:71
-msgid "Needs a look"
-msgstr "Necesita revisión"
 
 #: src/components/SettingsHome.tsx:68
 msgid "Needs permission"
@@ -407,9 +407,9 @@ msgstr "Sonidos"
 msgid "Studying"
 msgstr "Estudios"
 
-#: src/components/SettingsHome.tsx:72
-msgid "Syncing"
-msgstr "Sincronizando"
+#: src/components/SettingsHome.tsx:71
+msgid "Sync needs attention"
+msgstr "Revisa la sincronización"
 
 #: src/components/SettingsHome.tsx:146
 msgid "Terms"

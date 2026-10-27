@@ -72,6 +72,10 @@ msgstr ""
 msgid "Arts & design"
 msgstr ""
 
+#: src/components/SettingsHome.tsx:72
+msgid "Auto-sync on"
+msgstr ""
+
 #: src/components/ColumnHeader.tsx:38
 #: src/components/NavButtons.tsx:20
 #: src/components/NavButtons.tsx:53
@@ -198,7 +202,7 @@ msgid "Import a screenshot or PDF"
 msgstr ""
 
 #: src/components/SettingsHome.tsx:72
-msgid "Imported"
+msgid "Imported once"
 msgstr ""
 
 #: src/app/(tabs)/you.tsx:52
@@ -242,10 +246,6 @@ msgstr ""
 #: src/app/settings/_layout.tsx:35
 #: src/components/SettingsHome.tsx:100
 msgid "Name"
-msgstr ""
-
-#: src/components/SettingsHome.tsx:71
-msgid "Needs a look"
 msgstr ""
 
 #: src/components/SettingsHome.tsx:68
@@ -406,8 +406,8 @@ msgstr ""
 msgid "Studying"
 msgstr ""
 
-#: src/components/SettingsHome.tsx:72
-msgid "Syncing"
+#: src/components/SettingsHome.tsx:71
+msgid "Sync needs attention"
 msgstr ""
 
 #: src/components/SettingsHome.tsx:146

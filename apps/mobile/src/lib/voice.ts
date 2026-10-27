@@ -37,7 +37,7 @@ const STOP_GRACE_MS = 1500;
 
 export const VOICE_ERRORS = {
   denied: 'Allow microphone and speech recognition access in Settings to add plans by voice.',
-  deniedManual: 'Open your device Settings, choose Semli, then allow Microphone and Speech Recognition.',
+  deniedManual: 'In your device’s settings for Semli, allow access to the microphone and speech recognition.',
   offline: 'Voice input needs an internet connection. You can type your plans instead.',
   unavailable: 'Voice input isn’t available on this device. You can type your plans instead.',
   failed: 'Voice input stopped. Your text is still here. Tap the microphone to continue.',
