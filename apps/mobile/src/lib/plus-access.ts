@@ -2,6 +2,7 @@ import { track } from './analytics';
 import { reportError } from './errors';
 import { hasSemliPro, purchaseErrorMessage } from './revenuecat';
 import { hasFreeImports } from './plans';
+import { setPlusStatus } from './plus-status';
 import { usePurchases } from '../providers/PurchasesProvider';
 import { useStore } from '../store';
 
@@ -32,7 +33,12 @@ export function usePlusAccess() {
       }
       reportError('plus.refresh', failure);
     }
-    if (hasSemliPro(info)) return true;
+    if (hasSemliPro(info)) {
+      // Code outside React (alarms) reads this; the provider's effect sets it a render later,
+      // after a caller that goes straight on to enable ringing alarms has already asked.
+      setPlusStatus('active');
+      return true;
+    }
     track('paywall_shown', { reason });
     return presentPaywall();
   }

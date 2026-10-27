@@ -14,7 +14,7 @@ import { track } from '@/lib/analytics';
 import { feedback } from '@/lib/feedback';
 import { durations, enter, exit } from '@/lib/motion';
 import { LINKS, openLink } from '@/lib/links';
-import { notificationsAllowed, requestNotifications } from '@/lib/notifications';
+import { notificationsAllowed, requestNotifications, trialRenews } from '@/lib/notifications';
 import { PLUS_ENTITLEMENT, customerCenterEnabled, hasSemliPro, offeringFor, usingTestStore } from '@/lib/revenuecat';
 import { plusMonthLine } from '@/lib/plus-month';
 import { usePurchases } from '@/providers/PurchasesProvider';
@@ -99,8 +99,12 @@ export function PlanPicker({ onContinueFree, onComplete, onWelcome, freeImportsL
         showWelcome('celebrate');
         feedback('success');
         track('purchase_completed', { term: current.key, student, trial: !!days });
-        const ends = info.entitlements.active[PLUS_ENTITLEMENT]?.expirationDate;
-        if (days && ends) setSettings({ trial: { endsAt: ends, label: `${selected.product.priceString} ${current.billed}` } });
+        // The store's answer decides, not the product's intro offer (Oct 27, 2026): someone who
+        // already used a trial pays today and must not get a "trial ends" reminder.
+        // useReminderSync clears it once the entitlement stops being a renewing trial.
+        const entitled = info.entitlements.active[PLUS_ENTITLEMENT];
+        if (trialRenews(info) && entitled?.expirationDate) setSettings({ trial: { endsAt: entitled.expirationDate, label: `${selected.product.priceString} ${current.billed}` } });
+        else setSettings({ trial: null });
       } else {
         setNotice('Your purchase completed, but Plus isn’t active yet. Try Restore below. If it still doesn’t work, email hello@semli.app.');
       }

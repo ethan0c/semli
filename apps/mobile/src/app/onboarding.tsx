@@ -182,6 +182,14 @@ export default function OnboardingScreen() {
 
   /** "Try a sample": a real, labelled sample week as one undoable change, removed by the first real import. */
   const loadSample = () => {
+    // Already loaded (Back, then the sample again, or Replay the intro): show the same week. A
+    // second copy reused the sample's course ids, and Remove only took the newer one away.
+    const { settings: s, batches } = useStore.getState();
+    if (s.sampleBatchId && batches.some((b) => b.id === s.sampleBatchId && !b.undone)) {
+      setUsedSample(true);
+      go("result", { sample: true });
+      return;
+    }
     const today = localParts(new Date()).date;
     const student = useStore.getState().settings.isStudent;
     const week = sampleWeek(today, { student, preview: true });

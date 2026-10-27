@@ -77,6 +77,9 @@ export function toDrafts(extraction: Extraction, today: string, opts: { breaks?:
       for (let d = base.date; d <= reach && n < MAX_OCCURRENCES; d = addDays(d, 1)) {
         // Classes don't meet over the breaks the student set, as a series edit already knew.
         if (!days.has(weekdayOf(d)) || breaks.some((b) => d >= b.start && d <= b.end)) continue;
+        // Lectures already held aren't plans: a syllabus read mid-term (or a classmate's cached
+        // read) starts its class on the first meeting from today.
+        if (d < today) continue;
         // The first one carries the item's own question (no time, a year that looks wrong) before "Until when?".
         const ask = n === 0 ? base.question ?? (endUnknown ? 'Until when does this repeat?' : null) : null;
         drafts.push({ ...base, key: `${idx}-${n++}`, date: d, seriesId, seriesUntil: until, seriesEndUnknown: endUnknown, question: ask, needsInput: n === 1 && (base.needsInput || endUnknown) });
@@ -186,6 +189,10 @@ export function planCommit(
 ): CommitPlan {
   const chosen = drafts.filter((d): d is DatedDraft => d.include && d.date !== null);
   const plan: CommitPlan = { create: [], update: [], remove: [], skipped: 0 };
+  // A job already on file keeps its own spelling, so "Campus Cafe" lands on the "Campus Café" page.
+  const read = extraction.employer;
+  const known = read ? existing.find((i) => i.category === 'work' && i.employer && normalizeTitle(i.employer) === normalizeTitle(read))?.employer : null;
+  const employerName = known ?? read;
 
   const toItem = (d: DatedDraft): CommitPlan['create'][number] => ({
     kind: d.kind,
@@ -199,7 +206,7 @@ export function planCommit(
     done: false,
     completedAt: null,
     courseId: courseIdByCode(d.courseCode),
-    employer: d.category === 'work' ? extraction.employer : null,
+    employer: d.category === 'work' ? employerName : null,
     seriesId: d.seriesId,
     notes: null,
   });
@@ -210,7 +217,7 @@ export function planCommit(
     const coversFrom = isLocalDate(extraction.covers_from) ? extraction.covers_from : dates[0];
     const coversTo = isLocalDate(extraction.covers_to) ? extraction.covers_to : dates[dates.length - 1];
     if (coversFrom && coversTo) {
-      const employer = extraction.employer;
+      const employer = employerName!;
       const stored = existing.filter(
         (i) =>
           i.category === 'work' &&

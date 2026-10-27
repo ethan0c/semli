@@ -15,7 +15,6 @@ import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
 import { useNow } from '@/lib/now';
 import { usePlusAccess } from '@/lib/plus-access';
-import { purchaseErrorMessage } from '@/lib/revenuecat';
 import { usePurchases } from '@/providers/PurchasesProvider';
 import { useItemList, useStore } from '@/store';
 import { useTheme, screen, space } from '@/theme';
@@ -36,6 +35,8 @@ export default function CanvasScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const connected = !!canvas.feedUrl;
+  // A sync already happened on this phone, so the free one is used: connecting again is Plus.
+  const freeSyncUsed = !!canvas.lastSyncedAt;
 
   const connect = async () => {
     const url = normalizeFeedUrl(link);
@@ -43,33 +44,33 @@ export default function CanvasScreen() {
     setError(null);
     setBusy(true);
     try {
+      // Disconnect then Connect was a free sync every time (Oct 27, 2026); only the first is free.
+      if (freeSyncUsed && !(await requirePlus('canvas', { onError: setError }))) return;
       const res = await syncCanvas(url);
       if (!res.ok) { feedback('error'); setError(res.error); return; }
       feedback('ready');
       setLink('');
-    } catch (failure) {
-      setError(purchaseErrorMessage(failure));
     } finally {
       setBusy(false);
     }
   };
 
   // The first sync is free; later ones are Plus.
+  const setLastError = (lastError: string) => setSettings({ canvas: { ...useStore.getState().settings.canvas, lastError } });
   const syncNow = async () => {
     setBusy(true);
     try {
-      if (!(await requirePlus('canvas'))) return;
+      if (!(await requirePlus('canvas', { onError: setLastError }))) return;
       await syncCanvas();
-    } catch (failure) {
-      useStore.getState().setSettings({ canvas: { ...useStore.getState().settings.canvas, lastError: purchaseErrorMessage(failure) } });
     } finally {
       setBusy(false);
     }
   };
 
+  // Keeps `lastSyncedAt`: it is the record that the free first sync was used, and it outlives the link.
   const disconnect = () => {
     feedback('tap');
-    setSettings({ canvas: { feedUrl: null, lastSyncedAt: null, lastError: null } });
+    setSettings({ canvas: { ...useStore.getState().settings.canvas, feedUrl: null, lastError: null } });
     useStore.getState().showToast('Canvas disconnected. Your Canvas items stay in your plan.');
   };
 
@@ -117,7 +118,9 @@ export default function CanvasScreen() {
         <Animated.View key="off" layout={layout} entering={enter.fade} exiting={exit.fade} style={styles.stack}>
           <View style={styles.top}>
             <T token="display" accessibilityRole="header">Connect Canvas</T>
-            <T token="lead" color={c.inkSecondary} style={styles.line}>Bring in due dates from your Canvas calendar. With Plus, Semli checks for updates when you open the app.</T>
+            <T token="lead" color={c.inkSecondary} style={styles.line}>{freeSyncUsed && !isPlus
+              ? 'Bring in due dates from your Canvas calendar. Your free Canvas import is used; connecting again, and checking for updates when you open the app, are part of Semli Plus.'
+              : 'Bring in due dates from your Canvas calendar. With Plus, Semli checks for updates when you open the app.'}</T>
           </View>
           <Group title="Paste your calendar feed link"
             footer="On the Canvas website, open Calendar, choose Calendar feed at the bottom of the sidebar, and copy the link. It only lets Semli read your calendar.">
@@ -129,7 +132,7 @@ export default function CanvasScreen() {
               <T token="subhead" color={c.conflict} style={{ flex: 1 }}>{error}</T>
             </Animated.View>
           ) : null}
-          <Button label={busy ? 'Connecting…' : 'Connect Canvas'} disabled={busy || !link.trim()} onPress={() => void connect()} />
+          <Button label={busy ? 'Connecting…' : freeSyncUsed && !isPlus ? 'Connect with Plus' : 'Connect Canvas'} disabled={busy || !link.trim()} onPress={() => void connect()} />
           {fallback}
         </Animated.View>
       )}

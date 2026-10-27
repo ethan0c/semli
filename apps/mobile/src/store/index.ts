@@ -308,12 +308,21 @@ export const useStore = create<State>()(
         const change: Change = { op: 'update', before, after };
         // Part of a larger action (stopping a repeat): its Undo takes this back too.
         const host = opts?.into ? get().batches.find((b) => b.id === opts.into && !b.undone) : undefined;
-        set({
-          items: { ...get().items, [id]: after },
-          batches: host
-            ? get().batches.map((b) => (b === host ? { ...b, changes: [...b.changes, change] } : b))
-            : [batch('Edited ' + before.title, [change]), ...get().batches],
-        });
+        // Turning a time wheel saves on every tick: edits to one item within MERGE_MS are one
+        // batch, so Recent changes isn't a column of "Edited Essay" and one Undo takes them all back.
+        const last = get().batches[0];
+        const merge = !host && last && !last.undone && last.changes.length === 1 && last.changes[0]!.op === 'update'
+          && last.changes[0]!.after?.id === id && Date.now() - Date.parse(last.createdAt) < MERGE_MS ? last : undefined;
+        const b = host ?? merge ?? batch('Edited ' + before.title, [change]);
+        const batches = host
+          ? get().batches.map((x) => (x === host ? { ...x, changes: [...x.changes, change] } : x))
+          : merge
+            ? [{ ...merge, changes: [{ ...merge.changes[0]!, after }] }, ...get().batches.slice(1)]
+            : [b, ...get().batches];
+        // A move gets an Undo where it was made; later ticks of the same move keep the one toast.
+        const toast = moved && !host && get().toast?.batchId !== b.id
+          ? { message: `Moved ${before.title}.`, batchId: b.id } : get().toast;
+        set({ items: { ...get().items, [id]: after }, batches, toast });
         if (moved) track('item_edited', { field: 'date' in patch ? 'date' : 'time', scope: 'one', repeats: !!before.seriesId });
       },
 
@@ -611,6 +620,9 @@ export const useStore = create<State>()(
     },
   ),
 );
+
+/** Edits to one item this close together are one undoable change (a time wheel saves every tick). */
+const MERGE_MS = 10_000;
 
 function batch(label: string, changes: Change[]): Batch {
   return { id: newId(), createdAt: nowIso(), label, changes, undone: false };

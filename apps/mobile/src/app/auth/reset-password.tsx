@@ -8,7 +8,6 @@ import { T } from '@/components/Text';
 import { authErrorMessage, validateAuthForm } from '@/lib/auth';
 import { authClient, leaveAuth } from '@/lib/auth-client';
 import { accountOf, useSession } from '@/lib/supabase';
-import { useStore } from '@/store';
 import { SCREEN_GUTTER, useTheme, space } from '@/theme';
 
 /** After the reset code: the person is signed in, so they only choose the new password. */
@@ -25,7 +24,7 @@ export default function ResetPasswordScreen() {
     setBusy(true);
     try {
       await authClient.updatePassword(password);
-      useStore.getState().showToast('Password changed.');
+      // One toast (Oct 27, 2026): leaveAuth shows this line once the cover has gone.
       leaveAuth('Password changed. You’re signed in.'); // Stays busy while the screen leaves.
     } catch (failure) {
       setError(authErrorMessage(failure, 'auth.reset_password'));

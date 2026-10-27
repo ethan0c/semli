@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     const cached = cache ? await readCache(cache) : null;
     if (cached) {
       console.info('[extract.pdf]', { via: 'cache' });
+      if (!cached.items.length) await access.refund();
       cached.items.forEach((item) => hooks.onItem?.(item));
       return [{ ok: true, extraction: cached }, 200];
     }
@@ -60,6 +61,9 @@ export async function POST(request: Request) {
       // How often PDFs read as text, for the cost dashboard; no content, only the path taken.
       if (result.ok && result.via) console.info('[extract.pdf]', { via: result.via });
       if (result.ok && cache) await writeCache(cache, result.extraction);
+      // A read that found nothing to add gave the student nothing, so it doesn't use a free import
+      // (Oct 27, 2026: "Nothing to add" still counted against the month).
+      if (result.ok && !result.extraction.items.length) await access.refund();
       if (!result.ok) {
         // A failed read never costs an import.
         await access.refund();

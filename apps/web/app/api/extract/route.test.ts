@@ -102,6 +102,14 @@ describe('import limits', () => {
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import'))).toBe(true);
   });
 
+  it('gives the import back when the read finds nothing to add', async () => {
+    const fetchMock = vi.fn(async (url: string) => url.includes('/auth/v1/user') ? ok({ id: 'u1' }) : url.includes('claim_import') ? ok(true) : ok(null));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.mocked(extract).mockResolvedValue({ ok: true, extraction: { detected_type: 'general', employer: null, course: null, covers_from: null, covers_to: null, items: [] } } as never);
+    await POST(withAuth({ authorization: 'Bearer t' }));
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('refund_import'))).toBe(true);
+  });
+
   it('rejects a session the database does not know', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 401 })));
     const res = await POST(withAuth({ authorization: 'Bearer forged' }));

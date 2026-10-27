@@ -24,6 +24,7 @@ import { deviceRegion, regionName } from '@/lib/locale';
 import { LANGUAGE_PICKER, LANGUAGES } from '@/lib/language';
 import { profileFor } from '@/lib/majors';
 import { useCanDo } from '@/lib/can-do';
+import { useNotificationsAllowed } from '@/lib/notifications';
 import { freeImportAllowance } from '@/lib/plans';
 import { PLUS_ENTITLEMENT } from '@/lib/revenuecat';
 import { usePurchases } from '@/providers/PurchasesProvider';
@@ -46,6 +47,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
   const usage = useStore((s) => s.usage);
   const allowance = freeImportAllowance(usage);
   const canDo = useCanDo();
+  const notificationsOn = useNotificationsAllowed();
   const openSetting = useOpenSetting();
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const [openedAt] = useState(() => Date.now());
@@ -60,6 +62,14 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
   const total = canDo.length;
   const renewalDate = entitlement?.expirationDate ? fullDate(localParts(new Date(entitlement.expirationDate)).date) : null;
   const left = Math.max(0, allowed - used);
+  // What actually happens, not only the saved choice (Oct 27, 2026): reminders switched on with
+  // notifications off in iOS Settings ring nowhere, and only Plus keeps Canvas in sync.
+  const reminderStatus = !settings.reminders.enabled ? t`Off`
+    : notificationsOn === false ? t`Needs permission`
+    : settings.reminders.briefing ? t`On, with daily summary` : t`On`;
+  const canvasStatus = !settings.canvas.feedUrl ? t`Off`
+    : settings.canvas.lastError ? t`Needs a look`
+    : isPlus ? t`Syncing` : t`Imported`;
   // Counts down, so the line reads as what is still yours rather than what is spent.
   const planLabel = isPlus
     ? trialEnds !== null && trialEnds > 0 && entitlement?.periodType === 'TRIAL'
@@ -92,8 +102,8 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
         </Group>
 
         <Group title={t`Preferences`}>
-          <Row label={t`Reminders`} icon="bell" value={settings.reminders.enabled ? (settings.reminders.briefing ? t`On, with daily summary` : t`On`) : t`Off`} onPress={() => openSetting('reminders')} />
-          <Row label="Canvas" icon="book" value={settings.canvas.feedUrl ? (settings.canvas.lastError ? t`Needs a look` : t`Syncing`) : t`Off`} onPress={() => openSetting('canvas')} />
+          <Row label={t`Reminders`} icon="bell" value={reminderStatus} onPress={() => openSetting('reminders')} />
+          <Row label="Canvas" icon="book" value={canvasStatus} onPress={() => openSetting('canvas')} />
           {LANGUAGE_PICKER ? <Row label={t`Language`} icon="globe" value={LANGUAGES.find((l) => l.id === settings.language)?.name ?? (SYSTEM_NAME === 'system' ? t`Match system` : t`Match iPhone`)} onPress={() => openSetting('language')} /> : null}
           <Row label={t`Region`} icon="globe" value={regionName(settings.region ?? deviceRegion(), i18n.locale)} onPress={() => openSetting('region')} />
           <Row label={t`Appearance`} icon="appearance" value={appearanceLabels[settings.appearance]} onPress={() => openSetting('appearance')} />

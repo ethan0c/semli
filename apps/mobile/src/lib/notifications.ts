@@ -1,12 +1,14 @@
 import { localParts } from '@dayli/core';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
+import Purchases, { type CustomerInfo } from 'react-native-purchases';
 
 import { track } from '@/lib/analytics';
-import { withErrorLogging } from './errors';
+import { reportError, withErrorLogging } from './errors';
 import { planReminders, type PlannedNotification } from '@/lib/reminder-plan';
+import { PLUS_ENTITLEMENT, purchasesUnavailableReason } from '@/lib/revenuecat';
 import { useStore } from '@/store';
 
 /** Show reminders while the app is open too; a reminder you can't see is not a reminder. */
@@ -23,6 +25,35 @@ export async function notificationsAllowed(): Promise<boolean> {
     const current = await Notifications.getPermissionsAsync();
     return current.granted;
   });
+}
+
+/**
+ * Where permission stands before asking: `blocked` means iOS will not show the prompt again
+ * (a "Don't Allow" from before), so only Settings can turn it on.
+ */
+export async function notificationPermission(): Promise<'granted' | 'ask' | 'blocked'> {
+  return withErrorLogging('reminders.check_permission', async () => {
+    if (Platform.OS === 'web') return 'blocked';
+    const current = await Notifications.getPermissionsAsync();
+    return current.granted ? 'granted' : current.canAskAgain ? 'ask' : 'blocked';
+  });
+}
+
+/**
+ * Whether this phone lets Semli notify, re-checked when the app returns from Settings.
+ * null while checking, on the web (which edits the iPhone's reminders), or if the check failed.
+ */
+export function useNotificationsAllowed(): boolean | null {
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    // The check reports its own failure; an unknown answer shows the saved preference.
+    const check = () => void notificationsAllowed().then(setAllowed, () => setAllowed(null));
+    check();
+    const sub = AppState.addEventListener('change', (st) => { if (st === 'active') check(); });
+    return () => sub.remove();
+  }, []);
+  return allowed;
 }
 
 /** Ask once, in context (after the first confirmed import). Returns whether reminders can fire. */
@@ -83,12 +114,31 @@ export async function sendTestNotification(): Promise<void> {
   });
 }
 
+/** A free trial that will turn into a charge: the only case the trial-ends reminder is for. */
+export function trialRenews(info: CustomerInfo | null): boolean {
+  const entitlement = info?.entitlements.active[PLUS_ENTITLEMENT];
+  return entitlement?.periodType === 'TRIAL' && entitlement.willRenew === true;
+}
+
+/** The store's latest answer, kept so a plan that hydrates after it arrives is still checked. */
+let latestCustomerInfo: CustomerInfo | null = null;
+
+/** Drops the trial reminder once the trial converted, was cancelled, or ended (Oct 27, 2026). */
+function settleTrial() {
+  const { hydrated, settings, setSettings } = useStore.getState();
+  if (!hydrated || !settings.trial || !latestCustomerInfo || trialRenews(latestCustomerInfo)) return;
+  setSettings({ trial: null });
+}
+
 /** Keeps the schedule in step with the plan: on changes to items or preferences, and when the app returns. */
 export function useReminderSync() {
   const items = useStore((s) => s.items);
   const reminders = useStore((s) => s.settings.reminders);
   const trial = useStore((s) => s.settings.trial);
+  const hydrated = useStore((s) => s.hydrated);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // syncReminders reports its own failure (withErrorLogging), so these catches only stop an
+  // unhandled rejection; the next change or return to the app tries again.
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => void syncReminders().catch(() => {}), 1500);
@@ -100,6 +150,20 @@ export function useReminderSync() {
     const sub = AppState.addEventListener('change', (s) => s === 'active' && void syncReminders().catch(() => {}));
     return () => sub.remove();
   }, []);
+  // This runs outside PurchasesProvider, so it listens to the store itself. Like the provider's
+  // listener, it can attach before RevenueCat is configured.
+  useEffect(() => {
+    if (purchasesUnavailableReason) return;
+    const listener = (info: CustomerInfo) => {
+      latestCustomerInfo = info;
+      try { settleTrial(); } catch (failure) { reportError('reminders.trial', failure); }
+    };
+    Purchases.addCustomerInfoUpdateListener(listener);
+    return () => { Purchases.removeCustomerInfoUpdateListener(listener); };
+  }, []);
+  // Not on `trial` changes: right after a purchase the kept answer can still be the one from
+  // before it, and would clear the trial PlanPicker just recorded. The listener brings the new one.
+  useEffect(() => { settleTrial(); }, [hydrated]);
 }
 
 /**

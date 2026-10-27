@@ -10,7 +10,7 @@ import { track } from '@/lib/analytics';
 import { feedback } from '@/lib/feedback';
 import { friendlyError } from '@/lib/errors';
 import { openSystemSettings } from '@/lib/links';
-import { notificationsAllowed, requestNotifications, sendTestNotification, syncReminders } from '@/lib/notifications';
+import { notificationPermission, notificationsAllowed, requestNotifications, sendTestNotification, syncReminders } from '@/lib/notifications';
 import type { ReminderPrefs } from '@/lib/reminder-plan';
 import { useStore } from '@/store';
 import { useTheme, screen, space } from '@/theme';
@@ -49,12 +49,17 @@ export default function RemindersScreen() {
     track('reminders_changed', { enabled: patch.enabled ?? prefs.enabled, briefing: patch.briefing ?? prefs.briefing });
   };
 
-  /** Ask the system if we still can; otherwise send them to iOS Settings, which is the only place left to allow it. */
+  /**
+   * Ask the system if we still can; otherwise send them to iOS Settings, which is the only place
+   * left to allow it. Settings opens only when it was blocked before this tap (Oct 27, 2026): a
+   * "Don't Allow" just now is an answer, and jumping to Settings on top of it overrides it.
+   */
   const ensureAllowed = async (): Promise<boolean> => {
     try {
+      const before = await notificationPermission();
       const ok = await requestNotifications();
       setAllowed(ok);
-      if (!ok && !(await openSystemSettings())) setError('Open your device Settings, choose Semli, then allow Notifications.');
+      if (!ok && before === 'blocked' && !(await openSystemSettings())) setError('Open your device Settings, choose Semli, then allow Notifications.');
       return ok;
     } catch (failure) { failed(failure); return false; }
   };

@@ -7,6 +7,7 @@ import { nextTranscript } from '@dayli/core';
 import { track } from '@/lib/analytics';
 import { reportError } from '@/lib/errors';
 import { feedback } from '@/lib/feedback';
+import { openSystemSettings } from '@/lib/links';
 import { springs } from '@/lib/motion';
 
 /*
@@ -36,6 +37,7 @@ const STOP_GRACE_MS = 1500;
 
 export const VOICE_ERRORS = {
   denied: 'Allow microphone and speech recognition access in Settings to add plans by voice.',
+  deniedManual: 'Open your device Settings, choose Semli, then allow Microphone and Speech Recognition.',
   offline: 'Voice input needs an internet connection. You can type your plans instead.',
   unavailable: 'Voice input isn’t available on this device. You can type your plans instead.',
   failed: 'Voice input stopped. Your text is still here. Tap the microphone to continue.',
@@ -64,6 +66,11 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
   /** Resolves once listening has ended and the last words are in the text. */
   stop: () => Promise<void>;
   clearError: () => void;
+  /**
+   * Set while the error is a denied permission: iOS won't ask twice, so Settings is the only way
+   * back to voice (Oct 27, 2026). The composer shows it as an "Open Settings" action by the error.
+   */
+  openSettings: (() => Promise<void>) | null;
   /** The last few seconds of input volume, 0 to 1, oldest first: the composer's live bars. */
   levels: number[];
   /** When listening started, for the elapsed time. */
@@ -193,5 +200,12 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
     return done;
   }, [finish]);
 
-  return { state, transcript, level, error, start, stop, clearError: () => setError(null), levels, startedAt };
+  const openSettings = useCallback(async () => {
+    if (!(await openSystemSettings())) setError(VOICE_ERRORS.deniedManual);
+  }, []);
+
+  return {
+    state, transcript, level, error, start, stop, clearError: () => setError(null), levels, startedAt,
+    openSettings: error === VOICE_ERRORS.denied ? openSettings : null,
+  };
 }

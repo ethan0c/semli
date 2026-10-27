@@ -340,7 +340,12 @@ describe('repeating classes in review', () => {
     const drafts = toDrafts(cls(), '2026-10-27', { breaks: [{ start: '2027-03-15', end: '2027-03-19' }] });
     expect(drafts.map((d) => d.date)).not.toContain('2027-03-15');
     const guess = drafts[0]!.seriesUntil!;
-    expect(drafts.some((d) => d.date > guess)).toBe(true);
+    expect(drafts.some((d) => d.date! > guess)).toBe(true);
+  });
+
+  it('starts a class read mid-term from today, not from its first lecture', () => {
+    const drafts = toDrafts(cls(), '2027-02-03');
+    expect(drafts[0]!.date).toBe('2027-02-08');
   });
 
   it('asks for a missing time before asking how long it repeats', () => {

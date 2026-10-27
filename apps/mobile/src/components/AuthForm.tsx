@@ -69,10 +69,14 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
     } catch (error) {
       setNotice(authErrorMessage(error, `auth.${mode}.${provider}`));
     }
-    setPassword('');
+    // A tried password is cleared; a closed Apple or Google sheet leaves the typed one alone (Oct 27, 2026).
+    if (provider === 'email') setPassword('');
     setBusy(false);
     lock.current = false;
   }
+
+  /** The typed email goes along to Sign in, Sign up and Forgot password, so nobody types it twice. */
+  const carried = () => (email.trim() ? { email: email.trim() } : {});
 
   return (
     <Sheet title={copy.title} nav="push">
@@ -103,7 +107,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           {!forgot ? <AuthField label="Password" inputRef={passwordRef} password value={password} onChangeText={(value) => { setPassword(value); clear('password'); }}
             error={errors.password} placeholder={signup ? 'At least 8 characters' : 'Your password'} autoComplete={signup ? 'new-password' : 'current-password'}
             autoCapitalize="none" autoCorrect={false} maxLength={256} editable={!busy} returnKeyType="go" onSubmitEditing={() => void submit()} /> : null}
-          {mode === 'login' ? <TextButton label="Forgot password?" tone="muted" disabled={busy} onPress={() => { setPassword(''); router.push('/auth/forgot-password'); }} style={styles.start} /> : null}
+          {mode === 'login' ? <TextButton label="Forgot password?" tone="muted" disabled={busy} onPress={() => { setPassword(''); router.push({ pathname: '/auth/forgot-password', params: carried() }); }} style={styles.start} /> : null}
         </View>
         {notice ? <T token="callout" color={c.conflict} accessibilityRole="alert">{notice}</T> : null}
         <View style={{ gap: space.sm }}>
@@ -111,7 +115,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           {signup ? <T token="caption" color={c.inkSecondary} style={styles.center}>By creating an account, you agree to our <T token="caption" color={c.accentInk} accessibilityRole="link" onPress={() => void openLink(LINKS.terms)}>Terms</T> and <T token="caption" color={c.accentInk} accessibilityRole="link" onPress={() => void openLink(LINKS.privacy)}>Privacy policy</T>.</T> : null}
           <TextButton label={forgot ? 'Back to sign in' : signup ? 'Already have an account? Sign in' : 'New to Semli? Sign up'} tone="muted"
             disabled={busy}
-            onPress={() => { setPassword(''); if (forgot && router.canGoBack()) router.back(); else router.replace(signup || forgot ? '/auth/login' : '/auth/signup'); }} style={styles.footerLink} />
+            onPress={() => { setPassword(''); if (forgot && router.canGoBack()) router.back(); else router.replace({ pathname: signup || forgot ? '/auth/login' : '/auth/signup', params: carried() }); }} style={styles.footerLink} />
           {ACCOUNT_REQUIRED ? null : <TextButton label="Continue as a guest" tone="muted" disabled={busy} onPress={leaveAuth} style={styles.footerLink} />}
         </View>
       </ScrollView>
