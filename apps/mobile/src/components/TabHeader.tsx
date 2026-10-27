@@ -39,7 +39,7 @@ export function TabHeader({ date, context, title, size = 'number', value, detail
         // A header that opens something says so with the title chevron, as "On your list ›" does.
         <View style={styles.valueRow}>
           <View style={{ flexShrink: 1 }}>{big}</View>
-          <Icon name="chevronRight" size={iconSize.title} color={c.disclosureInk} />
+          <Icon name="chevronRight" size={iconSize.nav} color={c.disclosureInk} />
         </View>
       ) : big}
       {details ? <View style={styles.details}>{details}</View> : null}
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   root: { paddingHorizontal: SCREEN_GUTTER, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   content: { flex: 1, minWidth: 0, gap: space.snug },
   line: { minHeight: size.target, justifyContent: 'center' },
-  valueRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   details: { paddingTop: space.snug, gap: space.xxs },
   trailing: { paddingTop: space.hair, flexShrink: 0 },
 });

@@ -158,9 +158,9 @@ export function CourseDetail({ id, onClose }: { id?: string; onClose?: () => voi
           scale={1} dim={fade.pressed} style={styles.top}>
           {eyebrow ? <T token="callout" color={c.inkSecondary}>{eyebrow}</T> : null}
           {next ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
               <View style={{ flexShrink: 1 }}><Ticker value={big} token="displayXl" /></View>
-              <Icon name="chevronRight" size={iconSize.title} color={c.disclosureInk} />
+              <Icon name="chevronRight" size={iconSize.nav} color={c.disclosureInk} />
             </View>
           ) : <Ticker value={big} token="displayXl" />}
           {next
