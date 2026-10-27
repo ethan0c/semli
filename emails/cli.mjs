@@ -6,6 +6,8 @@
  *   npm run email build           render docs/emails/*.html and *.txt from templates.mjs
  *   npm run email preview         build, then open a gallery of every email in the browser
  *   npm run email status          segments with counts, every broadcast, and the plan at a glance
+ *   npm run email publish         every email as a published Resend template of the same name
+ *                                 (welcome and account-deleted are sent from those by the site)
  *   npm run email sync [--dry-run] [--survey-ref <tag,…>]
  *                                 Supabase accounts -> App users, then the waitlist -> Survey /
  *                                 Waitlist (skipping anyone with an account). Contacts in App users
@@ -28,7 +30,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderHtml, renderText, wordCount } from './layout.mjs';
-import { emails, segments, feedbackThankYou, SURVEY_TESTFLIGHT, BETA_LINK, USERS_REASON } from './templates.mjs';
+import { emails, transactional, templateVariables, segments, feedbackThankYou, SURVEY_TESTFLIGHT, BETA_LINK, USERS_REASON } from './templates.mjs';
 
 const targets = (e) => (Array.isArray(e.segment) ? e.segment : [e.segment]);
 const groupNames = (e) => targets(e).map((k) => segments[k] ?? k).join(' + ');
@@ -68,11 +70,12 @@ function table(rows) {
 
 function build({ quiet } = {}) {
   mkdirSync(out, { recursive: true });
-  for (const [name, e] of Object.entries(emails)) {
+  for (const [name, e] of [...Object.entries(emails), ...Object.entries(transactional)]) {
     writeFileSync(join(out, `${name}.html`), renderHtml(e, POSTAL));
     writeFileSync(join(out, `${name}.txt`), renderText(e, POSTAL));
     const words = wordCount(e);
-    if (!quiet) console.log(`  ${pad(name, 20)} ${pad(words + ' words', 10)} ${words > MAX_WORDS ? `over ${MAX_WORDS}, trim it` : ''}`);
+    const over = words > MAX_WORDS && e.kind !== 'account';
+    if (!quiet) console.log(`  ${pad(name, 20)} ${pad(words + ' words', 10)} ${over ? `over ${MAX_WORDS}, trim it` : e.kind === 'account' ? 'sent by the site' : ''}`);
   }
   const fb = feedbackThankYou({ name: '[FIRST_NAME]', about: '[FEEDBACK_SUMMARY]', reply: '[PERSONAL_REPLY]' });
   writeFileSync(join(out, 'feedback-thank-you.html'), renderHtml(fb, POSTAL));
@@ -84,7 +87,7 @@ function build({ quiet } = {}) {
 function preview() {
   build();
   const fb = feedbackThankYou({ name: 'Ana', about: 'the overlap warning hiding the class name', reply: 'I can see how that would be confusing. Could you tell me which screen you were on when it happened?' });
-  const all = [...Object.entries(emails), ['feedback-thank-you', { ...fb, segment: 'one-to-one', plan: 'Reply after reading their message' }]];
+  const all = [...Object.entries(emails), ...Object.entries(transactional).map(([n, e]) => [n, { ...e, segment: 'one-to-one' }]), ['feedback-thank-you', { ...fb, segment: 'one-to-one', plan: 'Reply after reading their message' }]];
   const cards = all.map(([name, e]) => `
     <section>
       <header><strong>${name}</strong><span>${groupNames(e)} · ${wordCount(e)} words</span><em>${e.subject}</em><small>${e.preheader}</small></header>
@@ -290,7 +293,7 @@ async function status() {
     const state = b ? `${b.status}${b.sent_at ? ' ' + b.sent_at.slice(0, 10) : b.scheduled_at ? ' for ' + b.scheduled_at.slice(0, 10) : ''}` : 'not drafted';
     rows.push([name, groupNames(e), wordCount(e), state, e.plan]);
   }
-  rows.push(['welcome', 'each new account', 'about 60', 'sent by the site', 'apps/web/lib/transactional-email.ts, the day an account is confirmed']);
+  for (const [name, e] of Object.entries(transactional)) rows.push([name, 'one person', wordCount(e), 'sent by the site', e.plan]);
   rows.push(['feedback-thank-you', 'one person', wordCount(feedbackThankYou({ name: 'x', about: 'x', reply: 'x' })), 'sent as needed', 'Reply after reading their message']);
   table(rows);
 
@@ -299,6 +302,12 @@ async function status() {
     console.log('\nOther broadcasts in Resend');
     table([['name', 'status', 'created'], ...other.map((b) => [b.name, b.status, b.created_at.slice(0, 10)])]);
   }
+  const published = new Map((await api.templates()).map((t) => [t.alias ?? t.name, t]));
+  console.log('\nTemplates in Resend');
+  table([['template', 'state'], ...templateList().map(([name]) => {
+    const t = published.get(name);
+    return [name, t ? `${t.status ?? 'saved'}${t.published_at ? ' ' + String(t.published_at).slice(0, 10) : ''}` : 'missing (run publish)'];
+  })]);
   console.log('');
   if (POSTAL.startsWith('[')) warn('EMAIL_POSTAL_ADDRESS is not set in .env; broadcasts will carry a placeholder footer.');
   warn(`Survey invite link: ${SURVEY_TESTFLIGHT}. Confirm it accepts testers before sending.`);
@@ -347,6 +356,37 @@ async function sendFeedback() {
   console.log(`  sent to ${to}  ${r.id}`);
 }
 
+// ---------- templates ----------
+
+/** Every email, as Resend templates see it: broadcasts, the site's account emails, and the feedback reply. */
+function templateList() {
+  const fb = feedbackThankYou({ name: '{{{NAME}}}', about: '{{{ABOUT}}}', reply: '{{{REPLY}}}' });
+  return [...Object.entries(emails), ...Object.entries(transactional), ['feedback-thank-you', fb]];
+}
+
+// Templates reject the broadcast fallback syntax, so the greeting uses the NAME variable instead.
+const asTemplate = (s) => s.replaceAll('{{{FIRST_NAME|there}}}', '{{{NAME}}}');
+
+/** Builds each email, then creates or updates the template of the same name and publishes it. */
+async function publish() {
+  if (POSTAL.startsWith('[')) throw new Error('Set EMAIL_POSTAL_ADDRESS in .env before publishing; the footer needs a real address.');
+  const api = resend();
+  for (const [name, e] of templateList()) {
+    const html = asTemplate(renderHtml(e, POSTAL));
+    const text = asTemplate(renderText(e, POSTAL).replace(/^Subject: .*\n\n/, ''));
+    const variables = Object.entries(templateVariables)
+      .filter(([key]) => (html + text).includes(`{{{${key}}}}`))
+      .map(([key, fallback_value]) => ({ key, type: 'string', fallback_value }));
+    const body = { name, from: FROM, reply_to: REPLY_TO, subject: e.subject, html, text, variables };
+    const existing = await api.template(name);
+    const id = existing ? existing.id : (await api.createTemplate({ ...body, alias: name })).id;
+    if (existing) await api.updateTemplate(id, body);
+    await api.publishTemplate(id);
+    console.log(`  ${pad(name, 20)} ${existing ? 'updated' : 'created'}, published   https://resend.com/templates/${id}`);
+  }
+  console.log('  Edit emails/templates.mjs and publish again; an edit made in Resend is overwritten by the next publish.');
+}
+
 // ---------- main ----------
 
 const [cmd, ...rest] = args;
@@ -354,6 +394,7 @@ const run = {
   build: () => build(),
   preview: () => preview(),
   status,
+  publish,
   sync,
   add: () => add(rest[0], rest.slice(1).filter((a) => !a.startsWith('--'))),
   send: () => send(rest[0]),

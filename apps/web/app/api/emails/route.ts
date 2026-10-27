@@ -1,10 +1,10 @@
 import { errorDiagnostic } from '@dayli/core';
-import { render, type OutboxRow } from '../../../lib/transactional-email';
-import { SUPPORT_EMAIL } from '../../../lib/site';
+import { templateFor, type OutboxRow } from '../../../lib/transactional-email';
 
 /*
  * Sends what the database queued in `email_outbox` (supabase/migrations/20261023100000 and
- * 20261027100000). Vercel's cron calls it with CRON_SECRET; the app may also call it right after
+ * 20261027100000), each through its published Resend template (subject, sender and words live
+ * there; see lib/transactional-email.ts). Vercel's cron calls it with CRON_SECRET; the app may also call it right after
  * deleting an account so the confirmation arrives in seconds. Calling it only sends what is
  * already queued, so an unauthenticated call can't do more than send those emails sooner.
  *
@@ -76,7 +76,7 @@ async function updateContacts(resend: Resend, groupIds: () => Promise<Record<str
   // which would re-subscribe someone who unsubscribed from the survey or waitlist emails.
   const found = await check(resend('GET', `/contacts/${email}`), [404]);
   if (found.status === 404) {
-    const first = row.name?.trim().split(/\s+/)[0];
+    const first = templateFor(row).variables.NAME;
     await check(resend('POST', '/contacts', { email: row.email, ...(first ? { first_name: first } : {}), properties: { source: 'app' }, segments: [{ id: users }] }));
     return;
   }
@@ -100,13 +100,7 @@ export async function flush(): Promise<{ sent: number; failed: number }> {
   let sent = 0;
   let failed = 0;
   for (const row of rows) {
-    const mail = render(row);
-    const out = await resend(
-      'POST',
-      '/emails',
-      { from: `Semli <${SUPPORT_EMAIL}>`, to: [row.email], reply_to: SUPPORT_EMAIL, subject: mail.subject, text: mail.text, html: mail.html },
-      { 'idempotency-key': `outbox-${row.id}` },
-    );
+    const out = await resend('POST', '/emails', { to: [row.email], template: templateFor(row) }, { 'idempotency-key': `outbox-${row.id}` });
     if (!out.ok) {
       failed++;
       console.error('[emails.send]', { code: 'resend_failed', status: out.status, kind: row.kind });

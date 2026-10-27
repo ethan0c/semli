@@ -131,6 +131,59 @@ export const emails = {
 };
 
 /**
+ * Emails the site sends after something the person did, through the Resend templates of the
+ * same name (`npm run email publish`; apps/web/app/api/emails sends `template: { id }`). Not
+ * broadcasts, so no unsubscribe link and no contact fields: Resend leaves both empty in an API
+ * send. {{{NAME}}} is the template variable the site fills with the first name ("there" if none).
+ * Account emails may run past the 80-word limit; they have to say what happened in full.
+ */
+const HI_NAME = 'Hi {{{NAME}}},';
+
+export const transactional = {
+  welcome: {
+    kind: 'account',
+    plan: 'The day an account first has a confirmed address (database trigger, daily cron at 15:00 UTC)',
+    subject: 'Welcome to Semli',
+    preheader: 'Your plan now backs up to your account.',
+    heading: 'Welcome to ~Semli~.',
+    greeting: HI_NAME,
+    before: [
+      'Thanks for making a Semli account. Your plan now backs up to it, so a new phone picks up where this one left off.',
+      "If you haven't yet, add one syllabus or a screenshot of your shifts. Check the dates Semli finds, then save them.",
+    ],
+    after: ['I read every reply. If a date came out wrong or something was confusing, reply and tell me. A sentence is plenty.'],
+    signoff: 'Thanks,',
+    reason: "You're getting this because you made a Semli account.",
+    unsubscribe: false,
+  },
+
+  'account-deleted': {
+    kind: 'account',
+    plan: 'Right after an account is deleted (database trigger; the app asks the site to send at once)',
+    subject: 'Your Semli account is deleted',
+    preheader: 'What was removed, what stays on your phone, and what happens to Plus.',
+    heading: 'Your account is deleted.',
+    greeting: HI_NAME,
+    before: [
+      'Your sign-in, your email address and the plan backup are gone from our servers, and this is the last email we send to this address about it.',
+      'The plan on your phone stays until you delete the app or clear it in You → Your data, and Semli keeps working there as a guest.',
+      '*Deleting your account does not cancel Semli Plus.* Subscriptions belong to your Apple ID: open Settings, tap your name, then Subscriptions, and choose Semli.',
+    ],
+    after: ["If you didn't delete your account, reply to this email or write to hello@semli.app today."],
+    signoff: 'Thanks for using Semli,',
+    reason: 'This is an email about your Semli account.',
+    unsubscribe: false,
+  },
+};
+
+/** Template variables, with the words used when the sender leaves one out. */
+export const templateVariables = {
+  NAME: 'there',
+  ABOUT: 'your message',
+  REPLY: 'Thanks for writing.',
+};
+
+/**
  * The one-to-one reply. Not a broadcast: `email send feedback --to a@b.edu --name Ana
  * --about "the overlap warning" --reply "..."` fills it and sends it through the Emails API.
  */

@@ -1,34 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render } from '../../../lib/transactional-email';
+import { templateFor } from '../../../lib/transactional-email';
 import { GET, POST } from './route';
 
 const row = { id: 7, email: 'ama@school.edu', kind: 'account_deleted' as const, name: 'Ama Owusu', created_at: '2026-10-23T10:00:00Z' };
 const ok = (body: unknown, status = 200) => new Response(body === null ? null : JSON.stringify(body), { status });
 
-describe('the account-deleted email', () => {
-  it('says what was deleted, what stays, and that Plus is not cancelled', () => {
-    const mail = render(row);
-    expect(mail.subject).toBe('Your Semli account is deleted');
-    expect(mail.text).toContain('Hi Ama,');
-    expect(mail.text).toContain('does not cancel Semli Plus');
-    expect(render({ ...row, name: '<b>x</b>' }).html).not.toContain('<b>x</b>');
+describe('the template each row is sent with', () => {
+  it('names the published template and passes the first name', () => {
+    expect(templateFor(row)).toEqual({ id: 'account-deleted', variables: { NAME: 'Ama' } });
+    expect(templateFor({ ...row, kind: 'welcome' })).toEqual({ id: 'welcome', variables: { NAME: 'Ama' } });
   });
-});
-
-describe('the welcome email', () => {
-  const welcome = { ...row, kind: 'welcome' as const };
-  it('greets by first name, asks for a reply, and says why it came', () => {
-    const mail = render(welcome);
-    expect(mail.subject).toBe('Welcome to Semli');
-    expect(mail.text).toContain('Hi Ama,');
-    expect(mail.text).toContain('reply and tell me');
-    expect(mail.text).toContain('you made a Semli account');
-    expect(mail.html).toContain('Thanks,<br>Semli');
-    expect(mail.text).not.toMatch(/[\u2013\u2014]/);
-  });
-  it('falls back to "there" without a name', () => {
-    expect(render({ ...welcome, name: null }).text).toContain('Hi there,');
-    expect(render({ ...welcome, name: '  ' }).text).toContain('Hi there,');
+  it('leaves the name out so the template says "there"', () => {
+    expect(templateFor({ ...row, name: null }).variables).toEqual({});
+    expect(templateFor({ ...row, name: '   ' }).variables).toEqual({});
   });
 });
 
@@ -50,7 +34,8 @@ describe('the outbox sender', () => {
     const res = await POST();
     expect(await res.json()).toEqual({ ok: true, sent: 1, failed: 0 });
     const send = fetchMock.mock.calls.find(([u]) => String(u).includes('resend.com'))!;
-    expect(JSON.parse(String((send[1] as RequestInit).body)).to).toEqual(['ama@school.edu']);
+    expect(JSON.parse(String((send[1] as RequestInit).body))).toEqual({ to: ['ama@school.edu'], template: { id: 'account-deleted', variables: { NAME: 'Ama' } } });
+    expect((send[1] as RequestInit).headers).toMatchObject({ 'idempotency-key': 'outbox-7' });
     expect(fetchMock.mock.calls.some(([u, i]) => String(u).includes('id=eq.7') && (i as RequestInit).method === 'DELETE')).toBe(true);
   });
 

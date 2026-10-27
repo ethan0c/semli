@@ -56,5 +56,10 @@ export function client(apiKey) {
     broadcasts: () => all('/broadcasts'),
     createBroadcast: (b) => call('POST', '/broadcasts', b),
     sendEmail: (e) => call('POST', '/emails', e),
+    templates: () => all('/templates'),
+    template: (idOrAlias) => call('GET', `/templates/${encodeURIComponent(idOrAlias)}`).catch((err) => { if (err.status === 404) return null; throw err; }),
+    createTemplate: (t) => call('POST', '/templates', t),
+    updateTemplate: (id, t) => call('PATCH', `/templates/${id}`, t),
+    publishTemplate: (id) => call('POST', `/templates/${id}/publish`),
   };
 }
