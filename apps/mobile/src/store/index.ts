@@ -174,7 +174,7 @@ interface State {
    * the rule's times, appear on its new dates and leave dates it no longer covers. The past, done
    * ones and hand-moved ones stay. Returns what changed, for the toast.
    */
-  applySeries: (seriesId: string, rule: SeriesRule, from: string, today: string, label: string) => { created: number; updated: number; removed: number; kept: number };
+  applySeries: (seriesId: string, rule: SeriesRule, from: string, today: string, label: string) => { created: number; updated: number; removed: number; kept: number; batchId: string | null };
   /** Make a one-off repeat: it becomes the first occurrence of a new series under `rule`. */
   startSeries: (id: string, rule: SeriesRule, today: string) => string;
   removeItem: (id: string) => void;
@@ -331,7 +331,7 @@ export const useStore = create<State>()(
         set({ items, series: { ...get().series, [seriesId]: rule }, batches: changes.length ? [b, ...get().batches] : get().batches,
           toast: changes.length ? { message: `${label}.`, batchId: b.id } : get().toast });
         track('item_edited', { field: 'repeat', scope: 'series', created: r.create.length, updated: r.update.length, removed: r.remove.length });
-        return { created: r.create.length, updated: r.update.length, removed: r.remove.length, kept: r.kept };
+        return { created: r.create.length, updated: r.update.length, removed: r.remove.length, kept: r.kept, batchId: changes.length ? b.id : null };
       },
 
       startSeries: (id, rule, today) => {
