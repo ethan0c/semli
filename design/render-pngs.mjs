@@ -1,7 +1,7 @@
 /**
  * PNG copies of the brand marks, for places that can't show SVG (email clients, decks, press,
  * App Store Connect uploads). Run `node design/render-pngs.mjs`; it writes design/png/ and the
- * email wordmark the site serves at /email/wordmark.png.
+ * email header mark the site serves at /email/icon.png.
  *
  *   wordmark-ink-{1440,720}.png     ink wordmark, lavender dot, transparent
  *   wordmark-white-{1440,720}.png   white wordmark for dark grounds, transparent
@@ -9,25 +9,24 @@
  *   app-mark-on-dark-{1024,512}.png   the two dots alone (white, lavender), transparent
  *   app-mark-on-light-{1024,512}.png  the two dots in ink and the deeper lavender, transparent
  *
- * The email wordmark has the email page's paper (#FAF9F6) baked in, so Gmail's dark mode, which
- * darkens the page but never images, can't put ink letters on a dark ground. Shown at 84 px wide;
- * drawn at 3x for sharp screens.
+ * The email header is the app icon with its corners rounded off to transparent. Gmail's dark mode
+ * darkens the page but never images, so an ink wordmark would vanish and a paper-backed one shows
+ * as a light box (seen Oct 27, 2026); the dark tile reads on paper and on a darkened page alike.
+ * Shown at 40 px; drawn at 3x for sharp screens.
  */
 import sharp from 'sharp';
 import { mkdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const file = (name) => fileURLToPath(new URL(`../${name}`, import.meta.url));
-const PAPER = '#FAF9F6';
-export const EMAIL_WORDMARK = { path: 'apps/web/public/email/wordmark.png', width: 84 };
+export const EMAIL_ICON = { path: 'apps/web/public/email/icon.png', size: 40 };
 
 await mkdir(file('design/png'), { recursive: true });
 await mkdir(file('apps/web/public/email'), { recursive: true });
 
 const out = [];
-async function render(input, name, width, opts = {}) {
+async function render(input, name, width) {
   let img = sharp(typeof input === 'string' ? file(input) : input, { density: 300 }).resize({ width });
-  if (opts.flatten) img = img.flatten({ background: opts.flatten });
   await img.png({ compressionLevel: 9 }).toFile(file(name));
   out.push(name);
 }
@@ -40,7 +39,8 @@ const onDark = icon.replace(/<rect\b[^>]*\/>/, '');
 const onLight = onDark.replace('#FFFFFF', '#222320').replace('#C3AFF8', '#7057BD');
 for (const [tone, svg] of [['on-dark', onDark], ['on-light', onLight]]) for (const w of [1024, 512]) await render(Buffer.from(svg), `design/png/app-mark-${tone}-${w}.png`, w);
 
-await render('design/wordmark-ink.svg', EMAIL_WORDMARK.path, EMAIL_WORDMARK.width * 3, { flatten: PAPER });
+const rounded = icon.replace(/<rect\b/, '<rect rx="230" ry="230"');
+await render(Buffer.from(rounded), EMAIL_ICON.path, EMAIL_ICON.size * 3);
 
 for (const name of out) {
   const { width, height } = await sharp(file(name)).metadata();

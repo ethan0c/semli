@@ -66,9 +66,10 @@ describe('emails.md', () => {
     expect(feedbackThankYou({ about: 'x', reply: 'y' }).greeting).toBe('Hi there,');
   });
 
-  it('uses the wordmark image only when given one', () => {
+  it('uses the header icon only when given one, and the typeset wordmark otherwise', () => {
     expect(renderHtml(transactional.welcome, POSTAL)).not.toContain('<img');
-    expect(renderHtml(transactional.welcome, POSTAL, { wordmark: 'https://x.test/w.png' })).toContain('<img src="https://x.test/w.png" width="84"');
+    expect(renderHtml(transactional.welcome, POSTAL)).toContain('semli<span');
+    expect(renderHtml(transactional.welcome, POSTAL, { mark: 'https://x.test/i.png' })).toContain('<img src="https://x.test/i.png" width="40" height="40"');
   });
 });
 

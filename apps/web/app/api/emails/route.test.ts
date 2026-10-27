@@ -39,6 +39,16 @@ describe('the outbox sender', () => {
     expect(fetchMock.mock.calls.some(([u, i]) => String(u).includes('id=eq.7') && (i as RequestInit).method === 'DELETE')).toBe(true);
   });
 
+  it('asks only for account emails and welcomes queued at least 45 minutes ago', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-27T12:00:00Z'));
+    fetchMock.mockImplementation(async () => ok([]));
+    await POST();
+    const read = String(fetchMock.mock.calls[0][0]);
+    expect(decodeURIComponent(read)).toContain('or=(kind.neq.welcome,created_at.lte.2026-10-27T11:15:00.000Z)');
+    vi.useRealTimers();
+  });
+
   it('keeps a row whose send failed, to retry next run', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     fetchMock.mockImplementation(async (url: string) => url.includes('email_outbox?select') ? ok([row]) : ok({ message: 'nope' }, 500));
