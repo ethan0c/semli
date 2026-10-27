@@ -10,6 +10,7 @@ import { firstOf, readyLine } from "@/lib/milestones";
 import { Composer } from "@/components/Composer";
 import { Chip, PickerPill, Radio } from "@/components/Controls";
 import { InlinePicker } from "@/components/Native";
+import { ResumeReview } from "@/components/ResumeReview";
 import { RecentShots } from "@/components/RecentShots";
 import { File } from "expo-file-system";
 import { Press } from "@/components/Press";
@@ -90,7 +91,9 @@ export default function OnboardingScreen() {
   // `?step=plus` opens a specific step; useful when previewing copy and layout.
   const params = useLocalSearchParams<{ step?: string }>();
   const requested = (STEPS as readonly string[]).includes(params.step ?? "") ? (params.step as Step) : FIRST;
-  const [step, setStep] = useState<Step>(requested);
+  // A read waiting in review when Semli was closed: start at the import step with it on top, not
+  // at the first question, where reaching the import again meant reading (and paying for) it twice.
+  const [step, setStep] = useState<Step>(() => (!params.step && useStore.getState().pending ? (WEB ? "term" : "own") : requested));
   // Reset when the link changes (derived state, no effect).
   const [lastRequested, setLastRequested] = useState(requested);
   if (lastRequested !== requested) {
@@ -436,6 +439,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
         <T token="displaySm" accessibilityRole="header">{copy.title}</T>
         <T token="callout" color={c.inkSecondary}>{job && source !== "screenshots" ? `${copy.sub} You can add work shifts later.` : copy.sub}</T>
       </View>
+      <ResumeReview />
       {!busy && copy.primary ? (
         <Button label={copy.primary === "pdf" ? "Choose a syllabus PDF" : "Choose a photo or screenshot"}
           onPress={() => void pick(copy.primary === "pdf" ? pickPdfInput : () => pickImageInput(false))} />
@@ -552,6 +556,7 @@ function TermStep({ plate, onPlate, onReview, onCanvas, onType, onSample }: {
         <T token="displaySm" accessibilityRole="header">Bring in your term</T>
         <T token="callout" color={c.inkSecondary}>Drop every syllabus at once. Semli reads the classes, exams and due dates, and you check them before anything is saved.</T>
       </View>
+      <ResumeReview />
       <View style={styles.chips} accessibilityRole="list">
         {PLATE_CHIPS.map((p) => {
           const on = plate.includes(p.id);
