@@ -72,14 +72,15 @@ async function updateContacts(resend: Resend, groupIds: () => Promise<Record<str
   const ids = await groupIds();
   const users = ids[USERS_GROUP.toLowerCase()];
   if (!users) throw new ContactsError(404);
-  const first = row.name?.trim().split(/\s+/)[0];
-  const created = await check(
-    resend('POST', '/contacts', { email: row.email, ...(first ? { first_name: first } : {}), properties: { source: 'app' }, segments: [{ id: users }] }),
-    [409, 422],
-  );
-  if (created.ok) return;
-  // Already a contact, from the survey or the waitlist: move them to App users. An earlier
-  // unsubscribe stays as it is.
+  // Look first: Resend's create also succeeds for an existing address and overwrites it,
+  // which would re-subscribe someone who unsubscribed from the survey or waitlist emails.
+  const found = await check(resend('GET', `/contacts/${email}`), [404]);
+  if (found.status === 404) {
+    const first = row.name?.trim().split(/\s+/)[0];
+    await check(resend('POST', '/contacts', { email: row.email, ...(first ? { first_name: first } : {}), properties: { source: 'app' }, segments: [{ id: users }] }));
+    return;
+  }
+  // Already a contact, from the survey or the waitlist: move them to App users.
   await check(resend('POST', `/contacts/${email}/segments/${users}`), [409]);
   for (const name of OTHER_GROUPS) {
     const id = ids[name.toLowerCase()];

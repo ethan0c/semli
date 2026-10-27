@@ -76,16 +76,17 @@ describe('the outbox sender', () => {
   }
 
   it('puts a welcomed address in App users', async () => {
-    resendWith(() => ok({ id: 'c1' }, 201));
+    resendWith((url, method) => (method === 'GET' ? ok({ message: 'Contact not found' }, 404) : ok({ id: 'c1' }, 201)));
     expect(await (await POST()).json()).toEqual({ ok: true, sent: 1, failed: 0 });
     const create = fetchMock.mock.calls.find(([u, i]) => String(u).endsWith('/contacts') && (i as RequestInit).method === 'POST')!;
     expect(JSON.parse(String((create[1] as RequestInit).body))).toEqual({ email: 'ama@school.edu', first_name: 'Ama', properties: { source: 'app' }, segments: [{ id: 'g-users' }] });
     expect(calls('DELETE').filter((u) => u.includes('resend.com'))).toEqual([]);
   });
 
-  it('moves an existing survey or waitlist contact to App users, so nobody gets a broadcast twice', async () => {
-    resendWith((url, method) => (url.endsWith('/contacts') && method === 'POST' ? ok({ message: 'exists' }, 409) : ok({}, 200)));
+  it('moves an existing contact to App users without overwriting it, so an unsubscribe holds and nobody gets a broadcast twice', async () => {
+    resendWith(() => ok({ id: 'c1', unsubscribed: true }, 200));
     await POST();
+    expect(calls('POST').some((u) => u.endsWith('/contacts'))).toBe(false);
     expect(calls('POST')).toContain('https://api.resend.com/contacts/ama%40school.edu/segments/g-users');
     expect(calls('DELETE')).toEqual(expect.arrayContaining([
       'https://api.resend.com/contacts/ama%40school.edu/segments/g-survey',

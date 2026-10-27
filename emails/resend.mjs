@@ -44,9 +44,13 @@ export function client(apiKey) {
     createSegment: (name) => call('POST', '/segments', { name }),
     renameSegment: (id, name) => call('PATCH', `/segments/${id}`, { name }),
     contacts: (segmentId) => all(segmentId ? `/contacts?segment_id=${segmentId}` : '/contacts'),
+    contact: (email) => call('GET', `/contacts/${encodeURIComponent(email)}`).catch((err) => { if (err.status === 404) return null; throw err; }),
+    // Resend's create overwrites an existing contact, unsubscribed flag included: call it only after contact() returns null.
     createContact: (c) => call('POST', '/contacts', c),
     updateContact: (email, c) => call('PATCH', `/contacts/${encodeURIComponent(email)}`, c),
     addToSegment: (email, segmentId) => call('POST', `/contacts/${encodeURIComponent(email)}/segments/${segmentId}`),
+    removeFromSegment: (email, segmentId) => call('DELETE', `/contacts/${encodeURIComponent(email)}/segments/${segmentId}`),
+    deleteContact: (email) => call('DELETE', `/contacts/${encodeURIComponent(email)}`),
     properties: () => all('/contact-properties'),
     createProperty: (key) => call('POST', '/contact-properties', { key, type: 'string' }),
     broadcasts: () => all('/broadcasts'),

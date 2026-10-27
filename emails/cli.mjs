@@ -4,16 +4,19 @@
  *
  *   npm run email                 this help
  *   npm run email build           render docs/emails/*.html and *.txt from templates.mjs
- *   npm run email preview         build, then open a gallery of all five in the browser
+ *   npm run email preview         build, then open a gallery of every email in the browser
  *   npm run email status          segments with counts, every broadcast, and the plan at a glance
  *   npm run email sync [--dry-run] [--survey-ref <tag,…>]
- *                                 Supabase waitlist -> Resend contacts in Survey / Waitlist.
- *                                 --dry-run shows the rows by ref tag and day, writes nothing.
+ *                                 Supabase accounts -> App users, then the waitlist -> Survey /
+ *                                 Waitlist (skipping anyone with an account). Contacts in App users
+ *                                 whose account is gone are deleted from Resend.
+ *                                 --dry-run shows the counts and rows by ref tag, writes nothing.
  *                                 --survey-ref says which ref tags are survey rows (default survey;
  *                                 'none' means rows with no tag).
- *   npm run email add testers a@b.edu [more…]   put installed testers in the Testers segment
+ *   npm run email add waitlist a@b.edu [more…]  put addresses in a group by hand
  *   npm run email send <name> [--at "2027-01-05T13:00:00Z"] [--yes]
- *                                 draft a broadcast in Resend; --yes sends (or schedules with --at)
+ *                                 draft a broadcast in Resend; --yes sends (or schedules with --at).
+ *                                 A broadcast to App users syncs accounts first.
  *   npm run email send all [--yes]   one draft per email that has a date; --yes schedules them
  *   npm run email send feedback --to a@b.edu --name Ana --about "…" --reply "…"
  *
@@ -25,7 +28,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderHtml, renderText, wordCount } from './layout.mjs';
-import { emails, segments, feedbackThankYou, SURVEY_TESTFLIGHT, BETA_LINK } from './templates.mjs';
+import { emails, segments, feedbackThankYou, SURVEY_TESTFLIGHT, BETA_LINK, USERS_REASON } from './templates.mjs';
 
 const targets = (e) => (Array.isArray(e.segment) ? e.segment : [e.segment]);
 const groupNames = (e) => targets(e).map((k) => segments[k] ?? k).join(' + ');
@@ -144,21 +147,23 @@ async function ensureProperties(api) {
   for (const key of ['ref', 'source']) if (!keys.has(key)) { await api.createProperty(key); console.log(`  created contact property ${key}`); }
 }
 
-/** Create or update one contact and put it in its segments. */
+/**
+ * Create or update one contact and put it in its segments. Looks first: Resend's create also
+ * succeeds for an existing address and would overwrite it, re-subscribing anyone who opted out.
+ */
 async function upsert(api, { email, first_name, properties }, segmentIds) {
-  try {
-    await api.createContact({ email, first_name, unsubscribed: false, properties, segments: segmentIds.map((id) => ({ id })) });
+  const existing = await api.contact(email);
+  if (!existing) {
+    await api.createContact({ email, ...(first_name ? { first_name } : {}), properties, segments: segmentIds.map((id) => ({ id })) });
     return 'added';
-  } catch (err) {
-    if (!(err instanceof ResendError) || ![409, 422].includes(err.status)) throw err;
-    await api.updateContact(email, { properties });
-    for (const id of segmentIds) await api.addToSegment(email, id).catch((e) => { if (e.status !== 409) throw e; });
-    return 'updated';
   }
+  await api.updateContact(email, { properties, ...(first_name && !existing.first_name ? { first_name } : {}) });
+  for (const id of segmentIds) await api.addToSegment(email, id).catch((e) => { if (e.status !== 409) throw e; });
+  return 'updated';
 }
 
-function waitlistRows() {
-  const sql = "select email, ref, created_at from public.waitlist order by created_at";
+/** Runs one read-only query against the linked Supabase project through its CLI. */
+function dbRows(sql, expect) {
   let text;
   try {
     text = execFileSync('npx', ['--no-install', 'supabase', 'db', 'query', '--linked', '--output-format', 'json', sql], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
@@ -169,16 +174,49 @@ function waitlistRows() {
   if (start < 0) throw new Error(`no JSON in supabase output: ${text.slice(0, 200)}`);
   const json = JSON.parse(text.slice(start));
   const rows = Array.isArray(json) ? json : json.rows ?? json.result ?? json.data ?? [];
-  if (!Array.isArray(rows) || (rows.length && !rows[0].email)) throw new Error(`unexpected query output: ${text.slice(0, 200)}`);
+  if (!Array.isArray(rows) || (rows.length && !rows[0][expect])) throw new Error(`unexpected query output: ${text.slice(0, 200)}`);
   return rows;
 }
 
+const waitlistRows = () => dbRows('select email, ref, created_at from public.waitlist order by created_at', 'email');
+
+/** Every account with a confirmed address, the same rule the welcome trigger uses. */
+const accountRows = () =>
+  dbRows(
+    "select lower(email) as email, nullif(trim(coalesce(raw_user_meta_data ->> 'name', raw_user_meta_data ->> 'full_name', '')), '') as name " +
+      "from auth.users where email is not null and email <> '' and not coalesce(is_anonymous, false) and email_confirmed_at is not null order by created_at",
+    'email',
+  );
+
+const ignore404 = (err) => { if (err.status !== 404) throw err; };
+
+/** App users mirrors Supabase: add every account, move it out of Survey and Waitlist, delete contacts whose account is gone. */
+async function syncUsers(api, ids, rows = accountRows()) {
+  const counts = { added: 0, updated: 0, removed: 0 };
+  const accounts = new Set(rows.map((r) => r.email));
+  for (const r of rows) {
+    const first_name = r.name?.split(/\s+/)[0];
+    const result = await upsert(api, { email: r.email, ...(first_name ? { first_name } : {}), properties: { source: 'app' } }, [ids.users]);
+    counts[result]++;
+    if (result === 'updated') for (const key of ['survey', 'waitlist']) if (ids[key]) await api.removeFromSegment(r.email, ids[key]).catch(ignore404);
+  }
+  for (const c of await api.contacts(ids.users)) {
+    if (accounts.has(c.email.toLowerCase())) continue;
+    await api.deleteContact(c.email).catch(ignore404);
+    counts.removed++;
+  }
+  console.log(`  App users: ${counts.added} added, ${counts.updated} already there, ${counts.removed} removed (account deleted)`);
+  return accounts;
+}
+
 async function sync() {
-  const rows = waitlistRows();
+  const accounts = accountRows();
+  const isAccount = new Set(accounts.map((r) => r.email));
+  const rows = waitlistRows().filter((r) => !isAccount.has(r.email.toLowerCase()));
   const surveyTags = (flag('survey-ref') ?? 'survey').split(',').map((t) => t.trim().toLowerCase());
   const isSurvey = (r) => surveyTags.includes((r.ref ?? 'none').toLowerCase());
   const survey = rows.filter(isSurvey).length;
-  console.log(`  ${rows.length} waitlist rows: ${survey} survey (ref ${surveyTags.join(' or ')}), ${rows.length - survey} site`);
+  console.log(`  ${accounts.length} accounts; ${rows.length} waitlist rows without one: ${survey} survey (ref ${surveyTags.join(' or ')}), ${rows.length - survey} site`);
   if (has('dry-run')) {
     const by = {};
     for (const r of rows) {
@@ -193,16 +231,17 @@ async function sync() {
     return console.log('\n  Dry run; nothing written to Resend.');
   }
   const api = resend();
-  const ids = await ensureSegments(api, ['survey', 'waitlist']);
+  const ids = await ensureSegments(api, ['survey', 'waitlist', 'users']);
   await ensureProperties(api);
+  await syncUsers(api, ids, accounts);
   const counts = { added: 0, updated: 0 };
   for (const r of rows) {
     const source = isSurvey(r) ? 'survey' : 'waitlist';
     const result = await upsert(api, { email: r.email, properties: { ref: r.ref ?? '', source } }, [ids[source]]);
     counts[result]++;
   }
-  console.log(`  ${counts.added} added, ${counts.updated} already there (segments and properties refreshed)`);
-  console.log('  Unsubscribes stay as they are in Resend; sync never re-subscribes anyone.');
+  console.log(`  Survey and Waitlist: ${counts.added} added, ${counts.updated} already there (segments and properties refreshed)`);
+  console.log('  Unsubscribes stay as they are in Resend; sync never re-subscribes anyone (it looks before it writes).');
 }
 
 async function add(group, addresses) {
@@ -251,6 +290,7 @@ async function status() {
     const state = b ? `${b.status}${b.sent_at ? ' ' + b.sent_at.slice(0, 10) : b.scheduled_at ? ' for ' + b.scheduled_at.slice(0, 10) : ''}` : 'not drafted';
     rows.push([name, groupNames(e), wordCount(e), state, e.plan]);
   }
+  rows.push(['welcome', 'each new account', 'about 60', 'sent by the site', 'apps/web/lib/transactional-email.ts, the day an account is confirmed']);
   rows.push(['feedback-thank-you', 'one person', wordCount(feedbackThankYou({ name: 'x', about: 'x', reply: 'x' })), 'sent as needed', 'Reply after reading their message']);
   table(rows);
 
@@ -272,12 +312,13 @@ async function send(name) {
   if (POSTAL.startsWith('[')) throw new Error('Set EMAIL_POSTAL_ADDRESS in .env before drafting a broadcast; the footer needs a real address.');
   const api = resend();
   const ids = await ensureSegments(api, [...new Set(names.flatMap((n) => targets(emails[n])))]);
+  if (ids.users) await syncUsers(api, ids);
   const at = flag('at');
   const yes = has('yes');
   if (name === 'all' && yes && !at) throw new Error('`send all --yes` needs --at; it schedules every email for the same time. Send them one by one for different dates.');
   for (const n of names) {
-    const e = emails[n];
-    for (const key of targets(e)) {
+    for (const key of targets(emails[n])) {
+      const e = key === 'users' ? { ...emails[n], reason: USERS_REASON } : emails[n];
       const body = {
         name: targets(e).length > 1 ? `${n} to ${segments[key]}` : n,
         from: FROM,
