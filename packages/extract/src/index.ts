@@ -3,6 +3,9 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { Extraction, IMPORT_MESSAGES, type ExtractContext, type ExtractRequest } from '@dayli/schema';
 import { prepareImage } from './image';
 import { pdfAsText } from './pdf-text';
+import { itemScanner, type StreamedItem } from './stream-items';
+
+export type { StreamedItem } from './stream-items';
 
 /** Reads documents (syllabi, course PDFs), and anything the quick reader can't finish. */
 export const MODEL = 'claude-opus-5-5';
@@ -73,7 +76,11 @@ export type ExtractResult =
   | { ok: false; error: string };
 
 /** Which model reads (default: `modelFor` the input), and whether Opus runs in fast mode (Plus syllabi). */
-export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers; /** false reads every PDF whole (EXTRACT_PDF_TEXT=0). */ pdfText?: boolean; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high' };
+export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers; /** false reads every PDF whole (EXTRACT_PDF_TEXT=0). */ pdfText?: boolean;
+  /** Streams the answer: called with each item as soon as it's written. */
+  onItem?: (item: StreamedItem) => void;
+  /** Items handed over so far no longer stand (another reader is starting again). */
+  onReset?: () => void; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high' };
 
 export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
   const content: Anthropic.ContentBlockParam[] = [];
@@ -116,11 +123,19 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   // Oct 27, 2026 benchmark it read typed messages in 1.2 s, screenshots in 3.4 s and syllabi in 8.3 s
   // (medians) with the same accuracy as standard speed; evals/RESULTS.md. It has its own rate limit,
   // so a 429 there falls back to standard speed rather than failing the import.
-  const standard = () => client.messages.parse(params);
+  // With `onItem`, the answer streams: each item is handed over as soon as it's written, and the
+  // final message is parsed and validated exactly as a single response would be.
+  const watch = <T extends { on: (event: 'text', listener: (delta: string) => void) => unknown; finalMessage: () => Promise<R> }, R>(stream: T): Promise<R> => {
+    const scan = itemScanner(opts.onItem!);
+    stream.on('text', (delta) => scan.push(delta));
+    return stream.finalMessage();
+  };
+  const standard = () => (opts.onItem ? watch(client.messages.stream(params)) : client.messages.parse(params));
+  const fastParams = { ...params, speed: 'fast' as const, betas: ['fast-mode-2026-02-01'] };
   // Fast mode exists only for Opus; on any other model the flag is ignored.
   const response = opts.fast && hasFast(params.model)
-    ? await client.beta.messages.parse({ ...params, speed: 'fast', betas: ['fast-mode-2026-02-01'] }).catch((err: unknown) => {
-      if (err instanceof Anthropic.RateLimitError) return standard();
+    ? await (opts.onItem ? watch(client.beta.messages.stream(fastParams)) : client.beta.messages.parse(fastParams)).catch((err: unknown) => {
+      if (err instanceof Anthropic.RateLimitError) { opts.onReset?.(); return standard(); }
       throw err;
     })
     : await standard();
@@ -128,7 +143,10 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   // The quick reader handing back nothing usable is never the person's problem: Opus reads it again.
   const usable = response.stop_reason !== 'refusal' && response.stop_reason !== 'max_tokens' && !!response.parsed_output;
   const documentReader = opts.readers?.document || MODEL;
-  if (!usable && params.model !== documentReader && !opts.model) return extract(req, client, { ...opts, model: documentReader });
+  if (!usable && params.model !== documentReader && !opts.model) {
+    opts.onReset?.();
+    return extract(req, client, { ...opts, model: documentReader });
+  }
   if (response.stop_reason === 'refusal') {
     return { ok: false, error: IMPORT_MESSAGES.unreadable };
   }
