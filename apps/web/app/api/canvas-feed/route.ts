@@ -46,8 +46,11 @@ export async function POST(request: Request) {
     const upstream = await fetch(url, { signal: controller.signal, redirect: 'manual', headers: { accept: 'text/calendar' } });
     // The app reads a bare 401/403/404 as "Canvas didn't accept that link"; anything else as unreachable.
     if (!upstream.ok) return fail([401, 403, 404].includes(upstream.status) ? upstream.status : 502);
-    const text = await upstream.text();
-    if (text.length > MAX_BYTES) return fail(502);
+    // Read with a running count and stop at MAX_BYTES: reading the whole body first let a host that
+    // never stops sending hold the function's memory for the full timeout (Oct 27, 2026).
+    if (Number(upstream.headers.get('content-length') ?? 0) > MAX_BYTES) return fail(502);
+    const text = await readCapped(upstream, MAX_BYTES, controller);
+    if (text === null) return fail(502);
     return new Response(text, { status: 200, headers: { ...headers, 'content-type': 'text/calendar; charset=utf-8', 'cache-control': 'no-store' } });
   } catch (error) {
     console.error('[canvas_feed.fetch]', errorDiagnostic(error));
@@ -55,4 +58,23 @@ export async function POST(request: Request) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** The body as text, or null once it passes `max` bytes (the download is cancelled there). */
+async function readCapped(res: Response, max: number, controller: AbortController): Promise<string | null> {
+  if (!res.body) return '';
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      controller.abort();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
 }

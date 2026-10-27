@@ -15,7 +15,7 @@ import { motion, palettes } from '@dayli/tokens';
 import { syncRingingAlarms } from '@/lib/alarms';
 import { AppErrorBoundary, RecoveryScreen } from '@/components/AppErrorBoundary';
 import { StorageWarning } from '@/components/StorageWarning';
-import { reportError } from '@/lib/errors';
+import { reportError, scrubUrl, scrubUrls } from '@/lib/errors';
 import { useStorageStatus } from '@/lib/storage';
 import { CanvasAutoSync } from '@/lib/canvas-sync';
 import { CloudBackup } from '@/lib/cloud';
@@ -67,6 +67,23 @@ Sentry.init({
   dist: Application.nativeBuildVersion ?? undefined,
   tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   sendDefaultPii: false,
+  // Trace headers go only to Semli's own API, not to schools' calendar servers or Supabase.
+  tracePropagationTargets: [/^https:\/\/www\.semli\.app\//],
+  // Request addresses are scrubbed before they leave the phone: a calendar feed link is a password.
+  beforeBreadcrumb: (breadcrumb) => {
+    const url = breadcrumb.data?.url;
+    if (typeof url === 'string') breadcrumb.data = { ...breadcrumb.data, url: scrubUrl(url) };
+    if (breadcrumb.message) breadcrumb.message = scrubUrls(breadcrumb.message);
+    return breadcrumb;
+  },
+  beforeSendSpan: (span) => {
+    if (span.description) span.description = scrubUrls(span.description);
+    for (const key of ['url', 'http.url', 'url.full', 'http.query', 'url.query']) {
+      const value = span.data?.[key];
+      if (typeof value === 'string') span.data[key] = key.endsWith('query') ? '' : scrubUrl(value);
+    }
+    return span;
+  },
 });
 
 function AnalyticsRoot({ children }: { children: ReactNode }) {

@@ -188,7 +188,10 @@ export function useNotificationTaps(ready: boolean) {
     if (!settings.onboarded) return;
     const data = response.notification.request.content.data ?? {};
     const itemId = typeof data.itemId === 'string' ? data.itemId : null;
-    const url = typeof data.url === 'string' ? data.url : itemId ? `/item/${itemId}` : '/';
+    // Only the places Semli's own reminders open: an item, Today, or Your plan. Anything else a
+    // notification carries (a future push payload) opens Today rather than an arbitrary route.
+    const asked = typeof data.url === 'string' ? data.url : itemId ? `/item/${itemId}` : '/';
+    const url = /^\/item\/[\w-]+$/.test(asked) || asked === '/settings/plan' ? asked : '/';
     track('notification_opened', { kind: typeof data.kind === 'string' ? data.kind : 'test' });
     // Something deleted since the reminder was scheduled opens Today instead.
     if (url.startsWith('/item/') && !(itemId && items[itemId])) router.navigate('/');

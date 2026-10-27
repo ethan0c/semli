@@ -37,3 +37,13 @@ describe('error reporting boundary', () => {
     expect(context).toMatchObject({ tags: { operation: 'cloud.restore', error_code: 'network_error' }, extra: { status: 503 } });
   });
 });
+
+describe('scrubUrl', () => {
+  it('keeps only the origin of a calendar feed, and never a query', async () => {
+    const { scrubUrl, scrubUrls } = await import('./errors');
+    expect(scrubUrl('https://canvas.pomona.edu/feeds/calendars/user_abc123.ics')).toBe('https://canvas.pomona.edu');
+    expect(scrubUrl('https://uga.view.usg.edu/d2l/le/calendar/feed/user/feed.ics?token=secret')).toBe('https://uga.view.usg.edu');
+    expect(scrubUrl('https://www.semli.app/api/extract?x=1')).toBe('https://www.semli.app/api/extract');
+    expect(scrubUrls('GET https://school.instructure.com/feeds/calendars/user_x.ics')).toBe('GET https://school.instructure.com');
+  });
+});

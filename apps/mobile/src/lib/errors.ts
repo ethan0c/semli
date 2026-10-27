@@ -39,3 +39,25 @@ export async function withErrorLogging<T>(operation: string, action: () => Promi
   try { return await action(); }
   catch (error) { reportError(operation, error); throw error; }
 }
+
+const OWN_HOSTS = /^(www\.semli\.app|app\.semli\.app|[a-z0-9]+\.supabase\.co)$/i;
+
+/**
+ * A URL as diagnostics may keep it. A Canvas or Brightspace feed link is a credential (the token is
+ * in its path or query), and Sentry recorded every request's full address in breadcrumbs and spans
+ * (Oct 27, 2026). Other hosts keep only their origin; Semli's and Supabase's keep the path, never
+ * the query.
+ */
+export function scrubUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    return OWN_HOSTS.test(u.hostname) ? `${u.origin}${u.pathname}` : u.origin;
+  } catch {
+    return '[url]';
+  }
+}
+
+/** Every URL inside a piece of text (a span's "GET https://…" description), scrubbed. */
+export function scrubUrls(text: string): string {
+  return text.replace(/https?:\/\/[^\s"'<>]+/g, scrubUrl);
+}

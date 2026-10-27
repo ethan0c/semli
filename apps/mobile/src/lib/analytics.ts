@@ -23,10 +23,12 @@ export const posthog: PostHog | null = projectToken && host
       serviceName: 'dayli-mobile',
       environment: __DEV__ ? 'development' : 'production',
     },
+    // Crashes go to Sentry through the sanitizer in lib/errors.ts. PostHog's own capture sent raw
+    // messages (item titles, links) past it, against the privacy policy (Oct 27, 2026).
     errorTracking: {
       autocapture: {
-        uncaughtExceptions: true,
-        unhandledRejections: true,
+        uncaughtExceptions: false,
+        unhandledRejections: false,
       },
     },
   })

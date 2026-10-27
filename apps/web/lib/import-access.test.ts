@@ -60,3 +60,13 @@ describe('guest network limit', () => {
     expect((await checkImportAccess(req())).ok).toBe(true);
   });
 });
+
+describe('networkOf', () => {
+  it('counts an IPv6 address by its /64 and IPv4 as it is', async () => {
+    const { networkOf } = await import('./import-access');
+    expect(networkOf('2001:db8:abcd:12:1:2:3:4')).toBe('2001:db8:abcd:12::/64');
+    expect(networkOf('2001:db8:abcd:12::99')).toBe('2001:db8:abcd:12::/64');
+    expect(networkOf('2001:db8::1')).toBe('2001:db8:0:0::/64');
+    expect(networkOf('203.0.113.7')).toBe('203.0.113.7');
+  });
+});

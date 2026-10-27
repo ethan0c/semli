@@ -41,10 +41,9 @@ async function signedIn(): Promise<SignInResult> {
   if (user && !user.is_anonymous) {
     void deleteReplacedGuest(user.id);
     const fullName = user.user_metadata?.full_name;
-    posthog?.identify(user.id, {
-      ...(user.email ? { email: user.email } : {}),
-      ...(typeof fullName === 'string' ? { name: fullName } : {}),
-    });
+    // The account's random id only: the privacy policy promises usage records carry no name or
+    // email (Oct 27, 2026; email and full name were sent here before).
+    posthog?.identify(user.id);
     track('auth_completed');
     const provider = user.app_metadata?.provider;
     const first = (typeof fullName === 'string' ? fullName : useStore.getState().settings.name).trim().split(/\s+/)[0] || null;
