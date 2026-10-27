@@ -200,7 +200,6 @@ function TodayScreen() {
       {moment ? (
         <View style={styles.moment}>
           <PhotoHeader source={moment.image} height={330} to={c.canvas} fadeFrom={0.28} solidAt={MOMENT_TEXT_TOP - 6} />
-          <View style={[styles.momentToggle, { top: topInset + 20 }]}>{viewToggle}</View>
           <T token="callout" color={c.inkSecondary}>{moment.lead}</T>
           <Ticker value={moment.big} token="displayXl" />
           <View style={styles.momentLine}>
@@ -232,7 +231,7 @@ function TodayScreen() {
       <TabHeader date={now.date} title={featured ? 'Now' : 'Clear'} inset={!moment} onPhoto={onSky && !skyDark}
         value={moment ? (big ? <Ticker value={big} token="display" /> : <T token="display" accessibilityRole="header">{featured ? 'Now' : 'Clear'}</T>)
           : big ? <Ticker value={big} token="displayXl" /> : undefined}
-        trailing={moment || twoPane ? undefined : viewToggle}
+        trailing={moment || twoPane ? undefined : <View style={styles.toggleSpace} />}
         onPress={featured ? () => openItem(featured.id) : undefined}
         accessibilityLabel={featured ? [big, line].filter(Boolean).join(' ') : undefined}
         details={featured ? <>
@@ -397,7 +396,17 @@ function TodayScreen() {
       ) : null}
     </ScrollView>
   );
-  if (!twoPane) return list;
+  // The view toggle floats over the page instead of scrolling with it, so it never rides up into
+  // the status bar; the header keeps its place free, so the big number never runs under it.
+  if (!twoPane) return (
+    <View style={styles.root}>
+      {list}
+      {/* Dark like the header while it sits on a dark sky; the page's own look once the sky has scrolled away. */}
+      <ForceAppearance.Provider value={skyDark && !pastSky ? 'dark' : null}>
+        <View style={[styles.floatToggle, { top: topInset + 20 }]}>{viewToggle}</View>
+      </ForceAppearance.Provider>
+    </View>
+  );
   // A wide web window shows the day by the hour beside the list, so there's nothing to toggle.
   return (
     <View style={styles.panes}>
@@ -453,7 +462,9 @@ const styles = StyleSheet.create({
   spreadRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.sm },
   pill: { minHeight: size.target, paddingHorizontal: space.lg, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   moment: { position: 'relative', paddingHorizontal: SCREEN_GUTTER, paddingTop: MOMENT_TEXT_TOP, paddingBottom: space.md, gap: space.hair },
-  momentToggle: { position: 'absolute', right: SCREEN_GUTTER },
+  root: { flex: 1 },
+  floatToggle: { position: 'absolute', right: SCREEN_GUTTER },
+  toggleSpace: { width: 44, height: 44 },
   momentLine: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.xs, paddingTop: space.snug },
 });
 

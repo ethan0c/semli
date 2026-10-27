@@ -97,7 +97,8 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
   const applySeries = useStore((s) => s.applySeries);
   const storedRule = useStore((s) => (item.seriesId ? s.series[item.seriesId] : undefined));
   const showToast = useStore((s) => s.showToast);
-  // Leaving the screen saves what is open, as Calendar does; a repeating time defaults to every one from now.
+  // Leaving the screen saves what is open. On a repeating item the unanswered question saves to this
+  // one only: leaving never rewrites the rest of a series (a stray All day tap, then Back, stays small and undoable).
   const flush = useRef<() => void>(() => {});
   const gone = useRef(false);
   useEffect(() => () => { if (!gone.current) flush.current(); }, []);
@@ -219,7 +220,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
   useEffect(() => {
     flush.current = () => {
       if (picker === 'date') commitDate();
-      if (times && timeChanged) commitTimes(times, repeats ? 'series' : 'one');
+      if (times && timeChanged) commitTimes(times, 'one');
     };
   });
   const leave = (to: string) => { closePicker(null); setPicker(null); router.push(to); };

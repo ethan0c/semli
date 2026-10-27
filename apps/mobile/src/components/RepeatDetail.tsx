@@ -45,7 +45,8 @@ export function RepeatDetail({ id }: { id?: string }) {
 
   const noun = /lecture/i.test(item.title) ? 'lecture' : item.kind === 'event' ? 'event' : 'to-do';
   const plural = (n: number) => `${n} ${n === 1 ? noun : `${noun}s`}`;
-  const times = { start: current?.start ?? item.start, end: current?.end ?? item.end };
+  // A series keeps its rule's times, even none (all day); a one-off starting to repeat takes its own.
+  const times = current ? { start: current.start, end: current.end } : { start: item.start, end: item.end };
   // Turning repeat off is the rule ending on this occurrence: it stays, the later ones go.
   const next = draft ? { ...draft, start: times.start, end: times.end } : current ? { ...current, until: item.date } : null;
   const changed = !sameRule(next, current);

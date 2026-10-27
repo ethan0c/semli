@@ -55,7 +55,8 @@ export function PhotoHeader({ source, height, to, fadeFrom = 0.45, solidAt, dim 
           <Rect x={0} y={0} width="100%" height="100%" fill={`url(#${gradient})`} />
         </Svg>
       </View>
-      {end < height ? <View style={{ position: 'absolute', left: 0, right: 0, top: end, bottom: 0, backgroundColor: to }} /> : null}
+      {/* Starts a point early, under the gradient's last row: meeting it exactly left a hairline of photo at fractional heights. */}
+      {end < height ? <View style={{ position: 'absolute', left: 0, right: 0, top: end - 1, bottom: 0, backgroundColor: to }} /> : null}
     </View>
   );
 }
