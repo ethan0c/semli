@@ -63,6 +63,8 @@ vi.mock('./supabase', () => ({
   deleteReplacedGuest: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('../store', () => ({ useStore: mocks.store }));
+vi.mock('./feedback', () => ({ feedback: vi.fn() }));
+vi.mock('./motion', () => ({ durations: { slow: 0 } }));
 vi.mock('./cloud-store', () => mocks.cloud);
 vi.mock('@react-native-async-storage/async-storage', () => ({ default: { getItem: vi.fn().mockResolvedValue(null), setItem: vi.fn().mockResolvedValue(undefined), removeItem: vi.fn().mockResolvedValue(undefined) } }));
 
@@ -480,5 +482,18 @@ describe('signing out', () => {
     mocks.supabase.rpc.mockResolvedValue({ error: { code: 'x', message: 'nope' } });
     await expect(authClient.deleteAccount()).rejects.toBeTruthy();
     expect(mocks.auth.signOut).not.toHaveBeenCalled();
+  });
+});
+
+describe('the line after signing in', () => {
+  it('welcomes a new account by name and says where the plan is', async () => {
+    const { welcomeLine } = await import('./auth-client');
+    expect(welcomeLine({ first: 'Ethan', email: 'e@x.com', apple: false, isNew: true, restored: false }))
+      .toBe('Welcome to Semli, Ethan. You’re signed up with e@x.com, and your plan is backed up.');
+  });
+  it('welcomes someone back to a restored plan, and keeps an Apple relay address out of it', async () => {
+    const { welcomeLine } = await import('./auth-client');
+    expect(welcomeLine({ first: null, email: 'x@privaterelay.appleid.com', apple: true, isNew: false, restored: true })).toBe('Welcome back. Your backed-up plan is on this iPhone.');
+    expect(welcomeLine({ first: null, email: 'x@privaterelay.appleid.com', apple: true, isNew: false, restored: false })).toBe('Signed in with Apple. Your plan is backed up.');
   });
 });
