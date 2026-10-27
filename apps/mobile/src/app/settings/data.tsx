@@ -18,6 +18,7 @@ import { accountOf, useSession } from '@/lib/supabase';
 import { useCourseList, useItemList, useScheduleList, useStore, type Batch } from '@/store';
 import { THIS_DEVICE } from '@/lib/web';
 import { testFortnight } from '@/store/sample';
+import { undoQuestion } from '@/store/undo';
 import { useTheme, screen, space, size } from '@/theme';
 
 const RECENT = 3;
@@ -42,6 +43,7 @@ export default function DataScreen() {
   const schedules = useScheduleList();
   const batches = useStore((s) => s.batches);
   const undoBatch = useStore((s) => s.undoBatch);
+  const stored = { items: useStore((s) => s.items), series: useStore((s) => s.series), courses: useStore((s) => s.courses) };
   const setSettings = useStore((s) => s.setSettings);
   const applyPlan = useStore((s) => s.applyPlan);
   // Signed in, the account keeps the setup answers and only the plan is cleared; a guest starts over.
@@ -49,6 +51,8 @@ export default function DataScreen() {
   const cloud = useStore((s) => s.settings.cloud);
   const backupStatus = cloud.error ? 'Backup needs attention' : cloud.backedUpAt ? 'Backed up to your account' : 'Backup pending';
   const [confirm, setConfirm] = useState(false);
+  // The batch whose Undo was tapped, waiting on a second tap: an old import can hold weeks of work.
+  const [undoing, setUndoing] = useState<string | null>(null);
   const [allChanges, setAllChanges] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [eraseError, setEraseError] = useState<string | null>(null);
@@ -100,7 +104,14 @@ export default function DataScreen() {
         accessibilityLabel={`${b.label}, ${whenLabel(b)}${b.undone ? ', undone' : ''}`}
         trailing={b.undone
           ? <StatusPill label="Undone" />
-          : b.changes.length > 0 || b.workDatesBefore ? <TextButton label="Undo" haptic="undo" onPress={() => undoBatch(b.id)} accessibilityLabel={`Undo ${b.label}`} /> : null} />
+          : b.changes.length > 0 || b.workDatesBefore ? <TextButton label="Undo" haptic="tap" onPress={() => setUndoing(undoing === b.id ? null : b.id)} accessibilityLabel={`Undo ${b.label}`} /> : null} />
+      {undoing === b.id && !b.undone ? (
+        <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.confirm} accessibilityRole="alert">
+          <T token="callout" color={c.inkSecondary} style={{ flexBasis: '100%' }}>{undoQuestion(b, stored.items, stored.series, stored.courses)}</T>
+          <TextButton label="Cancel" tone="muted" onPress={() => setUndoing(null)} />
+          <TextButton label="Undo" tone="danger" haptic="undo" onPress={() => { undoBatch(b.id); setUndoing(null); }} />
+        </Animated.View>
+      ) : null}
     </Animated.View>
   );
 

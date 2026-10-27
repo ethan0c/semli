@@ -13,6 +13,7 @@ import { DEFAULT_API_URL } from '@/lib/api';
 import { track } from '@/lib/analytics';
 import { realRecords } from '@/lib/planner-preview';
 import { allDoneLine, firstOf } from '@/lib/milestones';
+import { planUndo } from './undo';
 import { DEFAULT_REMINDERS, type ReminderPrefs } from '@/lib/reminder-plan';
 import { plannerLoadFailed, plannerStorage } from '@/lib/storage';
 
@@ -36,6 +37,8 @@ export interface Batch {
   removedSchedules?: (ScheduleVersion & { batchId?: string })[];
   /** Work days this batch set, with what each task had before (null: none), so Undo can put them back. */
   workDatesBefore?: Record<string, string | null>;
+  /** Repeat rules this batch changed, as they were before (null: none), so Undo puts the rule back with the items. */
+  seriesBefore?: Record<string, SeriesRule | null>;
 }
 
 export interface Pending {
@@ -169,7 +172,7 @@ interface State {
 
   toggleDone: (id: string) => void;
   /** A change the person made. Touching the date or time marks the item edited, so a sync or a series rebuild leaves it alone; `silent` is for the app's own corrections. */
-  updateItem: (id: string, patch: Partial<Item>, opts?: { silent?: boolean }) => void;
+  updateItem: (id: string, patch: Partial<Item>, opts?: { silent?: boolean; into?: string | null }) => void;
   /** The rule a series repeats by, stored or read off its occurrences. */
   seriesRule: (seriesId: string) => SeriesRule | null;
   /**
@@ -197,7 +200,10 @@ interface State {
   removeEmployer: (employer: string, scope: 'upcoming' | 'all', today: string) => void;
   addItem: (item: Omit<Item, 'id' | 'createdAt' | 'batchId'>) => string;
   applyPlan: (plan: CommitPlan, label: string, extra?: { source?: string; course?: Course; courses?: Course[] }) => string;
-  undoBatch: (id: string) => void;
+  /** Takes a batch back, leaving anything changed since as it is. Returns how many items stayed. */
+  undoBatch: (id: string, opts?: { force?: boolean }) => { reverted: number; kept: number };
+  /** Moves a batch's changes into an earlier one, so one Undo takes back a whole action. */
+  joinBatch: (id: string, into: string) => void;
 
   /**
    * `plan` erases what the person added (items, classes, shifts, breaks) and keeps their setup
@@ -299,9 +305,14 @@ export const useStore = create<State>()(
         if (!before) return;
         const moved = !opts?.silent && ('date' in patch || 'start' in patch || 'end' in patch);
         const after = { ...before, ...patch, ...(moved ? { editedAt: nowIso() } : {}) };
+        const change: Change = { op: 'update', before, after };
+        // Part of a larger action (stopping a repeat): its Undo takes this back too.
+        const host = opts?.into ? get().batches.find((b) => b.id === opts.into && !b.undone) : undefined;
         set({
           items: { ...get().items, [id]: after },
-          batches: [batch('Edited ' + before.title, [{ op: 'update', before, after }]), ...get().batches],
+          batches: host
+            ? get().batches.map((b) => (b === host ? { ...b, changes: [...b.changes, change] } : b))
+            : [batch('Edited ' + before.title, [change]), ...get().batches],
         });
         if (moved) track('item_edited', { field: 'date' in patch ? 'date' : 'time', scope: 'one', repeats: !!before.seriesId });
       },
@@ -309,6 +320,7 @@ export const useStore = create<State>()(
       retimeItems: (ids, times, label) => {
         const items = { ...get().items };
         const series = { ...get().series };
+        const seriesBefore: Record<string, SeriesRule | null> = {};
         const changes: Change[] = [];
         for (const id of ids) {
           const before = items[id];
@@ -319,12 +331,13 @@ export const useStore = create<State>()(
           changes.push({ op: 'update', before, after });
           const sid = before.seriesId;
           if (sid) {
+            if (!(sid in seriesBefore)) seriesBefore[sid] = get().series[sid] ?? null;
             const rule = series[sid] ?? inferRule(Object.values(get().items).filter((it) => it.seriesId === sid));
             series[sid] = { ...rule, start: times.start, end: times.end };
           }
         }
         if (!changes.length) return null;
-        const b = batch(label, changes);
+        const b = { ...batch(label, changes), seriesBefore };
         set({ items, series, batches: [b, ...get().batches], toast: { message: `${label}.`, batchId: b.id } });
         track('item_edited', { field: 'time', scope: 'similar', updated: changes.length });
         return b.id;
@@ -366,7 +379,7 @@ export const useStore = create<State>()(
           delete items[id];
           changes.push({ op: 'delete', before, after: null });
         }
-        const b = batch(label, changes);
+        const b = { ...batch(label, changes), seriesBefore: { [seriesId]: get().series[seriesId] ?? null } };
         set({ items, series: { ...get().series, [seriesId]: rule }, batches: changes.length ? [b, ...get().batches] : get().batches,
           toast: changes.length ? { message: `${label}.`, batchId: b.id } : get().toast });
         track('item_edited', { field: 'repeat', scope: 'series', created: r.create.length, updated: r.update.length, removed: r.remove.length });
@@ -377,9 +390,22 @@ export const useStore = create<State>()(
         const it = get().items[id];
         if (!it) return { seriesId: '', created: 0, batchId: null };
         const seriesId = it.seriesId ?? `series-${id}`;
-        if (!it.seriesId) set({ items: { ...get().items, [id]: { ...it, seriesId } } });
+        if (it.seriesId) {
+          const r = get().applySeries(seriesId, rule, it.date, today, `${it.title} repeats`);
+          return { seriesId, created: r.created, batchId: r.batchId };
+        }
+        // Tagging the item is the first change of the same batch, so Undo leaves it a one-off again.
+        const tagged = { ...it, seriesId };
+        set({ items: { ...get().items, [id]: tagged } });
         const r = get().applySeries(seriesId, rule, it.date, today, `${it.title} repeats`);
-        return { seriesId, created: r.created, batchId: r.batchId };
+        const tag: Change = { op: 'update', before: it, after: tagged };
+        if (r.batchId) {
+          set({ batches: get().batches.map((b) => (b.id === r.batchId ? { ...b, changes: [tag, ...b.changes] } : b)) });
+          return { seriesId, created: r.created, batchId: r.batchId };
+        }
+        const b = { ...batch(`${it.title} repeats`, [tag]), seriesBefore: { [seriesId]: null } };
+        set({ batches: [b, ...get().batches] });
+        return { seriesId, created: 0, batchId: b.id };
       },
 
       removeItem: (id) => {
@@ -387,26 +413,36 @@ export const useStore = create<State>()(
         if (!before) return;
         const items = { ...get().items };
         delete items[id];
-        const b = batch('Deleted ' + before.title, [{ op: 'delete', before, after: null }]);
         // One occurrence of a series gone by hand: the rule skips that date, so a rebuild never brings it back.
         const rule = before.seriesId ? get().series[before.seriesId] : undefined;
-        const series = rule && !rule.skipped.includes(before.date) ? { ...get().series, [before.seriesId!]: { ...rule, skipped: [...rule.skipped, before.date] } } : get().series;
+        const skips = !!rule && !rule.skipped.includes(before.date);
+        const series = skips ? { ...get().series, [before.seriesId!]: { ...rule, skipped: [...rule.skipped, before.date] } } : get().series;
+        const b = { ...batch('Deleted ' + before.title, [{ op: 'delete', before, after: null }]), ...(skips ? { seriesBefore: { [before.seriesId!]: rule } } : {}) };
         set({ items, series, batches: [b, ...get().batches], toast: { message: `Deleted ${before.title}.`, batchId: b.id } });
         track('item_deleted', { deletion_scope: 'single', item_count: 1 });
       },
 
       removeItems: (ids, label) => {
         const items = { ...get().items };
+        const series = { ...get().series };
+        const seriesBefore: Record<string, SeriesRule | null> = {};
         const changes: Change[] = [];
         for (const id of ids) {
           const before = items[id];
           if (!before) continue;
           delete items[id];
           changes.push({ op: 'delete', before, after: null });
+          // As with one delete: the rule skips these dates, so a later series edit doesn't bring them back.
+          const sid = before.seriesId;
+          const rule = sid ? series[sid] : undefined;
+          if (sid && rule && !rule.skipped.includes(before.date)) {
+            if (!(sid in seriesBefore)) seriesBefore[sid] = rule;
+            series[sid] = { ...rule, skipped: [...rule.skipped, before.date] };
+          }
         }
         if (changes.length === 0) return;
-        const b = batch(label, changes);
-        set({ items, batches: [b, ...get().batches], toast: { message: `${label}.`, batchId: b.id } });
+        const b = { ...batch(label, changes), seriesBefore };
+        set({ items, series, batches: [b, ...get().batches], toast: { message: `${label}.`, batchId: b.id } });
         track('item_deleted', { deletion_scope: 'multiple', item_count: changes.length });
       },
 
@@ -458,8 +494,17 @@ export const useStore = create<State>()(
         const b = batch(label, []);
         const items = { ...get().items };
         const source = extra?.source ?? null;
+        // A draft's series id ("series-0-2027-01-11") is only unique within one read, so two
+        // syllabi starting the same day shared one, and editing BIOL's times moved CHEM's classes
+        // (Oct 27, 2026). Each import's series get ids of their own.
+        const fresh = new Map<string, string>();
+        const seriesOf = (sid: string | null | undefined) => {
+          if (!sid) return sid;
+          if (!fresh.has(sid)) fresh.set(sid, `series-${newId()}`);
+          return fresh.get(sid)!;
+        };
         for (const c of plan.create) {
-          const it: Item = { ...c, id: newId(), createdAt: nowIso(), batchId: b.id, sourceId: source };
+          const it: Item = { ...c, seriesId: seriesOf(c.seriesId), id: newId(), createdAt: nowIso(), batchId: b.id, sourceId: source };
           items[it.id] = it;
           b.changes.push({ op: 'create', before: null, after: it });
         }
@@ -505,14 +550,10 @@ export const useStore = create<State>()(
         return b.id;
       },
 
-      undoBatch: (id) => {
+      undoBatch: (id, opts) => {
         const b = get().batches.find((x) => x.id === id);
-        if (!b || b.undone) return;
-        const items = { ...get().items };
-        for (const ch of [...b.changes].reverse()) {
-          if (ch.op === 'create' && ch.after) delete items[ch.after.id];
-          else if (ch.before) items[ch.before.id] = ch.before;
-        }
+        if (!b || b.undone) return { reverted: 0, kept: 0 };
+        const { items, series, courses, reverted, kept } = planUndo(b, get().items, get().series, get().courses, opts);
         const taskWorkDates = { ...get().taskWorkDates };
         for (const [task, before] of Object.entries(b.workDatesBefore ?? {})) {
           if (before) taskWorkDates[task] = before;
@@ -521,17 +562,33 @@ export const useStore = create<State>()(
         set({
           items,
           taskWorkDates,
+          series,
+          courses,
           schedules: [...get().schedules.filter((s) => s.batchId !== id), ...(b.removedSchedules ?? [])],
-          courses: [...get().courses.filter((c) => c.batchId !== id), ...(b.removedCourses ?? [])],
           batches: get().batches.map((x) => (x.id === id ? { ...x, undone: true } : x)),
-          toast: null,
+          toast: kept ? { message: `Undid ${b.label}. Kept ${kept === 1 ? '1 item' : `${kept} items`} you changed since.` } : null,
         });
+        return { reverted, kept };
+      },
+
+      joinBatch: (id, into) => {
+        const from = get().batches.find((x) => x.id === id);
+        const host = get().batches.find((x) => x.id === into);
+        if (!from || !host || from === host) return;
+        const joined: Batch = {
+          ...host,
+          label: from.label,
+          changes: [...host.changes, ...from.changes],
+          // The earlier batch saw the older rule, so its copy wins.
+          seriesBefore: { ...from.seriesBefore, ...host.seriesBefore },
+        };
+        set({ batches: get().batches.filter((x) => x !== from).map((x) => (x === host ? joined : x)) });
       },
 
       clearAll: (scope) => {
         const { settings: s } = get();
         set({
-          items: {}, courses: [], schedules: [], batches: [], pending: null, toast: null, taskWorkDates: {}, suggestionDismissals: { date: '', ids: [] }, captureDraft: '', selectedPlanDate: null, planChoice: null,
+          items: {}, courses: [], schedules: [], series: {}, batches: [], pending: null, toast: null, taskWorkDates: {}, suggestionDismissals: { date: '', ids: [] }, captureDraft: '', selectedPlanDate: null, planChoice: null,
           settings: scope === 'plan'
             ? { ...s, breaks: [] }
             : { ...DEFAULT_SETTINGS, apiUrl: s.apiUrl, appearance: s.appearance, language: s.language, cardStyle: s.cardStyle, todayView: s.todayView, sounds: s.sounds, haptics: s.haptics, trial: s.trial },

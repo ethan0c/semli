@@ -183,7 +183,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
     } else if (repeats && rule && reach === 'series') {
       const r = applySeries(item.seriesId!, { ...rule, start: t.start, end: t.end }, item.date, now.date, `${seriesLabel('Moved')} to ${timeText(t)}`);
       // The occurrence on screen may be hand-moved itself; it follows the rule when it is the one being edited.
-      if (item.editedAt) updateItem(item.id, { start: t.start, end: t.end, editedAt: null }, { silent: true });
+      if (item.editedAt) updateItem(item.id, { start: t.start, end: t.end, editedAt: null }, { silent: true, into: r.batchId });
       if (r.kept) showToast(`${seriesLabel('Moved')} to ${timeText(t)}.${leftAlone(r.kept)}`, r.batchId ?? undefined);
     } else {
       updateItem(item.id, { start: t.start, end: t.end });

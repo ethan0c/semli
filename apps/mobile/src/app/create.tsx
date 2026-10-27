@@ -61,8 +61,10 @@ export default function CreateScreen() {
     saving.current = true;
     const store = useStore.getState();
     const id = store.addItem(result.item);
-    // The rest of a series is its own batch after the first one, so Undo on the toast removes them all but the first.
+    const added = useStore.getState().items[id]?.batchId ?? null;
     const series = result.repeat ? store.startSeries(id, result.repeat, localParts(new Date()).date) : null;
+    // One Undo on the toast takes back the first one and the rest of its series together.
+    if (series?.batchId && added) store.joinBatch(series.batchId, added);
     track('manual_item_created', {
       item_kind: result.item.kind,
       category: result.item.category,
@@ -73,7 +75,7 @@ export default function CreateScreen() {
     const noun = result.item.kind === 'event' ? 'event' : 'to-do';
     store.showToast(
       series && result.repeat ? `Added ${series.created + 1} ${noun}s through ${monthDay(result.repeat.until)}.` : `Added ${result.item.title}.`,
-      series?.batchId ?? useStore.getState().items[id]?.batchId ?? undefined,
+      added ?? undefined,
     );
     feedback('success');
     router.back();

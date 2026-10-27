@@ -13,6 +13,9 @@ import {
   isLocalDate,
   monthDay,
   pendingDates,
+  courseKey,
+  findCourse,
+  matchExisting,
   newCourses,
   planCommit,
   relativeDay,
@@ -284,5 +287,65 @@ describe('newCourses', () => {
       { code: 'NUR 410', title: 'Adult Health', instructor: 'Dr. Ade' },
     ]);
     expect(newCourses(ex, [], [{ code: 'nur 410', title: 'Something' }])).toEqual([]);
+  });
+});
+
+describe('re-imports', () => {
+  const base = { is_deadline: true, repeat_weekdays: [] as never[], repeat_until: null, evidence: '', confidence: 0.95, question: null, start: null, end: null };
+  const syllabus = (items: Extraction['items']): Extraction => ({ detected_type: 'syllabus', employer: null, course: null, covers_from: null, covers_to: null, items });
+
+  it('updates the closest title, and leaves done, notes and series alone', () => {
+    const existing = [
+      item({ id: 'q6', kind: 'task', title: 'Chapter 6 reading quiz', date: '2026-10-30' }),
+      item({ id: 'q5', kind: 'task', title: 'Chapter 5 reading quiz', date: '2026-10-30', done: true, notes: 'got 9/10', courseId: 'bio', seriesId: 's' }),
+    ];
+    const ex = syllabus([{ ...base, kind: 'task', title: 'Chapter 5 reading quiz due', category: 'school', date: '2026-10-30', course_code: 'BIO 1' }]);
+    const plan = planCommit(ex, toDrafts(ex, '2026-10-19'), existing, () => 'bio');
+    expect(plan.update).toEqual([{ id: 'q5', patch: { title: 'Chapter 5 reading quiz due', start: null, end: null, isDeadline: true } }]);
+  });
+
+  it('never matches another course\'s item', () => {
+    const engl = item({ id: 'e', kind: 'task', title: 'Reading response', date: '2026-10-30', courseId: 'engl' });
+    expect(matchExisting({ kind: 'task', title: 'Reading response', date: '2026-10-30', start: null, end: null, courseId: 'hist' }, [engl])).toBeNull();
+    expect(matchExisting({ kind: 'task', title: 'Reading response', date: '2026-10-30', start: null, end: null, courseId: 'engl' }, [engl])).toEqual({ type: 'duplicate', existingId: 'e' });
+  });
+
+  it('matches course codes however they are spaced, then titles', () => {
+    expect(courseKey('biol-201')).toBe(courseKey('BIOL 201'));
+    const courses = [{ id: 'a', code: 'BIOL201', title: 'Biology' }, { id: 'b', code: null, title: 'Intro to Psychology' }];
+    expect(findCourse(courses, 'BIOL 201')?.id).toBe('a');
+    expect(findCourse(courses, 'PSYC 101', 'intro to psychology')?.id).toBe('b');
+    expect(newCourses({ detected_type: 'course_schedule', course: null }, [{ include: true, kind: 'event', title: 'Biology', courseCode: 'BIOL 201' }], courses)).toEqual([]);
+  });
+
+  it('matches a work schedule to an employer written with or without accents', () => {
+    const existing = [item({ id: 'old', date: '2026-10-28', start: '09:00', end: '13:00', category: 'work', employer: 'Campus Café' })];
+    const ex: Extraction = {
+      detected_type: 'work_schedule', employer: 'Campus Cafe', course: null, covers_from: '2026-10-26', covers_to: '2026-11-01',
+      items: [{ ...base, is_deadline: false, kind: 'event', title: 'Campus Cafe shift', category: 'work', date: '2026-10-28', start: '10:00', end: '14:00', course_code: null }],
+    };
+    const plan = planCommit(ex, toDrafts(ex, '2026-10-19'), existing, () => null);
+    expect(plan.update).toEqual([{ id: 'old', patch: { start: '10:00', end: '14:00' } }]);
+    expect(plan.create).toEqual([]);
+  });
+});
+
+describe('repeating classes in review', () => {
+  const cls = (over: Partial<Extraction['items'][number]> = {}): Extraction => ({
+    detected_type: 'course_schedule', employer: null, course: null, covers_from: null, covers_to: null,
+    items: [{ kind: 'event', title: 'Biology', category: 'school', date: '2027-01-11', start: '09:00', end: '10:00', is_deadline: false, repeat_weekdays: ['mon'], repeat_until: null, course_code: 'BIOL 201', evidence: '', confidence: 0.95, question: null, ...over }],
+  });
+
+  it('skips breaks and expands past a guessed end so a later one can be picked', () => {
+    const drafts = toDrafts(cls(), '2026-10-27', { breaks: [{ start: '2027-03-15', end: '2027-03-19' }] });
+    expect(drafts.map((d) => d.date)).not.toContain('2027-03-15');
+    const guess = drafts[0]!.seriesUntil!;
+    expect(drafts.some((d) => d.date > guess)).toBe(true);
+  });
+
+  it('asks for a missing time before asking how long it repeats', () => {
+    const [first] = toDrafts(cls({ start: null, end: null }), '2026-10-27');
+    expect(first!.question).toBe('What time does this start?');
+    expect(first!.needsInput).toBe(true);
   });
 });

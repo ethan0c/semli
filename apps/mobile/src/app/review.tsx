@@ -278,7 +278,7 @@ export default function ReviewScreen() {
     if (before.sampleBatchId) {
       const sampleIds = new Set(batches.find((b) => b.id === before.sampleBatchId)?.changes.map((ch) => ch.after?.id).filter(Boolean));
       if (!plan.update.some((u) => sampleIds.has(u.id)) && !plan.remove.some((r) => sampleIds.has(r))) {
-        undoBatch(before.sampleBatchId);
+        undoBatch(before.sampleBatchId, { force: true });
         saveSettings({ sampleBatchId: null });
         track('sample_removed', { how: 'import' });
       }

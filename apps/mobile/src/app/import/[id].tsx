@@ -1,6 +1,7 @@
 import { dateLocale, formatTime, localParts, monthDay, weekdayShort , count } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -13,6 +14,7 @@ import { PressRow } from '@/components/Press';
 import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
 import { useStore, type Change } from '@/store';
+import { undoQuestion } from '@/store/undo';
 import { SCREEN_GUTTER, corner, radius, useTheme, screen, size, space } from '@/theme';
 
 const isShot = (source: string | null | undefined) => /^(screenshot|photo)$/i.test(source ?? '');
@@ -68,6 +70,8 @@ export default function ImportScreen() {
   const courses = useStore((s) => s.courses);
   const reminders = useStore((s) => s.settings.reminders);
   const undoBatch = useStore((s) => s.undoBatch);
+  const series = useStore((s) => s.series);
+  const [asking, setAsking] = useState(false);
 
   if (!batch) {
     return (
@@ -99,8 +103,9 @@ export default function ImportScreen() {
   const timed = created.filter((it) => it.kind === 'event' && it.start).length;
   const remindersLine = reminders.enabled && timed > 0 ? (timed === created.length ? `Reminders set for all ${timed}.` : `Reminders set for ${timed} of ${created.length}.`) : null;
 
-  const caption = 'Undo the changes made by this import.';
+  const caption = asking ? undoQuestion(batch, items, series, courses) : 'Undo the changes made by this import.';
   const undo = () => {
+    if (!asking) { feedback('tap'); setAsking(true); return; }
     feedback('undo');
     undoBatch(batch.id);
     router.back();
@@ -114,7 +119,12 @@ export default function ImportScreen() {
         <>
           {batch.undone
             ? <View style={{ minHeight: size.target, justifyContent: 'center' }}><StatusPill label="Undone" /></View>
-            : <TextButton label="Undo this import" tone="danger" haptic="tap" onPress={undo} />}
+            : asking
+              ? <View style={styles.asking}>
+                  <TextButton label="Cancel" tone="muted" onPress={() => setAsking(false)} />
+                  <TextButton label="Undo" tone="danger" haptic="tap" onPress={undo} />
+                </View>
+              : <TextButton label="Undo this import" tone="danger" haptic="tap" onPress={undo} />}
           {!batch.undone ? <T token="caption" color={c.inkSecondary} style={{ textAlign: 'center' }}>{caption}</T> : null}
         </>
       }>
@@ -158,6 +168,7 @@ export default function ImportScreen() {
 
 const styles = StyleSheet.create({
   body: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.xs, paddingBottom: space.xl },
+  asking: { flexDirection: 'row', justifyContent: 'center', gap: space.lg },
   top: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
   topText: { flex: 1, minWidth: 0, gap: space.hair },
   line: { paddingTop: space.snug },

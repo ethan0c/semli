@@ -25,6 +25,7 @@ import { COLUMN, frameStyle, useWebLayout } from '@/lib/layout';
 import { columnHeader } from '@/components/ColumnHeader';
 import { Sidebar } from '@/components/DesktopTabs';
 import { PlanChoice } from '@/components/PlanChoice';
+import { Toast } from '@/components/Overlay';
 import { devAppearance, devClock, devCommand, setDevAutoConfirm, setDevToday } from '@/lib/dev';
 import { i18n } from '@/lib/i18n';
 import { SHOWCASE, SKY, preloadPhotos } from '@/lib/images';
@@ -279,6 +280,9 @@ function RootLayout() {
             <Stack.Screen name="settings" options={{ contentStyle: { backgroundColor: c.canvas } }} />
           </Stack.Protected>
         </Stack>
+        {/* Pushed screens (an item, a course, settings) cover the tabs and the toast they hold, so
+            their deletes and moves would offer an Undo nobody could see (Oct 27, 2026). */}
+        {PUSHED.test(pathname) ? <Toast offset={-32} /> : null}
         </View>
         </View>
         <PlanChoice />
@@ -293,6 +297,9 @@ function RootLayout() {
 }
 
 export default Sentry.wrap(RootLayout);
+
+/** Routes pushed over the tabs, where the tabs' own toast can't be seen. */
+const PUSHED = /^\/(item|repeat|course|employer|import|settings)(\/|$)/;
 
 const styles = StyleSheet.create({
   app: { flex: 1, flexDirection: 'row' },

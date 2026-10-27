@@ -270,7 +270,7 @@ function TodayScreen() {
         <Animated.View layout={layout} entering={enter.fade} exiting={exit.fade} style={[styles.section, styles.sampleLine]}>
           <T token="callout" color={c.inkSecondary} style={{ flex: 1 }}>This is a sample week.</T>
           <TextButton label="Remove" tone="muted" accessibilityLabel="Remove the sample week" onPress={() => {
-            undoBatch(sampleBatchId);
+            undoBatch(sampleBatchId, { force: true });
             setSettings({ sampleBatchId: null });
             track('sample_removed', { how: 'today' });
           }} />

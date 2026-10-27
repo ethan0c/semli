@@ -68,7 +68,7 @@ export function RepeatDetail({ id }: { id?: string }) {
     if (stopping && current && item.seriesId) {
       const r = applySeries(item.seriesId, { ...current, until: item.date }, item.date, now.date, `Stopped repeating ${item.title}`);
       // This one is a one-off from here; the rule still describes the earlier ones.
-      updateItem(item.id, { seriesId: null }, { silent: true });
+      updateItem(item.id, { seriesId: null }, { silent: true, into: r.batchId });
       showToast(r.removed ? `Stopped repeating ${item.title}. Removed ${plural(r.removed)}.` : `Stopped repeating ${item.title}.`, r.batchId ?? undefined);
     } else if (next && !item.seriesId) {
       const r = startSeries(item.id, next, now.date);
