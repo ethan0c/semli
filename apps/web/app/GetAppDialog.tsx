@@ -4,10 +4,9 @@ import { useEffect, useRef } from 'react';
 import { appIconColors } from '@dayli/tokens';
 import type { Qr } from '@/lib/qr';
 import { MARK, QrCode } from '@/components/QrCode';
-import { APP_STORE_LIVE, APP_STORE_URL } from '@/lib/site';
 
-/** Where the dialog's button goes: the App Store once live, the counted beta link until then. */
-export const GET_APP_HREF = APP_STORE_LIVE ? APP_STORE_URL : '/beta?r=demo';
+/** Where the dialog's button goes: the counted link, which opens the App Store. */
+export const GET_APP_HREF = '/get?r=demo';
 
 /** The app icon (design/icon-b-dots.svg), the way the App Store shows it. */
 function AppIcon() {
@@ -53,27 +52,25 @@ export function GetAppDialog({ open, onClose, qr }: { open: boolean; onClose: ()
           <AppIcon />
           <div>
             <div className="getapp-name">Semli</div>
-            <div className="getapp-sub">{APP_STORE_LIVE ? 'AI student planner · Free' : 'AI student planner · iPhone beta'}</div>
+            <div className="getapp-sub">AI student planner · Free</div>
           </div>
         </div>
         <p className="getapp-kicker">You’ve used your free website previews.</p>
         <h2 id="getapp-title" className="getapp-title">
-          {APP_STORE_LIVE ? <>Keep planning in the <span className="getapp-word">app</span>.</> : <>Get early access to <span className="getapp-word">Semli</span>.</>}
+          Keep planning in the <span className="getapp-word">app</span>.
         </h2>
         <p className="getapp-text">
-          {APP_STORE_LIVE
-            ? 'Turn syllabi, work schedules, and messages into one plan. Review the dates, then add them alongside your classes and shifts.'
-            : 'The iPhone app is coming soon. Join the beta waitlist and we’ll email you when it’s ready to try.'}
+          Turn syllabi, work schedules, and messages into one plan. Review the dates, then add them alongside your classes and shifts.
         </p>
         <a className="btn getapp-btn" href={GET_APP_HREF}>
-          {APP_STORE_LIVE ? 'Get the iPhone app' : 'Join the beta waitlist'}
+          Get the iPhone app
         </a>
       </div>
       <div className="getapp-qr">
         <div className="getapp-code">
-          <QrCode qr={qr} label={APP_STORE_LIVE ? 'QR code to get the iPhone app' : 'QR code to join the iPhone beta waitlist'} />
+          <QrCode qr={qr} label="QR code to get the iPhone app" />
         </div>
-        <span>{APP_STORE_LIVE ? 'Scan with your iPhone to get the app' : 'Scan to join the beta waitlist'}</span>
+        <span>Scan with your iPhone to get the app</span>
       </div>
     </dialog>
   );

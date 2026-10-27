@@ -16,8 +16,7 @@ import sky from '@/public/photos/sky.jpg';
 import table from '@/public/photos/table.jpg';
 import { GET_APP_QR } from '@/lib/qr';
 import { faqJsonLd, pageMetadata } from '@/lib/seo';
-import { APP_STORE_LIVE, APP_STORE_URL, FREE_IMPORTS_PER_MONTH, FREE_IMPORTS_TO_START, money, plan } from '@/lib/site';
-import { Waitlist } from './Waitlist';
+import { APP_STORE_URL, FREE_IMPORTS_PER_MONTH, FREE_IMPORTS_TO_START, money, plan } from '@/lib/site';
 import styles from './home.module.css';
 
 export const metadata: Metadata = pageMetadata({ path: '/' });
@@ -83,9 +82,7 @@ function AppleMark() {
 }
 
 function GetApp({ className = 'btn' }: { className?: string }) {
-  return APP_STORE_LIVE
-    ? <a className={className} href={APP_STORE_URL}><AppleMark />Get the iPhone app</a>
-    : <Link className={className} href="/#beta"><AppleMark />Join the beta waitlist</Link>;
+  return <a className={className} href={APP_STORE_URL}><AppleMark />Get the iPhone app</a>;
 }
 
 export default function Home() {
@@ -101,7 +98,7 @@ export default function Home() {
           <h1 id="home-title" className="serif">Your week, already <span className={styles.accentWord}>organized</span>.</h1>
           <p className={styles.heroSub}>Classes, shifts, and deadlines in one plan. Add a syllabus, a work schedule, or a message, and Semli lays out what’s next.</p>
           <GetApp />
-          <p className={styles.note}>{APP_STORE_LIVE ? 'Free on iPhone. No account needed.' : 'The iPhone beta opens soon. We’re inviting up to 200 beta testers.'}</p>
+          <p className={styles.note}>Free on iPhone. No account needed.</p>
         </div>
         <div className={styles.heroShot}>
           <Shot name="today" width={440} priority label="Today: 34 minutes until Stats lecture ends, a full day on one bar, then the list with one overlap" />
@@ -123,9 +120,9 @@ export default function Home() {
           </div>
           <div className={styles.heroQr}>
             <div className="getapp-code">
-              <QrCode qr={GET_APP_QR} label={APP_STORE_LIVE ? 'QR code to get the iPhone app' : 'QR code to join the beta waitlist'} />
+              <QrCode qr={GET_APP_QR} label="QR code to get the iPhone app" />
             </div>
-            <p>{APP_STORE_LIVE ? 'Scan with your iPhone to get the app' : 'Scan with your iPhone to join the beta waitlist'}</p>
+            <p>Scan with your iPhone to get the app</p>
           </div>
         </div>
       </section>
@@ -233,22 +230,15 @@ export default function Home() {
         <Reveal className="faq-list" style={stagger(1)}>{FAQS.map(({ q, a }) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</Reveal>
       </section>
 
-      {/* The close and the beta are one panel: the last line, then the one thing to do. */}
-      <section id={APP_STORE_LIVE ? undefined : 'beta'} className={`${styles.band} ${styles.photoBand} ${styles.closing}`} aria-labelledby="final-title">
+      {/* The close: the last line, then the one thing to do. */}
+      <section className={`${styles.band} ${styles.photoBand} ${styles.closing}`} aria-labelledby="final-title">
         <div className={styles.bandPhoto} aria-hidden>
           <Image src={heroAutumn} alt="" fill placeholder="blur" sizes="100vw" />
         </div>
         <Reveal as="h2" id="final-title" className="section-title serif">One less thing to keep in your head.</Reveal>
-        {APP_STORE_LIVE ? (
-          <Reveal className={styles.ctas} style={stagger(1)}>
-            <GetApp />
-          </Reveal>
-        ) : (
-          <Reveal className={styles.closingBeta} style={stagger(1)}>
-            <p className="lede">The iPhone beta opens soon. We’re inviting up to 200 testers on TestFlight to try it with their week and send feedback directly to the developer.</p>
-            <Waitlist />
-          </Reveal>
-        )}
+        <Reveal className={styles.ctas} style={stagger(1)}>
+          <GetApp />
+        </Reveal>
       </section>
     </main>
   );

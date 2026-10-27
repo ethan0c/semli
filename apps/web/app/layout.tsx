@@ -4,7 +4,7 @@ import { NoSave } from '@/components/NoSave';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { HOME_TITLE, pageMetadata } from '@/lib/seo';
-import { APP_STORE_ID, APP_STORE_LIVE, APP_STORE_URL, DESCRIPTION, KEYWORDS, PLUS_PLANS, SITE_URL, SUPPORT_EMAIL } from '@/lib/site';
+import { APP_STORE_ID, APP_STORE_URL, DESCRIPTION, KEYWORDS, PLUS_PLANS, SITE_URL, SUPPORT_EMAIL } from '@/lib/site';
 import { sitePalettes, TOKENS_CSS } from './tokens';
 import './globals.css';
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   applicationName: 'Semli',
   robots: { index: true, follow: true },
   /** Safari's Smart App Banner, once there is a listing to open. */
-  ...(APP_STORE_LIVE ? { itunes: { appId: APP_STORE_ID } } : {}),
+  itunes: { appId: APP_STORE_ID },
 };
 
 export const viewport: Viewport = {
@@ -45,7 +45,7 @@ const JSON_LD = {
       logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon.png`, width: 512, height: 512 },
       email: SUPPORT_EMAIL,
       description: DESCRIPTION,
-      ...(APP_STORE_LIVE ? { sameAs: [APP_STORE_URL] } : {}),
+      sameAs: [APP_STORE_URL],
     },
     /** alternateName gives Google the site name for the result header; it was guessing "semli.app". */
     { '@type': 'WebSite', '@id': `${SITE_URL}/#site`, url: SITE_URL, name: 'Semli', alternateName: ['Semli planner', 'semli.app'], publisher: { '@id': `${SITE_URL}/#org` } },
@@ -61,7 +61,7 @@ const JSON_LD = {
       operatingSystem: 'iOS',
       description: DESCRIPTION,
       url: SITE_URL,
-      ...(APP_STORE_LIVE ? { downloadUrl: APP_STORE_URL } : {}),
+      downloadUrl: APP_STORE_URL,
       offers: [
         { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Free plan' },
         ...PLUS_PLANS.map((p) => ({ '@type': 'Offer', price: p.student.toFixed(2), priceCurrency: 'USD', description: `Semli Plus, ${p.name.toLowerCase()}, student price` })),

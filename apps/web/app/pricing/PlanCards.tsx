@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useReveal } from '@/components/Reveal';
 import { feedback } from '@/lib/feedback';
 import fireworks from '@/public/photos/plus-fireworks.jpg';
-import { APP_STORE_LIVE, APP_STORE_URL, FREE_IMPORTS_PER_MONTH, FREE_IMPORTS_TO_START, PLUS_PLANS, TRIAL_DAYS, money, type PlanId } from '@/lib/site';
+import { APP_STORE_URL, FREE_IMPORTS_PER_MONTH, FREE_IMPORTS_TO_START, PLUS_PLANS, TRIAL_DAYS, money, type PlanId } from '@/lib/site';
 
 const FREE = [
   'Calendar, to-dos, and repeating classes',
@@ -90,7 +90,7 @@ export function PlanCards() {
           </div>
 
           <div className="plan-actions">
-            {APP_STORE_LIVE ? <a className="btn" href={APP_STORE_URL}>Get Semli Plus on iPhone</a> : <Link className="btn" href="/#beta">Join the beta waitlist</Link>}
+            <a className="btn" href={APP_STORE_URL}>Get Semli Plus on iPhone</a>
             <p className="plan-caption">Eligible new subscribers can try Plus free for {TRIAL_DAYS} days. Subscriptions are purchased in the iPhone app. Prices shown in USD.</p>
             <div className="plan-links"><Link href="/terms">Terms</Link><span aria-hidden="true">·</span><Link href="/privacy">Privacy</Link></div>
           </div>

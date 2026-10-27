@@ -1,5 +1,5 @@
 import { toQR } from 'toqr';
-import { APP_STORE_LIVE, APP_STORE_URL, SITE_URL } from './site';
+import { SITE_URL } from './site';
 
 /** toqr's error-correction level H (its enum is not exported): survives the mark in the middle. */
 const EC_HIGH = 2 as Parameters<typeof toQR>[1];
@@ -31,5 +31,5 @@ export function qrCode(text: string): Qr {
   return { size, dots, hole: { at, size: holeSize } };
 }
 
-/** The try-it box's get-the-app code: a phone camera opens the App Store, or the counted beta link until launch. */
-export const GET_APP_QR = qrCode(APP_STORE_LIVE ? APP_STORE_URL : `${SITE_URL}/beta?r=demo-qr`);
+/** The try-it box's get-the-app code, counted: semli.app/get?r=demo-qr, which opens the App Store. */
+export const GET_APP_QR = qrCode(`${SITE_URL}/get?r=demo-qr`);
