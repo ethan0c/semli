@@ -1,19 +1,26 @@
-import { forwardRef, type ComponentRef } from 'react';
+import { forwardRef, useEffect, useState, type ComponentRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring, type SharedValue } from 'react-native-reanimated';
 
 import { IconButton } from '@/components/Controls';
 import { T } from '@/components/Text';
+import { enter, springs } from '@/lib/motion';
 import type { VoiceState, VoiceTranscript } from '@/lib/voice';
 import { corner, radius, textStyle, useTheme, space } from '@/theme';
 
 /** The mic grows with the voice: a whisper leaves it still, a normal voice lifts it a tenth. */
 const MIC_GROWTH = 0.12;
+/** The live bars while listening: a resting stub, and the tallest a loud voice reaches. */
+const BAR_MIN = 3;
+const BAR_MAX = 22;
 
 export type ComposerVoice = {
   state: VoiceState;
   transcript: VoiceTranscript;
   level: SharedValue<number>;
+  /** Recent volume, oldest first, drawn as bars while listening. */
+  levels: number[];
+  startedAt: number;
   onStart: () => void;
   onStop: () => void;
 };
@@ -72,14 +79,26 @@ export const Composer = forwardRef<ComponentRef<typeof TextInput>, {
           style={[styles.input, textStyle('body', c.inkPrimary)]}
         />
       )}
+      {listening && voice ? (
+        // While listening the toolbar is the recording: the voice as live bars, the time, stop, send.
+        <Animated.View key="listening" entering={enter.fade} style={styles.toolbar}>
+          <View style={styles.bars} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            {voice.levels.map((v, i) => <Bar key={i} v={v} fade={0.3 + (0.7 * i) / Math.max(1, voice.levels.length - 1)} color={c.inkPrimary} />)}
+          </View>
+          <Elapsed since={voice.startedAt} />
+          <IconButton icon="stop" label="Stop listening" tone="grey" size={40} haptic="select" disabled={!!busy} onPress={voice.onStop} />
+          <IconButton icon="send" label="Stop and read it" tone="primary" size={40} disabled={!canSend || voice.state === 'stopping'} haptic="ready" onPress={onSend} />
+        </Animated.View>
+      ) : (
       <View style={styles.toolbar}>
         <IconButton icon="image" label="Add a screenshot" tone="bare" size={40} disabled={busy || listening} onPress={onPickImage} />
         {onCamera ? <IconButton icon="camera" label="Take a photo" tone="bare" size={40} disabled={busy || listening} onPress={onCamera} /> : null}
         <IconButton icon="file" label="Add a PDF" tone="bare" size={40} disabled={busy || listening} onPress={onPickPdf} />
         <View style={{ flex: 1 }} />
         {voice ? <Mic voice={voice} disabled={!!busy} /> : null}
-        <IconButton icon="send" label="Read it" tone="primary" size={40} disabled={!canSend || voice?.state === 'stopping'} haptic="ready" onPress={onSend} />
+        <IconButton icon="send" label="Read it" tone="primary" size={40} disabled={!canSend} haptic="ready" onPress={onSend} />
       </View>
+      )}
     </View>
   );
 });
@@ -96,7 +115,29 @@ function Mic({ voice, disabled }: { voice: ComposerVoice; disabled: boolean }) {
   );
 }
 
+/** One bar: springs to its reading, so the row flows as readings shift left every 100 ms. */
+function Bar({ v, fade, color }: { v: number; fade: number; color: string }) {
+  const h = useSharedValue(BAR_MIN);
+  useEffect(() => { h.set(withSpring(BAR_MIN + v * (BAR_MAX - BAR_MIN), springs.snappy)); }, [v, h]);
+  const style = useAnimatedStyle(() => ({ height: h.value }));
+  return <Animated.View style={[styles.bar, { backgroundColor: color, opacity: fade }, style]} />;
+}
+
+function Elapsed({ since }: { since: number }) {
+  const { c } = useTheme();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const s = Math.max(0, Math.floor((now - since) / 1000));
+  return <T token="subhead" color={c.inkSecondary} tabular style={styles.elapsed} accessibilityLabel={`Listening for ${s} seconds`}>{`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`}</T>;
+}
+
 const styles = StyleSheet.create({
+  bars: { flex: 1, height: 40, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: space.xs, overflow: 'hidden' },
+  bar: { width: 3, borderRadius: 1.5 },
+  elapsed: { minWidth: 36, textAlign: 'right', marginRight: space.xs },
   composer: { ...corner(radius.field), borderWidth: 1 },
   input: { minHeight: 112, maxHeight: 240, paddingHorizontal: space.md, paddingTop: space.sm, paddingBottom: space.snug, textAlignVertical: 'top' },
   toolbar: { flexDirection: 'row', alignItems: 'center', gap: space.hair, paddingHorizontal: space.xs, paddingBottom: space.xs, paddingTop: space.hair },

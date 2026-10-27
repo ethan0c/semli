@@ -185,7 +185,7 @@ export function AddScreen() {
           onCamera={Platform.OS === 'web' ? undefined : () => void pick(() => pickImageInput(true))}
           onPickPdf={() => void pick(pickPdfInput)}
           onSend={() => void send()}
-          voice={VOICE_AVAILABLE ? { state: voice.state, transcript: voice.transcript, level: voice.level, onStart: () => { spoke.current = true; setError(null); void voice.start(); }, onStop: () => void voice.stop() } : undefined}
+          voice={VOICE_AVAILABLE ? { state: voice.state, transcript: voice.transcript, level: voice.level, levels: voice.levels, startedAt: voice.startedAt, onStart: () => { spoke.current = true; setError(null); void voice.start(); }, onStop: () => void voice.stop() } : undefined}
         />
 
         {shownError ? (

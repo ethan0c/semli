@@ -2,6 +2,7 @@ import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-spe
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useSharedValue, withSpring, type SharedValue } from 'react-native-reanimated';
+import { nextTranscript } from '@dayli/core';
 
 import { track } from '@/lib/analytics';
 import { reportError } from '@/lib/errors';
@@ -28,6 +29,8 @@ export const VOICE_AVAILABLE = Platform.OS === 'ios';
 const MAX_CHARS = 2000;
 const LEVEL_FLOOR = 0;
 const LEVEL_CEIL = 10;
+/** How many recent volume readings the composer draws as bars (one every 100 ms). */
+export const LEVEL_HISTORY = 28;
 /** How long a stop may wait for Apple's last result before the session is ended anyway. */
 const STOP_GRACE_MS = 1500;
 
@@ -61,17 +64,24 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
   /** Resolves once listening has ended and the last words are in the text. */
   stop: () => Promise<void>;
   clearError: () => void;
+  /** The last few seconds of input volume, 0 to 1, oldest first: the composer's live bars. */
+  levels: number[];
+  /** When listening started, for the elapsed time. */
+  startedAt: number;
 } {
   const [state, setState] = useState<VoiceState>('idle');
   const [transcript, setTranscript] = useState<VoiceTranscript>({ stable: '', tail: '' });
   const [error, setError] = useState<string | null>(null);
   const level = useSharedValue(0);
-  const session = useRef({ prefix: '', last: '', startedAt: 0, active: false });
+  const [levels, setLevels] = useState<number[]>(() => Array(LEVEL_HISTORY).fill(0));
+  const [startedAt, setStartedAt] = useState(0);
+  const session = useRef({ prefix: '', committed: '', last: '', startedAt: 0, active: false });
   const stopped = useRef<{ timer: ReturnType<typeof setTimeout> | null; waiting: (() => void)[] }>({ timer: null, waiting: [] });
 
   const emit = useCallback((spoken: string) => {
+    const said = `${session.current.committed} ${spoken}`.trim();
     const head = session.current.prefix.trim();
-    onText(head ? `${head} ${spoken}`.trimEnd() : spoken);
+    onText(head ? `${head} ${said}`.trimEnd() : said);
   }, [onText]);
 
   const finish = useCallback((reason: 'stop' | 'end' | 'error') => {
@@ -80,21 +90,27 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
     for (const resolve of stopped.current.waiting.splice(0)) resolve();
     if (!session.current.active) return;
     session.current.active = false;
-    const words = session.current.last.trim() ? session.current.last.trim().split(/\s+/).length : 0;
+    const said = `${session.current.committed} ${session.current.last}`.trim();
+    const words = said ? said.split(/\s+/).length : 0;
     track('voice_stopped', { reason, seconds: Math.round((Date.now() - session.current.startedAt) / 1000), words });
     setTranscript((t) => ({ stable: `${t.stable} ${t.tail}`.trim(), tail: '' }));
     level.set(withSpring(0, springs.gentle));
+    setLevels(Array(LEVEL_HISTORY).fill(0));
     setState('idle');
   }, [level]);
 
   useSpeechRecognitionEvent('result', (event) => {
     if (!session.current.active) return;
     const current = (event.results[0]?.transcript ?? '').trim();
-    const stable = event.isFinal ? current : sameWords(session.current.last, current);
-    session.current.last = current;
-    setTranscript({ stable, tail: current.slice(stable.length).trimStart() });
+    const next = nextTranscript(session.current.committed, session.current.last, current);
+    if (!next) return;
+    const previous = next.committed === session.current.committed ? session.current.last : '';
+    session.current.committed = next.committed;
+    session.current.last = next.last;
+    const stable = event.isFinal ? current : sameWords(previous, current);
+    setTranscript({ stable: `${next.committed} ${stable}`.trim(), tail: current.slice(stable.length).trimStart() });
     emit(current);
-    if (current.length >= MAX_CHARS) {
+    if (`${next.committed} ${current}`.length >= MAX_CHARS) {
       setError(VOICE_ERRORS.long);
       ExpoSpeechRecognitionModule.stop();
     }
@@ -103,6 +119,7 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
     if (!session.current.active) return;
     const v = Math.min(LEVEL_CEIL, Math.max(LEVEL_FLOOR, event.value)) / LEVEL_CEIL;
     level.set(withSpring(v, springs.snappy));
+    setLevels((l) => [...l.slice(1), v]);
   });
   useSpeechRecognitionEvent('end', () => finish('end'));
   useSpeechRecognitionEvent('error', (event) => {
@@ -139,7 +156,8 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
         setError(VOICE_ERRORS.denied);
         return;
       }
-      session.current = { prefix, last: '', startedAt: Date.now(), active: true };
+      session.current = { prefix, committed: '', last: '', startedAt: Date.now(), active: true };
+      setStartedAt(session.current.startedAt);
       setTranscript({ stable: '', tail: '' });
       setState('listening');
       feedback('select');
@@ -175,5 +193,5 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
     return done;
   }, [finish]);
 
-  return { state, transcript, level, error, start, stop, clearError: () => setError(null) };
+  return { state, transcript, level, error, start, stop, clearError: () => setError(null), levels, startedAt };
 }

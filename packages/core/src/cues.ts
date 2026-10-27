@@ -136,3 +136,16 @@ export function heardClauses(text: string): HeardClause[] {
   }
   return out;
 }
+
+/**
+ * What a new result means for the words so far. Apple can end a stop with an empty result, and
+ * on older iOS a pause restarts the transcript from nothing; neither may wipe what was said.
+ * A result that shares no opening word with the last one and is much shorter is a new segment:
+ * the last one is kept and the new one added after it.
+ */
+export function nextTranscript(committed: string, last: string, current: string): { committed: string; last: string } | null {
+  if (!current.trim()) return null;
+  const first = (s: string) => s.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z0-9]/g, '') ?? '';
+  const restarted = !!last && first(current) !== first(last) && current.length < last.length / 2;
+  return restarted ? { committed: `${committed} ${last}`.trim(), last: current } : { committed, last: current };
+}
