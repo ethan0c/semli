@@ -171,8 +171,16 @@ export function useReminderSync() {
  * trial reminder. Also when the tap launched the app, once the plan has loaded. Reminders
  * scheduled before `url` existed carry only `itemId`.
  */
+/**
+ * The tapped notification. The web has no notifications, and Expo's hook calls a native method
+ * there on mount that throws (logged on every load of app.semli.app, Oct 27, 2026), so the web
+ * gets a hook that answers nothing. Chosen once per platform, so the hook order never changes.
+ */
+const useTappedNotification: () => Notifications.NotificationResponse | null | undefined =
+  Platform.OS === 'web' ? () => null : Notifications.useLastNotificationResponse;
+
 export function useNotificationTaps(ready: boolean) {
-  const response = Notifications.useLastNotificationResponse();
+  const response = useTappedNotification();
   useEffect(() => {
     if (Platform.OS === 'web' || !ready || !response || response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
     Notifications.clearLastNotificationResponse();
