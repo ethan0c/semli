@@ -15,6 +15,23 @@ describe('the account-deleted email', () => {
   });
 });
 
+describe('the welcome email', () => {
+  const welcome = { ...row, kind: 'welcome' as const };
+  it('greets by first name, asks for a reply, and says why it came', () => {
+    const mail = render(welcome);
+    expect(mail.subject).toBe('Welcome to Semli');
+    expect(mail.text).toContain('Hi Ama,');
+    expect(mail.text).toContain('reply and tell me');
+    expect(mail.text).toContain('you made a Semli account');
+    expect(mail.html).toContain('Thanks,<br>Semli');
+    expect(mail.text).not.toMatch(/[\u2013\u2014]/);
+  });
+  it('falls back to "there" without a name', () => {
+    expect(render({ ...welcome, name: null }).text).toContain('Hi there,');
+    expect(render({ ...welcome, name: '  ' }).text).toContain('Hi there,');
+  });
+});
+
 describe('the outbox sender', () => {
   const fetchMock = vi.fn();
   beforeEach(() => {
@@ -42,6 +59,57 @@ describe('the outbox sender', () => {
     fetchMock.mockImplementation(async (url: string) => url.includes('email_outbox?select') ? ok([row]) : ok({ message: 'nope' }, 500));
     expect(await (await POST()).json()).toEqual({ ok: true, sent: 0, failed: 1 });
     expect(fetchMock.mock.calls.some(([, i]) => (i as RequestInit | undefined)?.method === 'DELETE')).toBe(false);
+  });
+
+  const groups = { data: [{ id: 'g-users', name: 'App users' }, { id: 'g-survey', name: 'Survey' }, { id: 'g-wait', name: 'Waitlist' }] };
+  const calls = (method: string) => fetchMock.mock.calls.filter(([, i]) => ((i as RequestInit | undefined)?.method ?? 'GET') === method).map(([u]) => String(u));
+
+  function resendWith(contact: (url: string, method: string) => Response) {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      const method = init?.method ?? 'GET';
+      if (url.includes('email_outbox?select')) return ok([{ ...row, kind: 'welcome' }]);
+      if (url.includes('email_outbox')) return ok(null, 204);
+      if (url.endsWith('/emails')) return ok({ id: 'e1' });
+      if (url.endsWith('/segments')) return ok(groups);
+      return contact(url, method);
+    });
+  }
+
+  it('puts a welcomed address in App users', async () => {
+    resendWith(() => ok({ id: 'c1' }, 201));
+    expect(await (await POST()).json()).toEqual({ ok: true, sent: 1, failed: 0 });
+    const create = fetchMock.mock.calls.find(([u, i]) => String(u).endsWith('/contacts') && (i as RequestInit).method === 'POST')!;
+    expect(JSON.parse(String((create[1] as RequestInit).body))).toEqual({ email: 'ama@school.edu', first_name: 'Ama', properties: { source: 'app' }, segments: [{ id: 'g-users' }] });
+    expect(calls('DELETE').filter((u) => u.includes('resend.com'))).toEqual([]);
+  });
+
+  it('moves an existing survey or waitlist contact to App users, so nobody gets a broadcast twice', async () => {
+    resendWith((url, method) => (url.endsWith('/contacts') && method === 'POST' ? ok({ message: 'exists' }, 409) : ok({}, 200)));
+    await POST();
+    expect(calls('POST')).toContain('https://api.resend.com/contacts/ama%40school.edu/segments/g-users');
+    expect(calls('DELETE')).toEqual(expect.arrayContaining([
+      'https://api.resend.com/contacts/ama%40school.edu/segments/g-survey',
+      'https://api.resend.com/contacts/ama%40school.edu/segments/g-wait',
+    ]));
+  });
+
+  it('removes a deleted account from Resend', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+      url.includes('email_outbox?select') ? ok([row]) : url.includes('email_outbox') ? ok(null, 204) : init?.method === 'DELETE' ? ok({ message: 'Contact not found' }, 404) : ok({ id: 'e1' }));
+    expect(await (await POST()).json()).toEqual({ ok: true, sent: 1, failed: 0 });
+    expect(calls('DELETE')).toContain('https://api.resend.com/contacts/ama%40school.edu');
+  });
+
+  it('still clears the row when the contact update fails, so the welcome is never sent twice', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    resendWith(() => ok({ name: 'restricted_api_key' }, 401));
+    fetchMock.mockImplementationOnce(async () => ok([{ ...row, kind: 'welcome' }]));
+    const segments = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith('/segments') ? ok({ name: 'restricted_api_key' }, 401) : segments(url, init)));
+    expect(await (await POST()).json()).toEqual({ ok: true, sent: 1, failed: 0 });
+    expect(calls('DELETE').some((u) => u.includes('id=eq.7'))).toBe(true);
+    expect(log).toHaveBeenCalledWith('[emails.contacts]', { code: 'resend_contacts_failed', status: 401, kind: 'welcome' });
+    expect(JSON.stringify(log.mock.calls)).not.toContain('ama@school.edu');
   });
 
   it('lets only the cron secret through GET', async () => {
