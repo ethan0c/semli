@@ -19,7 +19,7 @@ import { PhotoHeader } from '@/components/PhotoHeader';
 import { Press, PressRow } from '@/components/Press';
 import { DARK_FADE, SkyHeader } from '@/components/SkyHeader';
 import { T } from '@/components/Text';
-import { Swap, Ticker } from '@/components/Ticker';
+import { Ticker } from '@/components/Ticker';
 import { TabHeader } from '@/components/TabHeader';
 import { TodayStart } from '@/components/TodayStart';
 import { steadyScreen } from '@/components/SteadyScreen';
@@ -324,7 +324,7 @@ function TodayScreen() {
         <View style={styles.section}>
           <PressRow accessibilityRole="button" accessibilityLabel={`Still open, ${overdue.length} tasks`} accessibilityState={{ expanded: overdueExpanded }} onPress={() => setOverdueExpanded((o) => !o)} bleed={8} round={radius.small} style={styles.disclosure}>
             <View style={{ paddingBottom: space.hair }}><Ticker value={`Still open · ${overdue.length}`} token="overline" color={c.inkSecondary} /></View>
-            <Swap value={overdueExpanded ? 'Hide' : 'Show'} token="caption" color={c.inkSecondary} direction={overdueExpanded ? 1 : -1} />
+            <DisclosureChevron expanded={overdueExpanded} />
           </PressRow>
           {overdueExpanded ? (
             <Animated.View entering={enter.drop} exiting={exit.fade}>

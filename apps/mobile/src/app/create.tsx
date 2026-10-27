@@ -1,11 +1,11 @@
 import { anchorRule, describeRule, formatTime, isLocalDate, localParts, monthDay, weekdayShort } from '@dayli/core';
 import type { Category } from '@dayli/schema';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { CategoryDot, Chip, GroupLabel, PickerPill } from '@/components/Controls';
+import { CategoryDot, Chip, FieldRow, GroupLabel, PickerPill } from '@/components/Controls';
 import { InlinePicker, NativeToggle } from '@/components/Native';
 import { RepeatEditor } from '@/components/RepeatEditor';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
@@ -111,7 +111,7 @@ export default function CreateScreen() {
     </>}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <TextInput accessibilityLabel={event ? 'Event title' : 'To-do title'} value={draft.title} onChangeText={(title) => patch({ title })}
-          placeholder={event ? 'What’s happening?' : 'What needs doing?'} placeholderTextColor={c.inkSecondary}
+          placeholder={event ? 'What’s happening?' : 'What do you need to do?'} placeholderTextColor={c.inkSecondary}
           onFocus={() => setFocus('title')} onBlur={() => setFocus((f) => (f === 'title' ? null : f))}
           maxLength={500} returnKeyType="done" style={pillField('title')} />
 
@@ -141,8 +141,8 @@ export default function CreateScreen() {
               {draft.hasDueTime ? inlinePicker('time') : null}
             </>
           )}
-          <FieldRow label="Repeats" last>
-            <PickerPill label={draft.repeat ? describeRule(draft.repeat) : 'Never'} open={picker === 'repeat'} accessibilityLabel={`Repeats, ${draft.repeat ? describeRule(draft.repeat) : 'never'}`} onPress={() => toggle('repeat')} />
+          <FieldRow label="Repeat" last>
+            <PickerPill label={draft.repeat ? describeRule(draft.repeat) : 'Never'} open={picker === 'repeat'} accessibilityLabel={`Repeat, ${draft.repeat ? describeRule(draft.repeat) : 'never'}`} onPress={() => toggle('repeat')} />
           </FieldRow>
           {picker === 'repeat' ? (
             <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.repeat}>
@@ -159,7 +159,7 @@ export default function CreateScreen() {
         </View>
 
         <View style={styles.section}>
-          <GroupLabel>Keep it with</GroupLabel>
+          <GroupLabel>Category</GroupLabel>
           <Segmented options={categories} value={draft.category} onChange={(category) => patch({ category, courseId: null })} label="Category" />
           {draft.category === 'school' && courses.length > 0 ? (
             <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Course">
@@ -193,22 +193,10 @@ export default function CreateScreen() {
   );
 }
 
-/** A hairline row: the label on the left, one control on the right. */
-function FieldRow({ label, children, last }: { label: string; children: ReactNode; last?: boolean }) {
-  const { c } = useTheme();
-  return (
-    <View style={[styles.row, !last ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.line } : null]}>
-      <T token="body" style={{ flex: 1 }}>{label}</T>
-      {children}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.sm, paddingBottom: space.xl, gap: space.xl },
   pillField: { height: 52, borderRadius: 999, paddingHorizontal: space.lg, paddingVertical: 0, borderWidth: 1.5 },
   rows: { marginTop: -space.hair },
-  row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: space.sm },
   rowNote: { paddingTop: space.xs },
   repeat: { paddingTop: space.sm },
   section: { gap: space.sm },

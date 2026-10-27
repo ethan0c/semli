@@ -7,6 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { GroupLabel, ListRow, StatusPill, TextButton } from '@/components/Controls';
 import { Sheet } from '@/components/Sheet';
+import { Icon } from '@/components/Icon';
 import { T } from '@/components/Text';
 import { Ticker } from '@/components/Ticker';
 import { WeekChart, compactRange, type WeekDay } from '@/components/WeekChart';
@@ -15,7 +16,7 @@ import { feedback } from '@/lib/feedback';
 import { enter, exit } from '@/lib/motion';
 import { useNow } from '@/lib/now';
 import { useItemList, useScheduleList, useStore } from '@/store';
-import { SCREEN_GUTTER, radius, useTheme, fade, space, size } from '@/theme';
+import { SCREEN_GUTTER, radius, useTheme, fade, iconSize, space, size } from '@/theme';
 import { sourceName } from '@/lib/source-name';
 
 /** Hours to the nearest half: 30, 7.5, 1. */
@@ -127,7 +128,12 @@ export default function EmployerScreen() {
           accessibilityLabel={next ? `${eyebrow} ${big}, ${line}` : 'Work. No shifts coming up'}
           scale={1} dim={fade.pressed} style={styles.top}>
           <T token="callout" color={c.inkSecondary}>{eyebrow}</T>
-          <Ticker value={big} token="displayXl" />
+          {next ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+              <View style={{ flexShrink: 1 }}><Ticker value={big} token="displayXl" /></View>
+              <Icon name="chevronRight" size={iconSize.nav} color={c.disclosureInk} />
+            </View>
+          ) : <Ticker value={big} token="displayXl" />}
           {line
             ? <T token="lead" style={styles.line}>{line}</T>
             : <T token="callout" color={c.inkSecondary} style={{ paddingTop: space.snug }}>No shifts coming up</T>}

@@ -24,15 +24,15 @@ export type ManualResult = { ok: true; item: ManualItem; repeat: SeriesRule | nu
 
 /** Validate before touching the store; dates are local calendar dates, never UTC. */
 export function buildManualItem(draft: ManualDraft): ManualResult {
-  if (!draft.title.trim()) return { ok: false, error: 'Give your plan a title.' };
+  if (!draft.title.trim()) return { ok: false, error: `Add a title for this ${draft.kind === 'event' ? 'event' : 'to-do'}.` };
   if (!isLocalDate(draft.date)) return { ok: false, error: 'Choose a valid date.' };
   const timedEvent = draft.kind === 'event' && !draft.allDay;
   const hasStart = timedEvent || (draft.kind === 'task' && draft.hasDueTime);
   if (hasStart && !isLocalTime(draft.start)) return { ok: false, error: 'Choose a valid time.' };
   if (timedEvent && !isLocalTime(draft.end)) return { ok: false, error: 'Choose a valid end time.' };
-  if (timedEvent && draft.start === draft.end) return { ok: false, error: 'Choose an end time different from the start.' };
-  if (draft.repeat && draft.repeat.every > 0 && !draft.repeat.days.length) return { ok: false, error: 'Choose a day for it to repeat on.' };
-  if (draft.repeat && (!isLocalDate(draft.repeat.until) || draft.repeat.until < draft.date)) return { ok: false, error: 'Choose a last date on or after the first.' };
+  if (timedEvent && draft.start === draft.end) return { ok: false, error: 'Choose a different end time. The start and end times are the same.' };
+  if (draft.repeat && draft.repeat.every > 0 && !draft.repeat.days.length) return { ok: false, error: 'Choose at least one day to repeat.' };
+  if (draft.repeat && (!isLocalDate(draft.repeat.until) || draft.repeat.until < draft.date)) return { ok: false, error: 'Choose a last date on or after the first date.' };
   const start = hasStart ? draft.start : null;
   const end = timedEvent ? draft.end : null;
   return { ok: true, repeat: draft.repeat ? { ...draft.repeat, start, end } : null, item: {

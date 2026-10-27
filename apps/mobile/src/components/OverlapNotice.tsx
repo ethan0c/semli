@@ -37,7 +37,7 @@ export function OverlapNotice({ item, items }: { item: Item; items: Item[] }) {
       ))}
       {!flexible ? (
         <>
-          <T token="callout" color={c.inkSecondary}>{item.category === 'work' ? 'Keep your shift as scheduled.' : 'This time is fixed.'}{movable.length ? ' The other plan may be easier to move.' : ' Check whether either commitment can change before editing its time.'}</T>
+          <T token="callout" color={c.inkSecondary}>{item.category === 'work' ? 'This is a work shift.' : 'This event has a fixed time.'}{movable.length ? ' The other event has a flexible time and may be easier to move.' : ' Check whether either time can change before editing it.'}</T>
           {movable.map((other) => <TextButton key={other.id} label={`Review ${other.title} instead`} onPress={() => router.push(`/item/${other.id}`)} style={styles.link} />)}
         </>
       ) : !upcoming ? (
@@ -53,12 +53,12 @@ export function OverlapNotice({ item, items }: { item: Item; items: Item[] }) {
         <View style={styles.suggestion}>
           <GroupLabel>Suggested time · Plus</GroupLabel>
           <T token="title">{suggestedLabel}</T>
-          <T token="callout" color={c.inkSecondary}>{suggestion.date === item.date ? 'Same day, same duration' : 'Same duration, on the next available day'}, with 15 minutes between plans. This slot is free in your calendar. Check with anyone joining you before moving it.</T>
-          {item.seriesId ? <T token="caption" color={c.inkSecondary}>Only this occurrence will move.</T> : null}
+          <T token="callout" color={c.inkSecondary}>{suggestion.date === item.date ? 'This keeps the same day and duration' : 'This keeps the same duration on the next available day'}, with 15 minutes between events. Your calendar is free at this time. Check with anyone joining you before moving it.</T>
+          {item.seriesId ? <T token="caption" color={c.inkSecondary}>Only this event will move. Later repeats won’t change.</T> : null}
           <Button label={busy ? 'Checking…' : 'Move to this time'} disabled={busy} onPress={() => void applySuggestion()} />
         </View>
       ) : (
-        <T token="callout" color={c.inkSecondary}>No suitable free time found in the next seven days between 8 am and 10 pm, before any course deadline. Unknown event times can also prevent a suggestion. You can choose another time or date above.</T>
+        <T token="callout" color={c.inkSecondary}>We couldn’t find a free time between 8 am and 10 pm in the next seven days. Suggestions need to fit before any course deadline. Events with missing times can also limit suggestions. You can choose another date or time above.</T>
       )}
       {notice ? <T token="callout" color={c.conflict} accessibilityRole="alert">{notice}</T> : null}
     </View>

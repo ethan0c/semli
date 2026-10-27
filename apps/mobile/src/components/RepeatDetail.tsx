@@ -1,4 +1,4 @@
-import { describeRule, inferRule, monthDay, rebuildSeries, weekdayLong } from '@dayli/core';
+import { describeRule, inferRule, monthDay, rebuildSeries, sameRule, weekdayShort } from '@dayli/core';
 import type { SeriesRule } from '@dayli/schema';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -37,7 +37,7 @@ export function RepeatDetail({ id }: { id?: string }) {
     return (
       <Sheet title="Repeat" nav="push">
         <T token="callout" color={c.inkSecondary} style={{ padding: space.lg, paddingHorizontal: SCREEN_GUTTER }}>
-          We couldn’t find this item. It may have been deleted. Go back to return to your plan.
+          This item may have been deleted. Go back to your plan.
         </T>
       </Sheet>
     );
@@ -48,16 +48,18 @@ export function RepeatDetail({ id }: { id?: string }) {
   const times = { start: current?.start ?? item.start, end: current?.end ?? item.end };
   // Turning repeat off is the rule ending on this occurrence: it stays, the later ones go.
   const next = draft ? { ...draft, start: times.start, end: times.end } : current ? { ...current, until: item.date } : null;
-  const changed = JSON.stringify(next) !== JSON.stringify(current);
+  const changed = !sameRule(next, current);
   const preview = current && next && changed ? rebuildSeries(series, next, item.date, now.date, breaks) : null;
   const withNotes = preview ? preview.remove.filter((rid) => items.find((it) => it.id === rid)?.notes).length : 0;
-  const summary = preview
-    ? [
-      preview.create.length ? `Adds ${plural(preview.create.length)}` : null,
-      preview.remove.length ? `Removes ${plural(preview.remove.length)}${withNotes ? `, ${withNotes} with notes` : ''}` : null,
-      preview.kept ? `${preview.kept} you moved ${preview.kept === 1 ? 'stays' : 'stay'}` : null,
-    ].filter(Boolean).join(' · ')
-    : null;
+  // What the change comes to, said next to the button that applies it. Hand-moved ones that stay are
+  // only worth saying when something else moves.
+  const effect = preview ? [
+    preview.create.length ? `Adds ${plural(preview.create.length)}` : null,
+    preview.remove.length ? `Removes ${plural(preview.remove.length)}${withNotes ? ` (${withNotes} with notes)` : ''}` : null,
+    preview.update.length && !preview.create.length && !preview.remove.length ? `Updates ${plural(preview.update.length)}` : null,
+  ].filter(Boolean) : [];
+  const summary = effect.length ? `${effect.join(' · ')}.${preview?.kept ? ` ${plural(preview.kept)} you moved won't change.` : ''}` : null;
+  const hasEarlier = !!current && series.some((it) => it.date < item.date);
   const stopping = !draft && !!current;
 
   const save = () => {
@@ -72,34 +74,38 @@ export function RepeatDetail({ id }: { id?: string }) {
       showToast(`${item.title} repeats ${describeRule(next).toLowerCase()} through ${monthDay(next.until)}.`, r.batchId ?? undefined);
     } else if (next && item.seriesId) {
       const r = applySeries(item.seriesId, next, item.date, now.date, `Changed how ${item.title} repeats`);
-      const kept = r.kept ? ` ${r.kept} you moved ${r.kept === 1 ? 'stays' : 'stay'}.` : '';
+      const kept = r.kept ? ` ${plural(r.kept)} you moved won't change.` : '';
       showToast(`${item.title} repeats ${describeRule(next).toLowerCase()} through ${monthDay(next.until)}.${kept}`, r.batchId ?? undefined);
     }
     feedback('success');
     router.back();
   };
 
+  const scopeLine = !current ? `Starts ${weekdayShort(item.date)}, ${monthDay(item.date)}.`
+    : stopping ? `This ${noun} stays. You can undo this.`
+      : hasEarlier ? `Applies from ${weekdayShort(item.date)}, ${monthDay(item.date)}. Earlier ${noun}s won't change.` : null;
+
   return (
     <Sheet title="Repeat" nav="push" footer={
-      <Button label={stopping ? (preview?.remove.length ? `Stop and remove ${plural(preview.remove.length)}` : 'Stop repeating') : 'Done'} onPress={save} />
-    }>
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <T token="callout" color={c.inkSecondary}>
-          {`${item.title} · from ${weekdayLong(item.date)}, ${monthDay(item.date)}${current && series.some((it) => it.date < item.date) ? '. Earlier ones keep what they had.' : ''}`}
-        </T>
-        <RepeatEditor rule={draft} from={item.date} today={now.date} times={times} noun={noun} breaks={breaks} onChange={setDraft} />
-        {summary ? (
+      <>
+        {changed && (summary || scopeLine) ? (
           <View style={styles.summary}>
-            <T token="callout" color={c.inkSecondary}>{summary}</T>
-            {stopping ? <T token="caption" color={c.inkSecondary}>{`This ${noun} stays. Undo brings the others back.`}</T> : null}
+            {summary ? <T token="callout" color={c.inkPrimary} style={styles.center}>{summary}</T> : null}
+            {scopeLine ? <T token="caption" color={c.inkSecondary} style={styles.center}>{scopeLine}</T> : null}
           </View>
         ) : null}
+        <Button label={!changed ? 'Done' : stopping ? (preview?.remove.length ? `Stop and remove ${plural(preview.remove.length)}` : 'Stop repeating') : 'Save changes'} onPress={save} />
+      </>
+    }>
+      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <RepeatEditor rule={draft} from={item.date} today={now.date} times={times} noun={noun} breaks={breaks} onChange={setDraft} />
       </ScrollView>
     </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.xs, paddingBottom: space.xl, gap: space.lg },
-  summary: { gap: space.xxs },
+  body: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.xs, paddingBottom: space.xl },
+  summary: { gap: space.xxs, paddingBottom: space.xs },
+  center: { textAlign: 'center' },
 });

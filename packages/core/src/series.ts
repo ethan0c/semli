@@ -112,3 +112,11 @@ export function describeRule(rule: SeriesRule): string {
       : rule.days.map(short).join(rule.days.length === 2 ? ' & ' : ', ');
   return rule.every === 1 ? (days === 'weekdays' || days === 'every day' ? `Every ${days === 'weekdays' ? 'weekday' : 'day'}` : `Every ${days}`) : `Every ${rule.every} weeks on ${days}`;
 }
+
+/** Whether two rules put the same occurrences at the same times; the order of days and skips does not matter. */
+export function sameRule(a: SeriesRule | null, b: SeriesRule | null): boolean {
+  if (!a || !b) return a === b;
+  const sorted = (xs: string[]) => [...xs].sort().join();
+  return a.every === b.every && a.until === b.until && a.start === b.start && a.end === b.end
+    && (a.every === 0 || sorted(a.days) === sorted(b.days)) && sorted(a.skipped) === sorted(b.skipped);
+}
