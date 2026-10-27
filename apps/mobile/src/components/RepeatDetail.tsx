@@ -37,7 +37,7 @@ export function RepeatDetail({ id }: { id?: string }) {
     return (
       <Sheet title="Repeat" nav="push">
         <T token="callout" color={c.inkSecondary} style={{ padding: space.lg, paddingHorizontal: SCREEN_GUTTER }}>
-          This item may have been deleted. Go back to your plan to see what’s there.
+          This item may have been deleted. Go back to your plan.
         </T>
       </Sheet>
     );

@@ -114,7 +114,7 @@ export function RepeatEditor({ rule, from, today, times, noun, breaks, onChange 
 
           <View style={styles.group} accessibilityLabel={`${plural(dates.length)} through ${monthDay(rule.until)}`}>
             <T token="body">
-              {dates.length ? `${plural(dates.length)} through ${monthDay(rule.until)}` : `No ${noun}s through ${monthDay(rule.until)}`}
+              {dates.length ? `${plural(dates.length)} through ${monthDay(rule.until)}` : `No ${noun}s scheduled through ${monthDay(rule.until)}`}
               {skippedByBreaks.length ? <T token="body" color={c.inkSecondary}>{` · skips ${skippedByBreaks.map((b) => b.label ?? 'the break').join(', ')}`}</T> : null}
             </T>
             <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

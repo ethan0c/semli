@@ -56,7 +56,7 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
     return (
       <Sheet title="Item unavailable" nav="push" inline={!!onClose} onClose={onClose}>
         <T token="callout" color={c.inkSecondary} style={{ padding: space.lg, paddingHorizontal: SCREEN_GUTTER }}>
-          This item may have been deleted. Go back to your plan to see what’s there.
+          This item may have been deleted. Go back to your plan.
         </T>
       </Sheet>
     );
@@ -359,7 +359,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
           ) : null}
           {feedDiffers && item.feed ? (
             <FieldRow label="Canvas has" value={`${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? `, ${formatTime(item.feed.start, true)}` : ''}`} last>
-              <TextButton label="Use Canvas date" onPress={followFeed} accessibilityLabel="Use the date and time from Canvas" />
+              <TextButton label="Use Canvas" onPress={followFeed} accessibilityLabel="Use the date and time from Canvas" />
             </FieldRow>
           ) : null}
         </Animated.View>
