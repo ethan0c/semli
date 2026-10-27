@@ -53,7 +53,7 @@ export const TRIAL_DAYS = 7;
 
 /** Legal pages show these; bump when the text changes. */
 export const LEGAL_EFFECTIVE = 'October 19, 2026';
-export const LEGAL_UPDATED = 'October 23, 2026';
+export const LEGAL_UPDATED = 'October 27, 2026';
 
 export function absoluteUrl(path: string) {
   return path === '/' ? SITE_URL : `${SITE_URL}${path}`;
