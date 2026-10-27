@@ -19,7 +19,7 @@ import { PhotoHeader } from '@/components/PhotoHeader';
 import { Press, PressRow } from '@/components/Press';
 import { DARK_FADE, SkyHeader } from '@/components/SkyHeader';
 import { T } from '@/components/Text';
-import { Swap, Ticker } from '@/components/Ticker';
+import { Ticker } from '@/components/Ticker';
 import { TabHeader } from '@/components/TabHeader';
 import { TodayStart } from '@/components/TodayStart';
 import { steadyScreen } from '@/components/SteadyScreen';

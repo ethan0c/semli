@@ -2,9 +2,10 @@ import { monthDay, weekdayLong } from '@dayli/core';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import { T } from '@/components/Text';
 import { Press } from '@/components/Press';
-import { SCREEN_GUTTER, useTheme, useTopInset, fade, space, size } from '@/theme';
+import { SCREEN_GUTTER, useTheme, useTopInset, fade, iconSize, space, size } from '@/theme';
 
 /**
  * The top of every main tab: at most one small line above the big value, and the meaning under
@@ -29,11 +30,18 @@ export function TabHeader({ date, context, title, size = 'number', value, detail
   const top = useTopInset();
   const dateLabel = date ? `${weekdayLong(date)}, ${monthDay(date)}` : null;
   const line = context ?? (dateLabel ? <T token="callout" color={onPhoto ? c.inkPrimary : c.inkSecondary} numberOfLines={1}>{dateLabel}</T> : null);
+  const big = value ?? <T token={size === 'number' && (title?.length ?? 0) <= FITS_XL ? 'displayXl' : 'display'} accessibilityRole="header" numberOfLines={1}>{title}</T>;
   const content = (
     <>
       {line ? <View style={styles.line}>{line}</View> : null}
       {/* Sized up front, not shrunk to fit: iOS can draw a fitted title full size for a frame first. */}
-      {value ?? <T token={size === 'number' && (title?.length ?? 0) <= FITS_XL ? 'displayXl' : 'display'} accessibilityRole="header" numberOfLines={1}>{title}</T>}
+      {onPress ? (
+        // A header that opens something says so with the title chevron, as "On your list ›" does.
+        <View style={styles.valueRow}>
+          <View style={{ flexShrink: 1 }}>{big}</View>
+          <Icon name="chevronRight" size={iconSize.title} color={c.disclosureInk} />
+        </View>
+      ) : big}
       {details ? <View style={styles.details}>{details}</View> : null}
     </>
   );
@@ -57,6 +65,7 @@ const styles = StyleSheet.create({
   root: { paddingHorizontal: SCREEN_GUTTER, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   content: { flex: 1, minWidth: 0, gap: space.snug },
   line: { minHeight: size.target, justifyContent: 'center' },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   details: { paddingTop: space.snug, gap: space.xxs },
   trailing: { paddingTop: space.hair, flexShrink: 0 },
 });
