@@ -82,6 +82,14 @@ describe('sync', () => {
     expect(syncSummary(plan)).toBe('1 date moved');
   });
 
+  it('leaves a date the person moved by hand, and keeps what Canvas says', () => {
+    const plan = planCanvasSync(entries.slice(0, 1), [item({ date: '2026-10-21', editedAt: '2026-10-20T00:00:00Z' })], '2026-10-19', course);
+    expect(plan.update).toEqual([{ id: 'a', patch: { feed: { date: '2026-10-23', start: null, end: null } } }]);
+    expect(plan.moved).toBe(0);
+    const again = planCanvasSync(entries.slice(0, 1), [item({ date: '2026-10-21', editedAt: '2026-10-20T00:00:00Z', feed: { date: '2026-10-23', start: null, end: null } })], '2026-10-19', course);
+    expect(again.skipped).toBe(1);
+  });
+
   it('skips unchanged items', () => {
     const plan = planCanvasSync(entries.slice(0, 1), [item({})], '2026-10-19', course);
     expect(plan.skipped).toBe(1);

@@ -1,9 +1,9 @@
-import { count } from '@dayli/core';
+import { count, inferRule, rebuildSeries } from '@dayli/core';
 import type { CommitPlan, TermSystem } from '@dayli/core';
 import type { Snapshot } from '@/lib/cloud-snapshot';
 import type { ImportUsage } from '@/lib/plans';
 import type { AppLanguage } from '@/lib/language';
-import type { Course, Extraction, ExtractRequest, Item, ScheduleVersion } from '@dayli/schema';
+import type { Course, Extraction, ExtractRequest, Item, ScheduleVersion, SeriesRule } from '@dayli/schema';
 import { COURSE_TINTS, type TintName } from '@dayli/tokens';
 import { useMemo } from 'react';
 import { create } from 'zustand';
@@ -138,6 +138,8 @@ interface State {
   settings: Settings;
   /** User-chosen work dates. Item.date remains the source's event/due date. */
   taskWorkDates: Record<string, string>;
+  /** How each repeating series repeats, by seriesId. Inferred from the occurrences for series made before rules were stored. */
+  series: Record<string, SeriesRule>;
   suggestionDismissals: { date: string; ids: string[] };
   captureDraft: string;
   selectedPlanDate: string | null;
@@ -163,7 +165,18 @@ interface State {
   setSelectedPlanDate: (date: string) => void;
 
   toggleDone: (id: string) => void;
-  updateItem: (id: string, patch: Partial<Item>) => void;
+  /** A change the person made. Touching the date or time marks the item edited, so a sync or a series rebuild leaves it alone; `silent` is for the app's own corrections. */
+  updateItem: (id: string, patch: Partial<Item>, opts?: { silent?: boolean }) => void;
+  /** The rule a series repeats by, stored or read off its occurrences. */
+  seriesRule: (seriesId: string) => SeriesRule | null;
+  /**
+   * Change how a series repeats from `from` onward, as one undoable batch: occurrences move to
+   * the rule's times, appear on its new dates and leave dates it no longer covers. The past, done
+   * ones and hand-moved ones stay. Returns what changed, for the toast.
+   */
+  applySeries: (seriesId: string, rule: SeriesRule, from: string, today: string, label: string) => { created: number; updated: number; removed: number; kept: number };
+  /** Make a one-off repeat: it becomes the first occurrence of a new series under `rule`. */
+  startSeries: (id: string, rule: SeriesRule, today: string) => string;
   removeItem: (id: string) => void;
   /** Delete several at once as one undoable batch: a week of lectures, the rest of a series. */
   removeItems: (ids: string[], label: string) => void;
@@ -201,6 +214,7 @@ export const useStore = create<State>()(
       pending: null,
       toast: null,
       taskWorkDates: {},
+      series: {},
       suggestionDismissals: { date: '', ids: [] },
       captureDraft: '',
       selectedPlanDate: null,
@@ -265,14 +279,68 @@ export const useStore = create<State>()(
         track('item_completion_changed', { item_kind: it.kind, category: it.category, completed: done });
       },
 
-      updateItem: (id, patch) => {
+      updateItem: (id, patch, opts) => {
         const before = get().items[id];
         if (!before) return;
-        const after = { ...before, ...patch };
+        const moved = !opts?.silent && ('date' in patch || 'start' in patch || 'end' in patch);
+        const after = { ...before, ...patch, ...(moved ? { editedAt: nowIso() } : {}) };
         set({
           items: { ...get().items, [id]: after },
           batches: [batch('Edited ' + before.title, [{ op: 'update', before, after }]), ...get().batches],
         });
+        if (moved) track('item_edited', { field: 'date' in patch ? 'date' : 'time', scope: 'one', repeats: !!before.seriesId });
+      },
+
+      seriesRule: (seriesId) => {
+        const stored = get().series[seriesId];
+        if (stored) return stored;
+        const occurrences = Object.values(get().items).filter((it) => it.seriesId === seriesId);
+        if (!occurrences.length) return null;
+        const rule = inferRule(occurrences);
+        set({ series: { ...get().series, [seriesId]: rule } });
+        return rule;
+      },
+
+      applySeries: (seriesId, rule, from, today, label) => {
+        const all = Object.values(get().items).filter((it) => it.seriesId === seriesId);
+        const r = rebuildSeries(all, rule, from, today, get().settings.breaks ?? []);
+        // New occurrences copy the one being edited (or the nearest upcoming one): same class, course, kind.
+        const template = all.find((it) => it.date === from) ?? all.filter((it) => it.date >= from).sort((a, b) => a.date.localeCompare(b.date))[0] ?? all[0]!;
+        const items = { ...get().items };
+        const changes: Change[] = [];
+        for (const u of r.update) {
+          const before = items[u.id]!;
+          const after = { ...before, ...u.patch };
+          items[u.id] = after;
+          changes.push({ op: 'update', before, after });
+        }
+        for (const date of r.create) {
+          const it: Item = {
+            ...template, id: newId(), createdAt: nowIso(), date, start: rule.start, end: rule.end, done: false, completedAt: null,
+            editedAt: null, feed: null, notes: null, urgent: undefined, batchId: null,
+          };
+          items[it.id] = it;
+          changes.push({ op: 'create', before: null, after: it });
+        }
+        for (const id of r.remove) {
+          const before = items[id]!;
+          delete items[id];
+          changes.push({ op: 'delete', before, after: null });
+        }
+        const b = batch(label, changes);
+        set({ items, series: { ...get().series, [seriesId]: rule }, batches: changes.length ? [b, ...get().batches] : get().batches,
+          toast: changes.length ? { message: `${label}.`, batchId: b.id } : get().toast });
+        track('item_edited', { field: 'repeat', scope: 'series', created: r.create.length, updated: r.update.length, removed: r.remove.length });
+        return { created: r.create.length, updated: r.update.length, removed: r.remove.length, kept: r.kept };
+      },
+
+      startSeries: (id, rule, today) => {
+        const it = get().items[id];
+        if (!it) return '';
+        const seriesId = it.seriesId ?? `series-${id}`;
+        if (!it.seriesId) set({ items: { ...get().items, [id]: { ...it, seriesId } } });
+        get().applySeries(seriesId, rule, it.date, today, `${it.title} repeats`);
+        return seriesId;
       },
 
       removeItem: (id) => {
@@ -281,7 +349,10 @@ export const useStore = create<State>()(
         const items = { ...get().items };
         delete items[id];
         const b = batch('Deleted ' + before.title, [{ op: 'delete', before, after: null }]);
-        set({ items, batches: [b, ...get().batches], toast: { message: `Deleted ${before.title}.`, batchId: b.id } });
+        // One occurrence of a series gone by hand: the rule skips that date, so a rebuild never brings it back.
+        const rule = before.seriesId ? get().series[before.seriesId] : undefined;
+        const series = rule && !rule.skipped.includes(before.date) ? { ...get().series, [before.seriesId!]: { ...rule, skipped: [...rule.skipped, before.date] } } : get().series;
+        set({ items, series, batches: [b, ...get().batches], toast: { message: `Deleted ${before.title}.`, batchId: b.id } });
         track('item_deleted', { deletion_scope: 'single', item_count: 1 });
       },
 
@@ -385,7 +456,13 @@ export const useStore = create<State>()(
           courses.push({ ...k, batchId: b.id, color: nextCourseTint(courses) });
         }
         b.source = source;
-        set({ items, schedules, courses, batches: [b, ...get().batches], pending: null });
+        // A series arriving without a rule (an import) gets one read off its occurrences.
+        const series = { ...get().series };
+        for (const ch of b.changes) {
+          const sid = ch.op === 'create' && ch.after?.seriesId;
+          if (sid && !series[sid]) series[sid] = inferRule(Object.values(items).filter((it) => it.seriesId === sid));
+        }
+        set({ items, schedules, courses, series, batches: [b, ...get().batches], pending: null });
         return b.id;
       },
 
@@ -425,7 +502,7 @@ export const useStore = create<State>()(
     {
       name: 'semli',
       storage: createJSONStorage(() => plannerStorage),
-      partialize: (s) => ({ items: s.items, courses: s.courses, schedules: s.schedules, batches: s.batches, settings: s.settings, usage: s.usage, taskWorkDates: s.taskWorkDates, suggestionDismissals: s.suggestionDismissals }),
+      partialize: (s) => ({ items: s.items, courses: s.courses, schedules: s.schedules, batches: s.batches, settings: s.settings, usage: s.usage, taskWorkDates: s.taskWorkDates, series: s.series, suggestionDismissals: s.suggestionDismissals }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<State>;
         // Nested records gain fields over time; a stored one must not drop the new defaults.
