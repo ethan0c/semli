@@ -196,17 +196,31 @@ export function syncSummary(p: Pick<CanvasPlan, 'added' | 'moved' | 'dropped' | 
   return parts.length ? parts.join(' · ') : null;
 }
 
+// Retry copy names no Plus-only step (Oct 27, 2026): a free person has no "Sync now" and no
+// sync on open, so "try again" means Connect for them and Sync now for a subscriber.
 export const CANVAS_MESSAGES = {
   link: 'That isn’t a Canvas calendar feed link. In Canvas, open Calendar, choose Calendar feed, and copy the link.',
-  connection: 'We couldn’t reach Canvas. Your Canvas items are still here; we’ll try again next time you open Semli.',
-  timeout: 'Canvas took too long to respond. Your items are still here. Please try Sync now again in a moment.',
+  connection: 'We couldn’t reach Canvas. Your Canvas items are still here. Check your connection and try again.',
+  timeout: 'Canvas took too long to respond. Your Canvas items are still here. Try again in a moment.',
   rejected: 'Canvas didn’t accept that link. It may have been reset; copy a fresh one from Calendar feed.',
   format: 'Canvas sent something we couldn’t read. Your Canvas items are still here.',
+  /** The web's feed goes through Semli's server, which needs a current sign-in; the link itself is fine. */
+  session: 'Your Semli sign-in expired. Sign in again, then try Canvas once more. Your feed link is fine.',
+  /** An import under review is replaced by any plan saved under it, so Canvas waits for it. */
+  reviewing: 'Finish reviewing your import, then sync Canvas.',
+  /** Disconnected (or relinked) while the feed was loading; nothing from it was saved. */
+  disconnected: 'Canvas was disconnected during the sync, so nothing from it was saved.',
 } as const;
 
 /** How the feed is fetched: straight from Canvas on the phone, through Semli's server on the web. */
 export type FeedLoader = (url: string, signal: AbortSignal) => Promise<Response>;
 const direct: FeedLoader = (url, signal) => fetch(url, { signal, headers: { accept: 'text/calendar' } });
+
+/** `{ "reason": "session" }` is the web canvas-feed route's answer for a missing or expired Semli session. */
+async function sessionExpired(res: Response): Promise<boolean> {
+  const body = (await res.json().catch(() => null)) as { reason?: unknown } | null;
+  return body?.reason === 'session';
+}
 
 /** Fetch and parse the feed. Never throws; failures come back as a message to show. */
 export async function fetchCanvasFeed(url: string, timeoutMs = 20_000, load: FeedLoader = direct): Promise<{ ok: true; entries: CanvasEntry[] } | { ok: false; error: string }> {
@@ -216,6 +230,8 @@ export async function fetchCanvasFeed(url: string, timeoutMs = 20_000, load: Fee
     const res = await load(url, controller.signal);
     if (!res.ok) {
       reportError('canvas.fetch', { code: 'http_error', status: res.status });
+      // Semli's own server marks an expired sign-in, so it isn't read as Canvas refusing the link.
+      if (res.status === 401 && (await sessionExpired(res))) return { ok: false, error: CANVAS_MESSAGES.session };
       return { ok: false, error: [401, 403, 404].includes(res.status) ? CANVAS_MESSAGES.rejected : CANVAS_MESSAGES.connection };
     }
     const text = await res.text();

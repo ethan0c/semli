@@ -47,8 +47,11 @@ function useWaveEntrance() {
 }
 
 /** A hairline review row: glyph, title and sub, trailing controls, and an editor beneath when open. */
-export function ReviewRow({ glyph, title, sub, trailing, struck, below, onPress, accessibilityLabel }: {
-  glyph?: ReactNode; title: string; sub?: string | null; trailing?: ReactNode; struck?: boolean; below?: ReactNode; onPress?: () => void; accessibilityLabel?: string;
+export function ReviewRow({ glyph, title, sub, ask, trailing, struck, below, onPress, accessibilityLabel }: {
+  glyph?: ReactNode; title: string; sub?: string | null;
+  /** A question the read left for the person ("Which row is yours?"), in amber under the title. */
+  ask?: string | null;
+  trailing?: ReactNode; struck?: boolean; below?: ReactNode; onPress?: () => void; accessibilityLabel?: string;
 }) {
   const { c } = useTheme();
   const entering = useWaveEntrance();
@@ -58,6 +61,7 @@ export function ReviewRow({ glyph, title, sub, trailing, struck, below, onPress,
       <View style={styles.text}>
         <T token="body" color={struck ? c.inkSecondary : c.inkPrimary} numberOfLines={2} style={struck ? styles.struck : undefined}>{title}</T>
         {sub ? <T token="caption" color={c.inkSecondary} numberOfLines={2}>{sub}</T> : null}
+        {ask ? <T token="caption" color={c.changed} numberOfLines={3}>{ask}</T> : null}
       </View>
       {trailing}
     </View>

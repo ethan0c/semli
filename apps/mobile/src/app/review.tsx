@@ -1,4 +1,4 @@
-import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, newCourses, planCommit, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount } from '@dayli/core';
+import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, newCourses, planCommit, courseKey, diffDays, findCourse, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -57,9 +57,21 @@ export default function ReviewScreen() {
   const setPending = useStore((s) => s.setPending);
   const applyPlan = useStore((s) => s.applyPlan);
   const showToast = useStore((s) => s.showToast);
-  const courses = useCourseList();
+  const allCourses = useCourseList();
   const storedCourses = useStore((s) => s.courses);
-  const existing = useItemList();
+  const allItems = useItemList();
+  // The onboarding sample goes when this import lands, so nothing matches against it: a real
+  // PSYC 101 syllabus filed under the sample's PSYC 101 lost its course when the sample was removed.
+  const sampleBatchId = useStore((s) => s.settings.sampleBatchId);
+  const sampleIds = useStore((s) => s.batches.find((b) => b.id === s.settings.sampleBatchId)?.changes);
+  const { courses, existing } = useMemo(() => {
+    const ids = new Set(sampleIds?.map((ch) => ch.after?.id));
+    return {
+      courses: allCourses.filter((k) => !sampleBatchId || k.batchId !== sampleBatchId),
+      existing: allItems.filter((it) => !ids.has(it.id)),
+    };
+  }, [allCourses, allItems, sampleBatchId, sampleIds]);
+  const breaks = useStore((s) => s.settings.breaks);
   const today = localParts(new Date()).date;
   const leaving = useRef(false);
   const confirming = useRef(false);
@@ -79,7 +91,7 @@ export default function ReviewScreen() {
 
   // Undated drafts start excluded: they are counted as skipped, never block the confirm.
   const [drafts, setDrafts] = useState<Draft[]>(() =>
-    pending ? toDrafts(pending.extraction, today).map((d) => ({ ...d, include: isLocalDate(d.date) })) : [],
+    pending ? toDrafts(pending.extraction, today, { breaks }).map((d) => ({ ...d, include: isLocalDate(d.date) })) : [],
   );
   const [seriesEnd, setSeriesEnd] = useState<Record<string, SeriesEnd>>(() => suggestSeriesEnds(drafts));
   /** Existing shifts the user chose to keep although the new schedule drops them. */
@@ -97,17 +109,15 @@ export default function ReviewScreen() {
   }, [pending]);
 
   const ex = pending?.extraction;
-  const courseFor = useCallback(
-    (code: string | null) => (code ? (courses.find((k) => k.code?.toLowerCase() === code.toLowerCase())?.id ?? null) : null),
-    [courses],
-  );
+  /** Rows the person left out, by draft key. */
+  const [leftOut, setLeftOut] = useState<Set<string>>(() => new Set());
   // A chosen term end trims the repeating class to the occurrences on or before it.
   const effective = useMemo(
     () => drafts.map((d) => {
       const end = d.seriesId ? seriesEnd[d.seriesId] : undefined;
-      return end && d.date && d.date > end.date ? { ...d, include: false } : d;
+      return leftOut.has(d.key) || (end && d.date && d.date > end.date) ? { ...d, include: false } : d;
     }),
-    [drafts, seriesEnd],
+    [drafts, seriesEnd, leftOut],
   );
 
   // Courses the import describes that we don't have yet: a syllabus's one, or each class of a
@@ -118,13 +128,20 @@ export default function ReviewScreen() {
   const buildPlan = useCallback(
     (ids: string[]): CommitPlan | null => {
       if (!ex) return null;
+      // A syllabus's items belong to its course even when one lacks the code, and a stored course
+      // found by title (no code yet) takes them, as `newCourses` already counts it as known.
+      const own = ex.course;
       const p = planCommit(ex, effective, existing, (code) => {
-        const i = code ? added.findIndex((k) => k.code?.trim().toLowerCase() === code.trim().toLowerCase()) : -1;
-        return courseFor(code?.trim() ?? null) ?? (i >= 0 ? ids[i]! : null);
+        const key = courseKey(code);
+        const mine = own && (key === null || key === courseKey(own.code)) ? own : null;
+        const stored = findCourse(courses, code) ?? (mine ? findCourse(courses, mine.code, mine.title) : null);
+        if (stored) return stored.id;
+        const i = added.findIndex((k) => (key && courseKey(k.code) === key) || (mine && k.title === mine.title));
+        return i >= 0 ? ids[i]! : null;
       });
       return { ...p, remove: p.remove.filter((id) => !kept.has(id)) };
     },
-    [ex, effective, existing, courseFor, added, kept],
+    [ex, effective, existing, courses, added, kept],
   );
   const plan = useMemo(() => buildPlan(added.map(() => 'new-course')), [buildPlan, added]);
 
@@ -204,6 +221,28 @@ export default function ReviewScreen() {
     const before = timed.filter((s) => s.date <= d.date).at(-1);
     return before ?? timed[0]!;
   };
+
+  // Questions the read left that the row's own pills don't already ask, and reads the model wasn't
+  // sure of. They were worked out and never shown, so a wrong year went in silently (Oct 27, 2026).
+  const HANDLED = new Set(['When does this happen?', 'What time does this start?', 'Until when does this repeat?']);
+  const askOf = (d: Draft): string | null => {
+    if (!d.needsInput || !d.include) return null;
+    if (d.question && !HANDLED.has(d.question)) return d.question;
+    return d.question ? null : 'Semli wasn’t sure it read this right. Check the date and time.';
+  };
+  const leaveOut = (keys: string[]) => {
+    feedback('select');
+    setLeftOut((prev) => new Set([...prev, ...keys]));
+    setPicker(null);
+    setEditing((prev) => new Set([...prev].filter((k) => !keys.includes(k))));
+  };
+  const addBack = (keys: string[]) => {
+    feedback('select');
+    setLeftOut((prev) => new Set([...prev].filter((k) => !keys.includes(k))));
+  };
+  const leaveOutButton = (keys: string[], label: string) => (
+    <TextButton label={label} tone="muted" onPress={() => leaveOut(keys)} style={{ alignSelf: 'flex-start' }} />
+  );
 
   /** A pill opens its picker under the row in one tap, and closes it on the next. */
   const togglePicker = (id: string) => setPicker((open) => (open === id ? null : id));
@@ -468,30 +507,55 @@ export default function ReviewScreen() {
       return rows.sort((a, b) => a.date.localeCompare(b.date)).map((r) => r.node);
     }
     const visible = listOpen ? shifts : shifts.filter((d) => !d.start || !d.end || editing.has(d.key));
-    return visible.map((d) => {
-      const needs = !d.start || !d.end;
-      return (
-        <ReviewRow key={d.key} glyph={<ReviewGlyph />} title={shiftTitle(d)} onPress={needs ? undefined : () => toggleEditing([d.key])}
-          sub={needs ? `The ${docNoun} has no time for it` : `${weekdayShort(d.date)}, ${monthDay(d.date)} · ${longRange(d.start!, d.end!)}`}
-          trailing={needs ? <StatusPill label="Add a time" tone="amber" /> : <StatusPill label={compactRange(d.start!, d.end!)} />}
-          below={needs || editing.has(d.key) ? timeEditor(d) : null} />
-      );
-    });
+    const out = effective.filter((d): d is DatedDraft => d.category === 'work' && leftOut.has(d.key) && isLocalDate(d.date));
+    return [
+      ...visible.map((d) => {
+        const needs = !d.start || !d.end;
+        return (
+          <ReviewRow key={d.key} glyph={<ReviewGlyph />} title={shiftTitle(d)} onPress={needs ? undefined : () => toggleEditing([d.key])} ask={askOf(d)}
+            sub={needs ? `The ${docNoun} has no time for it` : `${weekdayShort(d.date)}, ${monthDay(d.date)} · ${longRange(d.start!, d.end!)}`}
+            trailing={needs ? <StatusPill label="Add a time" tone="amber" /> : <StatusPill label={compactRange(d.start!, d.end!)} />}
+            below={needs || editing.has(d.key) ? <>{timeEditor(d)}{leaveOutButton([d.key], 'Not my shift')}</> : null} />
+        );
+      }),
+      ...out.map((d) => (
+        <ReviewRow key={d.key} glyph={<ReviewGlyph color={c.controlOutline} />} title={shiftTitle(d)} struck sub="Left out"
+          trailing={<TextButton label="Add back" onPress={() => addBack([d.key])} />} />
+      )),
+    ];
   };
 
   const seriesRow = (s: Series) => {
     const end = seriesEnd[s.id];
-    const finalExam = exams.filter((e) => e.date >= s.first.date).at(-1);
-    const suggested = finalExam
-      ? { date: finalExam.date, label: `${monthDay(finalExam.date)} · ${/final/i.test(finalExam.title) ? 'The final' : 'The last exam'}` }
-      : { date: s.first.seriesUntil ?? s.last.date, label: `${monthDay(s.first.seriesUntil ?? s.last.date)} · Typical ${typicalTermEnd(s.first.date).name} end` };
+    const suggested = suggestedEnd(drafts, s.first) ?? { date: s.last.date, label: monthDay(s.last.date) };
     const when = s.first.start && s.first.end ? `${s.weekdays} ${longRange(s.first.start, s.first.end)}` : s.weekdays;
     const unknown = s.first.seriesEndUnknown;
+    const keys = drafts.filter((d) => d.seriesId === s.id).map((d) => d.key);
+    if (keys.every((k) => leftOut.has(k))) {
+      return <ReviewRow key={s.id} glyph={<ReviewGlyph color={c.controlOutline} />} title={`${s.first.title} · ${when}`} struck sub="Left out"
+        trailing={<TextButton label="Add back" onPress={() => addBack(keys)} />} />;
+    }
+    const untimed = s.first.kind === 'event' && !s.first.start;
+    const open = editing.has(s.id) || untimed;
+    // Times for the whole class at once: a series had no time editor, so an untimed class stayed untimed.
+    const setTimes = (f: 'start' | 'end', v: string | null) =>
+      setDrafts((ds) => ds.map((d) => (d.seriesId === s.id ? { ...d, [f]: v, needsInput: false } : d)));
+    const timeField = (f: 'start' | 'end') => {
+      const v = s.first[f];
+      return <ReviewPill key={f} label={v ? formatTime(v) : f === 'start' ? 'Start' : 'End'} muted={!v} open={picker === `${s.id}:${f}`} onPress={() => togglePicker(`${s.id}:${f}`)} />;
+    };
+    const openTime = (['start', 'end'] as const).find((f) => picker === `${s.id}:${f}`);
+    const editor = open ? (<>
+      <ReviewPillRow>{timeField('start')}{timeField('end')}</ReviewPillRow>
+      {openTime ? opened(<InlinePicker mode="time" date={s.first.date} time={s.first[openTime]} onChange={(v) => setTimes(openTime, v || null)} />) : null}
+      {leaveOutButton(keys, 'Leave this class out')}
+    </>) : null;
     return (
-      <ReviewRow key={s.id} glyph={<ReviewGlyph />} title={`${s.first.title} · ${when}`}
-        sub={unknown ? `The ${docNoun} doesn't say when the term ends` : `Until ${monthDay(end?.date ?? s.last.date)}`}
-        trailing={unknown ? <StatusPill label="Until when?" tone="amber" /> : <StatusPill label={monthDay(end?.date ?? s.last.date)} />}
-        below={unknown ? (<>
+      <ReviewRow key={s.id} glyph={<ReviewGlyph />} title={`${s.first.title} · ${when}`} onPress={() => toggleEditing([s.id])} ask={askOf(s.first)}
+        sub={untimed ? `The ${docNoun} has no time for it` : unknown ? `The ${docNoun} doesn't say when the term ends` : `Until ${monthDay(end?.date ?? s.last.date)}`}
+        trailing={untimed ? <StatusPill label="Add a time" tone="amber" /> : unknown ? <StatusPill label="Until when?" tone="amber" /> : <StatusPill label={monthDay(end?.date ?? s.last.date)} />}
+        below={!unknown ? editor : (<>
+          {editor}
           <ReviewPillRow>
             <ReviewPill label={suggested.label} selected={end?.mode !== 'pick'} onPress={() => setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'suggested', date: suggested.date } }))} />
             {end?.mode === 'pick'
@@ -501,7 +565,7 @@ export default function ReviewScreen() {
           {end?.mode === 'pick' && picker === `${s.id}:end`
             ? opened(<InlinePicker mode="date" date={end.date} time={null} onChange={(date) => { if (isLocalDate(date)) setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date } })); }} />)
             : null}
-        </>) : null} />
+        </>)} />
     );
   };
 
@@ -509,14 +573,22 @@ export default function ReviewScreen() {
     const exam = exams.includes(d as DatedDraft);
     const evidence = d.evidence.trim();
     const sub = (d.kind === 'event' || exam) && !d.start ? `Time not in the ${docNoun}` : evidence || d.courseCode || null;
-    return <ReviewRow key={d.key} glyph={<ReviewGlyph kind={exam ? 'ring' : 'dot'} />} title={d.title} sub={sub} trailing={dateTrailing(d, exam)} below={datePicker(d)} />;
+    if (leftOut.has(d.key)) {
+      return <ReviewRow key={d.key} glyph={<ReviewGlyph color={c.controlOutline} />} title={d.title} struck sub="Left out"
+        trailing={<TextButton label="Add back" onPress={() => addBack([d.key])} />} />;
+    }
+    // Any picker open on the row also offers to leave it out: a wrong read no longer has to be imported to be deleted.
+    const picking = !!picker?.startsWith(`${d.key}:`) && d.include;
+    return <ReviewRow key={d.key} glyph={<ReviewGlyph kind={exam ? 'ring' : 'dot'} />} title={d.title} sub={sub} ask={askOf(d)} trailing={dateTrailing(d, exam)}
+      below={picking ? <>{datePicker(d)}{leaveOutButton([d.key], 'Leave this out')}</> : datePicker(d)} />;
   };
 
   const undatedNoun = undated.length && undated.every((d) => d.icon === 'book') ? ['reading', 'readings'] : ['item', 'items'];
   const skippedLabel = undated.length ? ` · ${count(undated.length, undatedNoun[0], undatedNoun[1])} without a date ${undated.length === 1 ? 'is' : 'are'} skipped` : '';
 
   const dateRows = () => {
-    const visible = isSyllabus && !listOpen ? exams : nonSeries;
+    const out = effective.filter((d) => !d.seriesId && leftOut.has(d.key));
+    const visible = [...(isSyllabus && !listOpen ? exams : nonSeries), ...out].sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
     return (
       <>
         {series.map(seriesRow)}
@@ -642,14 +714,30 @@ function groupSeries(drafts: Draft[]): Series[] {
   });
 }
 
-/** The default term end for each open-ended series: the last exam if there is one, else the fifteen-week guess. */
+/**
+ * Where an open-ended class most likely stops, and how the pill says so: the final, or an exam in
+ * the last three weeks of the guessed term, else the fifteen-week guess. A midterm is not an end
+ * (Oct 27, 2026: with the final undated, classes stopped at the midterm). The label and the date
+ * come from this one place, so the selected pill always names the date it applies.
+ */
+function suggestedEnd(drafts: Draft[], first: Draft): { date: string; label: string } | null {
+  const guess = first.seriesUntil;
+  if (!guess || !first.date) return null;
+  const exams = drafts.filter((d) => !d.seriesId && d.isDeadline && isLocalDate(d.date) && d.date >= first.date! && assessment(d.title) === 'exam');
+  const final = exams.filter((d) => /final/i.test(d.title)).at(-1)
+    ?? exams.filter((d) => diffDays(d.date!, guess) <= 21).sort((a, b) => a.date!.localeCompare(b.date!)).at(-1);
+  return final
+    ? { date: final.date!, label: `${monthDay(final.date!)} · ${/final/i.test(final.title) ? 'The final' : 'The last exam'}` }
+    : { date: guess, label: `${monthDay(guess)} · Typical ${typicalTermEnd(first.date).name} end` };
+}
+
+/** The default term end for each open-ended series. */
 function suggestSeriesEnds(drafts: Draft[]): Record<string, SeriesEnd> {
   const out: Record<string, SeriesEnd> = {};
-  const lastExam = drafts.filter((d) => !d.seriesId && d.isDeadline && isLocalDate(d.date) && assessment(d.title) === 'exam').map((d) => d.date!).sort().at(-1);
   for (const d of drafts) {
     if (!d.seriesId || !d.seriesEndUnknown || out[d.seriesId]) continue;
-    const date = lastExam && d.date && lastExam >= d.date ? lastExam : d.seriesUntil;
-    if (date) out[d.seriesId] = { mode: 'suggested', date };
+    const end = suggestedEnd(drafts, d);
+    if (end) out[d.seriesId] = { mode: 'suggested', date: end.date };
   }
   return out;
 }
