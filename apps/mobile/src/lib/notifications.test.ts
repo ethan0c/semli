@@ -4,7 +4,7 @@ import { notificationPermission, trialRenews } from './notifications';
 
 const mocks = vi.hoisted(() => ({ platform: { OS: 'ios' }, getPermissionsAsync: vi.fn() }));
 vi.mock('react-native', () => ({ Platform: mocks.platform, AppState: { addEventListener: () => ({ remove: () => undefined }) } }));
-vi.mock('expo-notifications', () => ({ getPermissionsAsync: mocks.getPermissionsAsync }));
+vi.mock('expo-notifications', () => ({ getPermissionsAsync: mocks.getPermissionsAsync, useLastNotificationResponse: () => null }));
 vi.mock('expo-router', () => ({ router: {} }));
 vi.mock('react-native-purchases', () => ({ default: {} }));
 vi.mock('@/lib/revenuecat', () => ({ PLUS_ENTITLEMENT: 'semli_plus', purchasesUnavailableReason: null }));
