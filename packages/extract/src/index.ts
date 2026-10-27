@@ -51,7 +51,10 @@ export type ExtractResult =
   | { ok: true; extraction: Extraction; usage: Anthropic.Usage }
   | { ok: false; error: string };
 
-export async function extract(req: ExtractRequest, client = new Anthropic()): Promise<ExtractResult> {
+/** Which model reads, and whether it runs in fast mode. The app's default is `MODEL` at standard speed. */
+export type ExtractOptions = { model?: string; fast?: boolean };
+
+export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
   const content: Anthropic.ContentBlockParam[] = [];
   if (req.input.kind === 'image') {
     const prepared = await prepareImage(req.input);
@@ -67,16 +70,20 @@ export async function extract(req: ExtractRequest, client = new Anthropic()): Pr
         : `${contextBlock(req.context)}\n\nExtract everything schedulable from the attached ${req.input.kind === 'pdf' ? 'document' : 'image'}.`,
   });
 
-  const response = await client.messages.parse({
-    model: MODEL,
+  const params = {
+    model: opts.model ?? MODEL,
     max_tokens: 16000,
-    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+    system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
     output_config: {
-      effort: req.input.kind === 'text' ? 'low' : 'high',
+      effort: req.input.kind === 'text' ? ('low' as const) : ('high' as const),
       format: zodOutputFormat(Extraction),
     },
-    messages: [{ role: 'user', content }],
-  });
+    messages: [{ role: 'user' as const, content }],
+  };
+  // Fast mode runs the same model up to 2.5x faster at a premium price (beta, Opus only).
+  const response = opts.fast
+    ? await client.beta.messages.parse({ ...params, speed: 'fast', betas: ['fast-mode-2026-02-01'] })
+    : await client.messages.parse(params);
 
   if (response.stop_reason === 'refusal') {
     return { ok: false, error: IMPORT_MESSAGES.unreadable };

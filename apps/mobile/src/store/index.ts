@@ -1,4 +1,4 @@
-import { count, inferRule, rebuildSeries } from '@dayli/core';
+import { count, inferRule, localParts, rebuildSeries } from '@dayli/core';
 import type { CommitPlan, TermSystem } from '@dayli/core';
 import type { Snapshot } from '@/lib/cloud-snapshot';
 import type { ImportUsage } from '@/lib/plans';
@@ -12,6 +12,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { DEFAULT_API_URL } from '@/lib/api';
 import { track } from '@/lib/analytics';
 import { realRecords } from '@/lib/planner-preview';
+import { allDoneLine, firstOf } from '@/lib/milestones';
 import { DEFAULT_REMINDERS, type ReminderPrefs } from '@/lib/reminder-plan';
 import { plannerLoadFailed, plannerStorage } from '@/lib/storage';
 
@@ -283,6 +284,12 @@ export const useStore = create<State>()(
         const done = !it.done;
         set({ items: { ...get().items, [id]: { ...it, done, completedAt: done ? nowIso() : null } } });
         track('item_completion_changed', { item_kind: it.kind, category: it.category, completed: done });
+        // Ticking off the last to-do due today is worth saying, once, by name.
+        const today = localParts(new Date()).date;
+        if (done && it.kind === 'task' && it.date === today
+          && !realRecords(Object.values(get().items)).some((x) => x.kind === 'task' && x.date === today && !x.done)) {
+          set({ toast: { message: allDoneLine(firstOf(get().settings.name)) } });
+        }
       },
 
       updateItem: (id, patch, opts) => {

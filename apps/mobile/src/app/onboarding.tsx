@@ -4,6 +4,7 @@ import { Dimensions, Platform, ScrollView, StyleSheet, TextInput, View } from "r
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Toast } from "@/components/Overlay";
+import { firstOf, readyLine } from "@/lib/milestones";
 
 import { Composer } from "@/components/Composer";
 import { PickerPill, Radio } from "@/components/Controls";
@@ -200,7 +201,7 @@ export default function OnboardingScreen() {
     feedback("success");
     // The sample may have been replaced by a real import since it was loaded; say what is there now.
     const sampleLeft = !!useStore.getState().settings.sampleBatchId;
-    showToast(sampleLeft ? "Your sample week is ready. Add your own plans any time." : "Your plan is ready.");
+    showToast(readyLine(sampleLeft, firstOf(useStore.getState().settings.name)));
     router.replace("/");
   };
 

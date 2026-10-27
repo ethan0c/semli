@@ -26,6 +26,7 @@ import { noteConfirmedImport } from '@/lib/store-review';
 import { usePlusAccess } from '@/lib/plus-access';
 import { purchaseErrorMessage } from '@/lib/revenuecat';
 import { usePurchases } from '@/providers/PurchasesProvider';
+import { firstOf, importLine } from '@/lib/milestones';
 import { newId, nextCourseTint, useCourseList, useItemList, useStore } from '@/store';
 import { sampleScheduleExtraction } from '@/store/sample';
 import { SCREEN_GUTTER, useTheme, space } from '@/theme';
@@ -307,7 +308,7 @@ export default function ReviewScreen() {
     setPending(null);
     if (!settings.onboarded) {
       // Onboarding ends on its own showcase, so its import counts as the first without the moment.
-      showToast(parts.join(' · ') + '.', id);
+      showToast(importLine(parts, ex.detected_type, firstOf(useStore.getState().settings.name)), id);
       setSettings({ onboardingImportDone: true, firsts: { ...settings.firsts, added: true } });
       if (router.canGoBack()) router.back();
       else router.replace('/onboarding');
@@ -315,7 +316,7 @@ export default function ReviewScreen() {
     }
     // The toast with Undo and the reminders prompt wait until Plan, so neither lands on the moment.
     const goOn = () => {
-      showToast(parts.join(' · ') + '.', id);
+      showToast(importLine(parts, ex.detected_type, firstOf(useStore.getState().settings.name)), id);
       const { settings: now, setSettings: save } = useStore.getState();
       if (!now.remindersAsked) {
         save({ remindersAsked: true });
