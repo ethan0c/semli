@@ -98,9 +98,9 @@ Rules:
 Since Oct 27, 2026 each import goes to the cheapest model that holds accuracy on it (`docs/import-speed.md`), measured on the extraction benchmark:
 - Typed or spoken message, Haiku 5.5 ≈ $0.0002 (a 16-item week ≈ $0.001)
 - Schedule screenshot, Haiku 5.5 ≈ $0.001
-- Syllabus PDF, Opus 5.5 ≈ $0.17 for free users, ≈ $0.34 in fast mode for Plus
+- Syllabus PDF, Opus 5.5 reading its extracted text ≈ $0.11 for free users, ≈ $0.21 in fast mode for Plus (whole PDFs, still used for scans, ≈ $0.17 / $0.34)
 
-A heavy Plus user (5 syllabi + 16 screenshots + 40 typed adds a semester) costs about **$1.75 per semester** in AI, almost all of it syllabi; a typical one about $1. Against $14.99 that is a ~85–90% gross margin after Apple's 15%. A free student who imports five syllabi in month one costs about $0.85; after that the cap of three a month costs pennies. The live model with every assumption adjustable: https://claude.ai/artifact/75RWRSVf1weEhcVqBWjLDe.
+A heavy Plus user (5 syllabi + 16 screenshots + 40 typed adds a semester) costs about **$1.10 per semester** in AI, almost all of it syllabi; a typical one about $0.65. Against $14.99 that is a ~85–90% gross margin after Apple's 15%. A free student who imports five syllabi in month one costs about $0.55; after that the cap of three a month costs pennies. The live model with every assumption adjustable: https://claude.ai/artifact/75RWRSVf1weEhcVqBWjLDe.
 
 ### What 1,000 paying students looks like
 - All yearly on web: ~$29k/yr net of fees (~3%)

@@ -32,8 +32,8 @@ The 16-item cardio request: 14.0 s on Opus, 5.5 s on Opus fast, about 7 s on Hai
 |---|---|---|---|---|
 | Typed or spoken message | Haiku 5.5 | 99.1% | 2.0 s | $0.0002 |
 | Screenshot | Haiku 5.5 | 100% | 6.2 s | $0.001 |
-| Syllabus, free | Opus 5.5 | 96.9% | 21.6 s | $0.17 |
-| Syllabus, Plus | Opus 5.5 fast | 97.3% | 8.3 s | $0.34 |
+| Syllabus, free | Opus 5.5, read as text | 96.9% | 19.8 s | $0.11 |
+| Syllabus, Plus | Opus 5.5 fast, read as text | about the same | about 8 s | about $0.21 |
 
 Haiku handing back nothing usable (a refusal, a cut-off answer) is read again by Opus. Fast mode has its own rate limit; a 429 there retries at standard speed. The readers are server settings (`EXTRACT_QUICK_MODEL`, `EXTRACT_DOCUMENT_MODEL`, `EXTRACT_FAST` in `docs/env.md`), never in the app, so a model changes with a Vercel redeploy and no release. Run the benchmark before changing one.
 
@@ -50,7 +50,9 @@ The API reads a PDF page as both an image and its text, about 7,000 tokens for t
 
 Opus on the text is more accurate, back under the 2% extra-item gate, and a third cheaper; the wait doesn't change, because writing the answer, not reading, is now most of both the time and the cost. Lower effort and shorter evidence quotes were also tried on whole PDFs and saved nothing (medium effort: same cost, 96.5%; low: 12% cheaper, 85%).
 
-To build: extract text on the server (a PDF.js build such as unpdf in `packages/extract`), send it as text to the document model, and fall back to the whole PDF when a page carries little text (a scan, a photographed handout) or extraction fails. Also worth building: a cache of finished reads keyed by the file's hash, so a classmate's identical syllabus reads instantly and costs nothing; and rows streamed in as they're written, which is what would make a 20-second read feel instant.
+**Built the same day** (`packages/extract/src/pdf-text.ts`, unpdf 1.8.1): the server rebuilds each page's layout from PDF.js text positions (rows by baseline, columns by position, a blank line wherever the page leaves vertical space between table rows) and sends that to Opus. Any page with under 80 visible characters, under 300 in all, a failed parse or a parse over 4 s sends the whole PDF instead. On the benchmark through the live path: 96.9% of dates and times (the same as whole PDFs), 97.8% of other fields (from 96.8%), $0.107 a syllabus (from $0.166), 19.8 s median. The row breaks mattered: without them a dense 20-page nursing schedule dropped to 95.7%. `EXTRACT_PDF_TEXT=0` turns it off; the route logs `[extract.pdf]` with which way each PDF was read.
+
+Also worth building: a cache of finished reads keyed by the file's hash, so a classmate's identical syllabus reads instantly and costs nothing; and rows streamed in as they're written, which is what would make a 20-second read feel instant.
 
 ## The wait itself
 
