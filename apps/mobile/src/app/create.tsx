@@ -48,7 +48,7 @@ export default function CreateScreen() {
   const { requirePlus } = usePlusAccess();
   // Urgent items ring like an alarm, which is part of Plus. Turning it off is always allowed.
   const setUrgent = async (urgent: boolean) => {
-    if (urgent && !(await requirePlus('urgent'))) return;
+    if (urgent && !(await requirePlus('urgent', { onError: setError }))) return;
     feedback('select');
     patch({ urgent });
   };

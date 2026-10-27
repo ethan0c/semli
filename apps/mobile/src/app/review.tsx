@@ -298,7 +298,7 @@ export default function ReviewScreen() {
       setCheckingAccess(true);
       const beforeItems = useStore.getState().items;
       try {
-        if (!(await requirePlus('schedule_update')) || leaving.current) return;
+        if (!(await requirePlus('schedule_update', { onError: setAccessError })) || leaving.current) return;
         if (beforeItems !== useStore.getState().items) {
           setAccessError('Your calendar changed. Review the updated shifts before saving.');
           return;

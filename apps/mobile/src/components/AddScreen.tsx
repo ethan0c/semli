@@ -6,7 +6,7 @@ import { Platform, ScrollView, StyleSheet, type TextInput, View } from 'react-na
 
 import { Composer } from '@/components/Composer';
 import { Heard } from '@/components/Heard';
-import { GroupLabel, ListRow } from '@/components/Controls';
+import { GroupLabel, ListRow, TextButton } from '@/components/Controls';
 import { Icon } from '@/components/Icon';
 import { Reading } from '@/components/Reading';
 import { RecentShots } from '@/components/RecentShots';
@@ -65,7 +65,7 @@ export function AddScreen() {
     track('import_started', { kind: input.kind });
     try {
       try {
-        if (!(await requireImportAccess())) return;
+        if (!(await requireImportAccess({ onError: setError }))) return;
       } catch (failure) {
         setError(purchaseErrorMessage(failure));
         return;
@@ -77,7 +77,7 @@ export function AddScreen() {
       const hooks = { onItem: (item: StreamedItem) => setFound((rows) => [...rows, item]), onReset: () => setFound([]) };
       let res = await requestImport(apiUrl, req, hooks);
       // The server's count wins over this phone's (a reinstall resets the local one).
-      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota'))) res = await requestImport(apiUrl, req, hooks);
+      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota', { onError: setError }))) res = await requestImport(apiUrl, req, hooks);
       if (!res.ok) {
         track('import_failed', { kind: input.kind });
         setError(res.error);
@@ -200,6 +200,8 @@ export function AddScreen() {
           <View accessibilityRole="alert" style={styles.status}>
             <Icon name="alert" size={16} color={c.conflict} />
             <T token="subhead" color={c.conflict} style={{ flex: 1 }}>{shownError}</T>
+            {/* Microphone access was turned off: the way back is one tap, not a trip through Settings. */}
+            {!error && voice.openSettings ? <TextButton label="Open Settings" onPress={() => void voice.openSettings!()} /> : null}
           </View>
         ) : null}
 

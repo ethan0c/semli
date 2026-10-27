@@ -370,7 +370,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
     track("import_started", { kind: input.kind, where: "onboarding" });
     try {
       try {
-        if (!(await requireImportAccess())) return;
+        if (!(await requireImportAccess({ onError: setError }))) return;
       } catch (failure) {
         setError(purchaseErrorMessage(failure));
         return;
@@ -379,7 +379,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
       // Rows appear on the reading screen as they're read: a new student's first import shouldn't feel like a wait.
       const hooks = { onItem: (item: StreamedItem) => setFound((rows) => [...rows, item]), onReset: () => setFound([]) };
       let res = await requestImport(apiUrl, req, hooks);
-      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota"))) res = await requestImport(apiUrl, req, hooks);
+      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota", { onError: setError }))) res = await requestImport(apiUrl, req, hooks);
       if (!res.ok) {
         track("import_failed", { kind: input.kind, where: "onboarding" });
         setError(res.error);

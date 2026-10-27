@@ -426,6 +426,36 @@ describe('signing out', () => {
     expect(Object.keys(mocks.store.getState().items as object)).toEqual(['b']);
   });
 
+  it('refuses offline even with nothing left to send, before anything is stopped or signed out', async () => {
+    signedInWithPlan();
+    await authClient.signIn(fields);
+    mocks.cloud.pushRecords.mockClear();
+    mocks.cloud.pullRecords.mockRejectedValue(new Error('Network request failed'));
+    await expect(authClient.signOut()).rejects.toMatchObject({ code: 'backup_before_sign_out' });
+    expect(mocks.auth.signOut).not.toHaveBeenCalled();
+    expect(mocks.purchases.logOut).not.toHaveBeenCalled();
+    expect(Object.keys(mocks.store.getState().items as object)).toEqual(['b']);
+  });
+
+  it('when Supabase ends the session here but can’t tell the server, signing out still finishes', async () => {
+    signedInWithPlan();
+    mocks.auth.signOut.mockResolvedValue({ error: { name: 'AuthRetryableFetchError', message: 'Network request failed', status: 0 } });
+    mocks.auth.getSession.mockResolvedValue({ data: { session: null } });
+    const log = vi.spyOn(console, 'info').mockImplementation(() => {});
+    try {
+      await authClient.signOut();
+    } finally { log.mockRestore(); }
+    expect(mocks.purchases.logOut).toHaveBeenCalled();
+    expect(settings().cloud).toEqual({ backedUpAt: null, error: null });
+  });
+
+  it('a sign-out that leaves the session in place is an error', async () => {
+    signedInWithPlan();
+    mocks.auth.signOut.mockResolvedValue({ error: { name: 'AuthUnknownError', message: 'storage' } });
+    await expect(authClient.signOut()).rejects.toMatchObject({ message: 'storage' });
+    expect(mocks.purchases.logOut).not.toHaveBeenCalled();
+  });
+
   it('deleting the account removes the row and the user, then logs out', async () => {
     mocks.supabase.rpc.mockResolvedValue({ error: null });
     mocks.auth.signOut.mockResolvedValue({ error: null });
@@ -488,12 +518,40 @@ describe('signing out', () => {
 describe('the line after signing in', () => {
   it('welcomes a new account by name and says where the plan is', async () => {
     const { welcomeLine } = await import('./auth-client');
-    expect(welcomeLine({ first: 'Ethan', email: 'e@x.com', apple: false, isNew: true, restored: false }))
+    expect(welcomeLine({ first: 'Ethan', email: 'e@x.com', apple: false, isNew: true, outcome: 'backed-up' }))
       .toBe('Welcome to Semli, Ethan. You’re signed up with e@x.com, and your plan is backed up.');
   });
   it('welcomes someone back to a restored plan, and keeps an Apple relay address out of it', async () => {
     const { welcomeLine } = await import('./auth-client');
-    expect(welcomeLine({ first: null, email: 'x@privaterelay.appleid.com', apple: true, isNew: false, restored: true })).toBe('Welcome back. Your backed-up plan is on this iPhone.');
-    expect(welcomeLine({ first: null, email: 'x@privaterelay.appleid.com', apple: true, isNew: false, restored: false })).toBe('Signed in with Apple. Your plan is backed up.');
+    expect(welcomeLine({ first: null, email: 'x@privaterelay.appleid.com', apple: true, isNew: false, outcome: 'restored' })).toBe('Welcome back. Your backed-up plan is on this iPhone.');
+    expect(welcomeLine({ first: null, email: 'x@privaterelay.appleid.com', apple: true, isNew: false, outcome: 'backed-up' })).toBe('Signed in with Apple. Your plan is backed up.');
+  });
+  it('never says the plan is backed up when it isn’t', async () => {
+    const { welcomeLine } = await import('./auth-client');
+    const w = { first: 'Ama', email: 'ama@example.com', apple: false, isNew: false };
+    expect(welcomeLine({ ...w, outcome: 'choose' })).toBe('Signed in as ama@example.com. Choose which plan to keep.');
+    expect(welcomeLine({ ...w, outcome: 'unreached' })).not.toMatch(/is backed up/);
+    expect(welcomeLine({ ...w, outcome: 'unsent' })).not.toMatch(/is backed up/);
+    expect(welcomeLine({ ...w, isNew: true, outcome: 'unsent' })).toBe('Welcome to Semli, Ama. You’re signed up with ama@example.com. Your plan isn’t backed up yet. We’ll try again after your next change.');
+  });
+  it('after a sign-in that asks, or one that couldn’t reach the backup, the toast says so', async () => {
+    const toast = () => (mocks.store.getState().toast as { message: string } | null)?.message;
+    mocks.store.setState({ items: { b: item('b') }, settings: { ...DEFAULTS(), onboarded: true } });
+    legacy(row({ items: [item('a')], onboarded: true }));
+    await authClient.signIn(fields);
+    leaveAuth();
+    await vi.waitFor(() => expect(toast()).toBe('Signed in as ama@example.com. Choose which plan to keep.'));
+    mocks.store.setState({ toast: null, planChoice: null });
+    mocks.cloud.pullRecords.mockRejectedValue(new Error('offline'));
+    await authClient.signIn(fields);
+    leaveAuth();
+    await vi.waitFor(() => expect(toast()).toMatch(/couldn’t reach your backup/));
+  });
+  it('a clean restore counts as backed up, so Account doesn’t say “Backing up…” forever', async () => {
+    mocks.server.rows.set('item:a', { kind: 'item', id: 'a', data: item('a'), deleted: false, seq: ++mocks.server.seq });
+    mocks.server.rows.set('profile:me', { kind: 'profile', id: 'me', data: { settings: { name: 'Ama' }, onboarded: true }, deleted: false, seq: ++mocks.server.seq });
+    expect(await authClient.signIn(fields)).toEqual({ signedIn: true, restored: true });
+    expect(mocks.cloud.pushRecords).not.toHaveBeenCalled();
+    expect(settings().cloud.backedUpAt).not.toBeNull();
   });
 });
