@@ -32,6 +32,14 @@ function inline(s) {
     .replace(/~([^~]+)~/g, `<span style="color:${brand.accent};">$1</span>`);
 }
 
+/**
+ * The postal address, small and plain. Gmail turns anything that reads like an address into a
+ * blue map link (seen Oct 27, 2026); a zero-width non-joiner after each comma and inside each
+ * number breaks its detection without changing what anyone sees. Apple Mail's detection is
+ * handled by the x-apple-data-detectors rule in the head.
+ */
+const undetectable = (address) => esc(address).replace(/,/g, ',&zwnj;').replace(/(\d)(?=\d)/g, '$1&zwnj;');
+
 const p = (text, extra = '') => `<p style="margin:0 0 16px 0;font-size:16px;line-height:24px;color:${brand.ink};${extra}">${inline(text)}</p>`;
 
 /**
@@ -98,7 +106,7 @@ ${action ? `        ${action}\n` : ''}        <tr><td>
         <tr><td style="padding:32px 0 0 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" style="height:1px;line-height:1px;font-size:1px;background-color:${brand.line};">&nbsp;</td></tr></table>
           <p style="margin:16px 0 0 0;font-size:12px;line-height:18px;color:${brand.secondary};">${inline(e.reason)}</p>
-          <p style="margin:6px 0 0 0;font-size:12px;line-height:18px;color:${brand.secondary};">${esc(postalAddress)}</p>
+          <p style="margin:6px 0 0 0;font-size:11px;line-height:16px;color:${brand.secondary};text-decoration:none;">${undetectable(postalAddress)}</p>
           <p style="margin:6px 0 0 0;font-size:12px;line-height:18px;color:${brand.secondary};">${footerLinks.join(' &nbsp;&middot;&nbsp; ')}</p>
         </td></tr>
       </table>

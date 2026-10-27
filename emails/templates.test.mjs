@@ -86,3 +86,11 @@ describe('app links', () => {
     }
   });
 });
+
+describe('the footer address', () => {
+  it('is small and broken up so mail apps do not turn it into a map link', () => {
+    const html = renderHtml(transactional.welcome, '441 Country Club Road, York, PA 17403-3651, USA');
+    expect(html).toContain('font-size:11px;line-height:16px;color:#686963;text-decoration:none;">4&zwnj;4&zwnj;1 Country Club Road,&zwnj; York,&zwnj; PA 1&zwnj;7&zwnj;4&zwnj;0&zwnj;3-3&zwnj;6&zwnj;5&zwnj;1,&zwnj; USA</p>');
+    expect(html.replace(/&zwnj;/g, '')).toContain('441 Country Club Road, York, PA 17403-3651, USA');
+  });
+});
