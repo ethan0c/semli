@@ -80,7 +80,8 @@ export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers
   /** Streams the answer: called with each item as soon as it's written. */
   onItem?: (item: StreamedItem) => void;
   /** Items handed over so far no longer stand (another reader is starting again). */
-  onReset?: () => void; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high' };
+  onReset?: () => void; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high';
+  /** false turns thinking off on a model that allows it (benchmarks only). */ thinking?: boolean };
 
 export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
   const content: Anthropic.ContentBlockParam[] = [];
@@ -118,6 +119,7 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
       format: zodOutputFormat(Extraction),
     },
     messages: [{ role: 'user' as const, content }],
+    ...(opts.thinking === false ? { thinking: { type: 'disabled' as const } } : {}),
   };
   // Fast mode runs the same model up to 2.5x faster at a premium price (beta, Opus only). On the
   // Oct 27, 2026 benchmark it read typed messages in 1.2 s, screenshots in 3.4 s and syllabi in 8.3 s
