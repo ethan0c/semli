@@ -3,7 +3,19 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { Extraction, IMPORT_MESSAGES, type ExtractContext, type ExtractRequest } from '@dayli/schema';
 import { prepareImage } from './image';
 
+/** Reads documents (syllabi, course PDFs), and anything the quick reader can't finish. */
 export const MODEL = 'claude-opus-5-5';
+/**
+ * Reads typed and spoken messages and screenshots. On the Oct 27, 2026 benchmark (evals/RESULTS.md)
+ * Haiku 5.5 matched Opus on both (99.1% and 100% of dates and times) at about a fiftieth of the
+ * cost and as fast; on syllabi it fell to 92% against Opus's 97%, so documents stay on Opus.
+ */
+export const QUICK_MODEL = 'claude-haiku-5-5';
+
+/** Which model reads an input. */
+export function modelFor(kind: ExtractRequest['input']['kind']): string {
+  return kind === 'pdf' ? MODEL : QUICK_MODEL;
+}
 export const PROMPT_VERSION = '2026-10-27.1';
 
 const SYSTEM = `You read the things busy students and shift workers send to their planner app, Semli, and turn them into calendar events and to-dos.
@@ -51,7 +63,7 @@ export type ExtractResult =
   | { ok: true; extraction: Extraction; usage: Anthropic.Usage }
   | { ok: false; error: string };
 
-/** Which model reads, and whether it runs in fast mode. The app's default is `MODEL` at standard speed. */
+/** Which model reads (default: `modelFor` the input), and whether Opus runs in fast mode (Plus syllabi). */
 export type ExtractOptions = { model?: string; fast?: boolean };
 
 export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
@@ -71,7 +83,7 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   });
 
   const params = {
-    model: opts.model ?? MODEL,
+    model: opts.model ?? modelFor(req.input.kind),
     max_tokens: 16000,
     system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
     output_config: {
@@ -85,13 +97,17 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   // (medians) with the same accuracy as standard speed; evals/RESULTS.md. It has its own rate limit,
   // so a 429 there falls back to standard speed rather than failing the import.
   const standard = () => client.messages.parse(params);
-  const response = opts.fast
+  // Fast mode exists only for Opus; on any other model the flag is ignored.
+  const response = opts.fast && params.model === MODEL
     ? await client.beta.messages.parse({ ...params, speed: 'fast', betas: ['fast-mode-2026-02-01'] }).catch((err: unknown) => {
       if (err instanceof Anthropic.RateLimitError) return standard();
       throw err;
     })
     : await standard();
 
+  // The quick reader handing back nothing usable is never the person's problem: Opus reads it again.
+  const usable = response.stop_reason !== 'refusal' && response.stop_reason !== 'max_tokens' && !!response.parsed_output;
+  if (!usable && params.model !== MODEL && !opts.model) return extract(req, client, { ...opts, model: MODEL });
   if (response.stop_reason === 'refusal') {
     return { ok: false, error: IMPORT_MESSAGES.unreadable };
   }

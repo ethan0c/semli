@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
-import { extract, MODEL, PROMPT_VERSION } from '@dayli/extract';
+import { extract, PROMPT_VERSION } from '@dayli/extract';
 import { ExtractRequest, Extraction } from '@dayli/schema';
 import { EvalCase } from './schema';
 import { aggregate, score } from './score';
@@ -39,7 +39,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is missing. Configure it in the environment or apps/web/.env; no model calls were made.');
 const client = new Anthropic({ maxRetries: 1, timeout: 180_000 });
 // `--model claude-sonnet-5-5` or `--fast` compares another reader against the same cases.
-const options = { model: arg('--model') ?? MODEL, fast: process.argv.includes('--fast') };
+const options = { model: arg('--model'), fast: process.argv.includes('--fast') };
 const startedAt = new Date().toISOString();
 const reportPath = resolve(root, arg('--out') ?? `evals/reports/${startedAt.replace(/[:.]/g, '-')}.json`);
 mkdirSync(resolve(reportPath, '..'), { recursive: true });
@@ -48,7 +48,7 @@ const results: Result[] = [];
 const groups = () => Object.fromEntries(['text', 'image', 'pdf'].map((kind) => [kind, aggregate(results.filter((r) => r.kind === kind).map((r) => r.score))]));
 function save() {
   const byKind = groups();
-  const report = { startedAt, model: options.model, fast: options.fast, promptVersion: PROMPT_VERSION, fixtureHash, coverage, counts, byKind, overall: aggregate(results.map((r) => r.score)),
+  const report = { startedAt, model: options.model ?? 'routed', fast: options.fast, promptVersion: PROMPT_VERSION, fixtureHash, coverage, counts, byKind, overall: aggregate(results.map((r) => r.score)),
     releasePass: coverage && results.length === selected.length && results.every((r) => !r.error) && Object.values(byKind).every((g) => g.pass), results };
   writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
   return report;
@@ -79,5 +79,5 @@ await Promise.all(Array.from({ length: Math.min(3, requests.length) }, async () 
   }
 }));
 const report = save();
-console.log(JSON.stringify({ model: options.model, fast: options.fast, promptVersion: PROMPT_VERSION, byKind: report.byKind, coverage, releasePass: report.releasePass, report: relative(root, reportPath) }, null, 2));
+console.log(JSON.stringify({ model: options.model ?? 'routed', fast: options.fast, promptVersion: PROMPT_VERSION, byKind: report.byKind, coverage, releasePass: report.releasePass, report: relative(root, reportPath) }, null, 2));
 process.exitCode = report.releasePass ? 0 : 1;

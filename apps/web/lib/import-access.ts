@@ -17,7 +17,7 @@ export const DEMO_PREVIEWS_PER_DAY = 5;
 const PLUS_ENTITLEMENT = 'semli_plus';
 
 export type Access =
-  | { ok: true; refund: () => Promise<void> }
+  | { ok: true; refund: () => Promise<void>; /** A Plus subscriber: their syllabi read in fast mode. */ plus?: boolean }
   | { ok: false; status: 401 | 402 | 429; error: string };
 
 const free = async () => {};
@@ -66,7 +66,7 @@ export async function checkImportAccess(request: Request): Promise<Access> {
   if (!user.ok) return { ok: false, status: 401, error: IMPORT_MESSAGES.session };
   const userId = ((await user.json().catch(() => null)) as { id?: string } | null)?.id ?? null;
 
-  if (await hasPlus(purchaserFor(userId, request.headers.get('x-revenuecat-app-user-id')))) return { ok: true, refund: free };
+  if (await hasPlus(purchaserFor(userId, request.headers.get('x-revenuecat-app-user-id')))) return { ok: true, refund: free, plus: true };
 
   const allowed = await rpc(base, 'claim_import', { p_limit: FREE_IMPORTS_PER_MONTH, p_start_limit: FREE_IMPORTS_TO_START, p_start_days: START_WINDOW_DAYS }, token);
   if (allowed !== true) return { ok: false, status: 402, error: IMPORT_MESSAGES.quota };
