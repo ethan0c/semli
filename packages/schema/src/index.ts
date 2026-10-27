@@ -182,4 +182,18 @@ export const ExtractResponse = z.discriminatedUnion('ok', [
   z.object({ ok: z.literal(false), error: z.string() }),
 ]);
 export type ExtractResponse = z.infer<typeof ExtractResponse>;
+
+/** Ask for this to get the answer as it's written: one JSON line per item, then the full response. */
+export const EXTRACT_STREAM_TYPE = 'application/x-ndjson';
+/**
+ * One line of a streamed import. `item`: a row as soon as it's written (validated, but only a
+ * preview). `reset`: the rows so far no longer stand (another reader is starting again). `done`: the
+ * same response a single request returns, with its HTTP status; review uses only this.
+ */
+export const ExtractStreamLine = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('item'), item: Extraction.shape.items.element }),
+  z.object({ type: z.literal('reset') }),
+  z.object({ type: z.literal('done'), status: z.number(), response: ExtractResponse }),
+]);
+export type ExtractStreamLine = z.infer<typeof ExtractStreamLine>;
 export { IMPORT_MESSAGES, importErrorForStatus, friendlyImportError } from './messages';
