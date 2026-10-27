@@ -2,13 +2,13 @@ Subject: An update on that student planner survey
 
 Hi {{{FIRST_NAME|there}}},
 
-You answered my survey about juggling classes and work. Your feedback helped me build Semli, and I'd love for you to try it.
+A while back, you answered my survey about balancing classes and work. I used your feedback to build Semli, and it's ready to try.
 
-Add a syllabus or screenshot of your shifts, check the dates, and save them to your calendar.
+Start with a syllabus or screenshot of your shifts. Check the dates Semli finds, then add them to your plan.
 
 Get Semli on iPhone: https://www.semli.app/get?r=email-survey
 
-Something wrong or confusing? Reply and let me know.
+If something looks wrong or feels confusing, just reply and let me know.
 
 Thanks again,
 Semli

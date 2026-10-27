@@ -1,4 +1,4 @@
-Subject: Thanks for your feedback on Semli
+Subject: Thanks for writing about Semli
 
 Hi [FIRST_NAME],
 
@@ -6,12 +6,12 @@ Thanks for telling me about [FEEDBACK_SUMMARY].
 
 [PERSONAL_REPLY]
 
-If anything else comes up, just reply here.
+If you notice anything else, just reply here.
 
 Thanks again,
 Semli
 
 --
-You got this reply because you sent feedback about Semli.
+This is a reply to the feedback you sent about Semli.
 441 Country Club Road, York, PA 17403-3651, USA
 Contact Semli: hello@semli.app

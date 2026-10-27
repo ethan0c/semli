@@ -2,11 +2,11 @@ Subject: Welcome to Semli
 
 Hi {{{NAME}}},
 
-Thanks for signing up. Your plan now backs up to your account, so you can get it back when you switch phones.
+Thanks for signing up. Your account lets you back up your plan and bring it to a new phone.
 
-To get started, add a syllabus or screenshot of your shifts. Check the dates Semli finds, then save them.
+Start with a syllabus or screenshot of your shifts. Check the dates Semli finds before saving them to your plan.
 
-If a date looks wrong or something's confusing, reply and tell me. I read every reply.
+If anything looks wrong or you're not sure how something works, reply and tell me. I read every reply.
 
 Thanks,
 Semli

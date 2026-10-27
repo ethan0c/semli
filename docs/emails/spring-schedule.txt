@@ -1,18 +1,18 @@
-Subject: Registered for spring? Add your classes now
+Subject: Picked your spring classes?
 
 Hi {{{FIRST_NAME|there}}},
 
-If you've picked your spring classes, you can add them to Semli now.
+Once you've registered for spring, take a screenshot of the schedule in your school's portal.
 
-Take a screenshot of the schedule in your school's portal. Add it in Semli, check the class times, and save them. They'll repeat through the term.
+Add it in Semli, check the class times, and save. Your classes will repeat through the term.
 
 Get Semli on iPhone: https://www.semli.app/get?r=email-spring
 
 Already have Semli? Open the app and tap Add.
 
-When you get your syllabi in January, add those too to bring in your exam dates.
+When your syllabi arrive, add those too for your exams and deadlines.
 
-Good luck with registration,
+Hope registration goes smoothly,
 Semli
 
 --

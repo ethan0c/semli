@@ -2,17 +2,17 @@ Subject: Got a syllabus for the new semester?
 
 Hi {{{FIRST_NAME|there}}},
 
-Getting ready for the semester? You don't need your whole schedule to get started.
+If you've got a syllabus for the new semester, that's enough to get started.
 
-Add a syllabus or a week of shifts to Semli. Check the dates before saving, then add the rest as you get them.
+Add it in Semli, check the dates, and save them to your plan. Add your work shifts whenever you have them.
 
 Get Semli on iPhone: https://www.semli.app/get?r=email-semester
 
 Already have Semli? Open the app and tap Add.
 
-If the dates don't look right, reply and tell me what happened.
+If a date looks wrong, reply and tell me what happened.
 
-Hope your semester gets off to a good start,
+Hope your semester starts well,
 Semli
 
 --

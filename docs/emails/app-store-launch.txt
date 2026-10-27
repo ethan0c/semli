@@ -2,19 +2,19 @@ Subject: Semli is on the App Store
 
 Hi {{{FIRST_NAME|there}}},
 
-Semli is on the App Store. Thanks for being here while I built it.
+You can now download Semli for iPhone. Thanks for following along while I built it.
 
-Add your syllabi, work schedule, or class messages to start your plan. It works with Canvas and Brightspace too. The calendar, to-dos, and reminders are free, and you get five imports to start.
+Add a syllabus, work schedule, or class message to put your dates in one place. You can connect Canvas or Brightspace too. The calendar, to-dos, and reminders are free, with five imports to start.
 
 Get Semli on iPhone: https://www.semli.app/get?r=email-launch
 
-Reply and tell me how it fits into your week. I read every one.
+Let me know how it fits into your week. Just reply here.
 
 Thanks,
 Semli
 
 --
-You're getting this because you answered the Semli student survey or joined the waitlist. One email, then only the occasional update.
+You answered the Semli student survey or joined the waitlist.
 441 Country Club Road, York, PA 17403-3651, USA
 Contact Semli: hello@semli.app
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

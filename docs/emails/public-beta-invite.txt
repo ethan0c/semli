@@ -2,15 +2,15 @@ Subject: You're invited to try Semli
 
 Hi {{{FIRST_NAME|there}}},
 
-Thanks for waiting. You can now try Semli on your iPhone.
+Thanks for joining the waitlist. Semli is ready for you to try on your iPhone.
 
-Start with a syllabus, a screenshot of your shifts, or a class message. Check the dates Semli finds, then save them to your calendar.
+Try adding a syllabus, a screenshot of your shifts, or a class message. Check the dates Semli finds before saving them to your plan.
 
 Get Semli on iPhone: https://www.semli.app/get?r=email-waitlist
 
-Let me know how it goes. I read every reply.
+I'd love to hear how it goes. You can reply to this email.
 
-Thanks for trying it,
+Thanks for giving it a try,
 Semli
 
 --
