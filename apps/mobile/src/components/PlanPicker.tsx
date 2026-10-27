@@ -16,6 +16,7 @@ import { durations, enter, exit } from '@/lib/motion';
 import { LINKS, openLink } from '@/lib/links';
 import { notificationsAllowed, requestNotifications } from '@/lib/notifications';
 import { PLUS_ENTITLEMENT, customerCenterEnabled, hasSemliPro, offeringFor, usingTestStore } from '@/lib/revenuecat';
+import { plusMonthLine } from '@/lib/plus-month';
 import { usePurchases } from '@/providers/PurchasesProvider';
 import { useStore } from '@/store';
 import { useTheme, type Palette, radius, size, fade, space } from '@/theme';
@@ -58,6 +59,10 @@ export function PlanPicker({ onContinueFree, onComplete, onWelcome, freeImportsL
   const theme = useTheme();
   const c = palette ?? theme.c;
   const { offering, offerings, customerInfo, isPlus, loading, busy, error, unavailableReason, refresh, purchase, restore, manageSubscription } = usePurchases();
+  // What Plus has done lately, so a subscriber sees it working, not only an absence of limits.
+  const usage = useStore((st) => st.usage);
+  const itemMap = useStore((st) => st.items);
+  const plusLately = isPlus ? plusMonthLine(usage, Object.values(itemMap), localParts(new Date()).date) : null;
   const student = useStore((s) => s.settings.isStudent);
   const setSettings = useStore((s) => s.setSettings);
   const [welcome, setWelcome] = useState<'celebrate' | 'tour' | null>(null);
@@ -146,6 +151,7 @@ export function PlanPicker({ onContinueFree, onComplete, onWelcome, freeImportsL
           <T token="callout" color={c.inkSecondary} style={{ paddingTop: space.xxs }}>
             {entitlement?.expirationDate ? `${entitlement.willRenew ? 'Renews' : 'Access until'} ${fullDate(localParts(new Date(entitlement.expirationDate)).date)}.` : 'Your Plus subscription is active.'}
           </T>
+          {plusLately ? <T token="body" color={c.inkPrimary} style={{ paddingTop: space.sm }}>{plusLately}</T> : null}
         </View>
         <PlusFeatures c={c} onGo={goTo} />
         {onComplete ? <Press accessibilityRole="button" onPress={onComplete} style={styles.textBtn}><T token="subhead" color={c.inkSecondary}>Continue</T></Press> : null}
