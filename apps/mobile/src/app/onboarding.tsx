@@ -641,6 +641,7 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<number | null>(null);
+  const { requirePlus } = usePlusAccess();
 
   const connect = async () => {
     const url = normalizeFeedUrl(link);
@@ -650,6 +651,8 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
       return;
     }
     setError(null);
+    // The first sync is free once, as in Settings; replaying the intro doesn't hand out another.
+    if (useStore.getState().settings.canvas.lastSyncedAt && !(await requirePlus("canvas", { onError: setError }))) return;
     setBusy(true);
     const res = await syncCanvas(url);
     setBusy(false);
