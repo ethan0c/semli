@@ -15,21 +15,26 @@ export const APP_STORE_URL = 'https://apps.apple.com/us/app/semli-ai-student-pla
 /**
  * Groups in Resend. The free plan allows three segments, so there are exactly three:
  *
- *   Survey    the spring 2026 survey respondents
- *   Waitlist  people who signed up on semli.app
- *   Testers   people confirmed to have installed the beta; added by hand with `email add testers`
+ *   Survey     the spring 2026 survey respondents
+ *   Waitlist   people who signed up on semli.app
+ *   App users  everyone with a Semli account (a confirmed, non-guest address in Supabase auth).
+ *              The site adds each one after their welcome email; `npm run email sync` and every
+ *              broadcast to the group reconcile it with Supabase. Was Testers until Oct 27, 2026.
  *
- * Survey and Waitlist never overlap (each address has one source), so "everyone" is one
- * broadcast to each. Testers are also in one of the two, so the check-in is its own send.
+ * The three never overlap: an address with an account leaves Survey and Waitlist, so a
+ * broadcast to several groups reaches each person once.
  */
 export const segments = {
   survey: 'Survey',
   waitlist: 'Waitlist',
-  testers: 'Testers',
+  users: 'App users',
 };
 
-/** Everyone who signed up for anything: one broadcast per segment, no duplicates. */
+/** Everyone who signed up for anything but has no account yet: one broadcast per segment. */
 export const EVERYONE = ['survey', 'waitlist'];
+
+/** The footer's reason for the App users copy of a broadcast. */
+export const USERS_REASON = "You're getting this because you have a Semli account.";
 
 const HI = 'Hi {{{FIRST_NAME|there}}},';
 
@@ -70,24 +75,6 @@ export const emails = {
     unsubscribe: true,
   },
 
-  'tester-check-in': {
-    segment: 'testers',
-    plan: 'Three to five days after someone installs; add them to Testers first',
-    subject: 'Had a chance to try Semli?',
-    preheader: 'Were the dates right? Was anything confusing?',
-    heading: "How's Semli ~working~ for you?",
-    greeting: HI,
-    before: [
-      "Thanks for trying the beta. If you've had a chance to add a schedule, I've got two questions:",
-      'Did the dates come out right?',
-      'Was anything confusing or hard to find?',
-    ],
-    after: ['Just reply here. A sentence is plenty, even if you only opened it once.'],
-    signoff: 'Thanks for your help,',
-    reason: "You're receiving this because you're testing the Semli beta.",
-    unsubscribe: true,
-  },
-
   'app-store-launch': {
     segment: EVERYONE,
     plan: 'Tue Nov 3, 2026, 10 am Eastern, once the listing is public (released early, Oct 26 plan)',
@@ -107,7 +94,7 @@ export const emails = {
   },
 
   'spring-schedule': {
-    segment: EVERYONE,
+    segment: [...EVERYONE, 'users'],
     plan: 'Tue Nov 17, 2026, 10 am Eastern: spring registration is open at most schools (Nov 2 to 23)',
     subject: 'Registered for spring? Add your classes now',
     preheader: 'One screenshot of your schedule fills the whole term.',
@@ -125,7 +112,7 @@ export const emails = {
   },
 
   'semester-reminder': {
-    segment: EVERYONE,
+    segment: [...EVERYONE, 'users'],
     plan: 'Tue Jan 5, 2027, 10 am Eastern: the week before most spring terms start (Jan 11 to 20)',
     subject: 'Got your new syllabus yet?',
     preheader: 'Start with one syllabus or a week of shifts.',
