@@ -21,7 +21,7 @@ Status: Oct 27, 2026. The App Store listing went public today, ten weeks before 
 ### Wed Oct 28 to Fri Oct 30
 
 - [ ] Schedule the eight clips (`design/clips/out/`), one a week on both accounts, syllabus clip first, with a licensed or in-app sound (marketing-500 §3.3). After this the video channel costs nothing until January.
-- [ ] Product Hunt: skip the coming-soon page, there is nothing to wait for now. Pick the launch day instead: **Tue Jan 5**, the semester push, when the two creator videos go live. Save the tagline and first comment in [beta-copy.md](beta-copy.md).
+- [x] Product Hunt: profile made (@semliapp, Oct 27); launch day **Tue Jan 5**; tagline, description and first comment in [beta-copy.md](beta-copy.md) §7. Schedule the launch itself in early December.
 - [ ] Reddit: the founder's own seven-year-old account, not a new pseudonymous one (Oct 27: age and karma clear the filters a new account trips). Skim its history first; say "I built this" in every post. Still leave a few helpful comments in r/college and r/StudentNurse before posting, and read each subreddit's self-promotion rules. No second account, ever.
 - [ ] Creator list: twenty names, 5k to 50k, their own screen in their last five videos. Send the first ten DMs Friday with the brief (beta-copy §4), the ask now "it's free on the App Store, link in bio".
 - [ ] Fri: first build-in-public post on the brand account. The number is the store's first-week downloads, whatever it is.

@@ -130,3 +130,31 @@ Use real numbers from the Monday funnel. Check remaining spots in the public Bet
 ## 6. TestFlight fields (already in App Store Connect doc)
 
 Beta App Description and What to Test are in [app-store-connect.md](app-store-connect.md#L245). Use the review account `review@semli.app` for Beta App Review sign-in.
+
+## 7. Product Hunt, Tue Jan 5, 2027
+
+Drafted Oct 27, 2026. The launch goes up at 12:01 am Pacific on Jan 5, the same day as the two creator videos and the `semester-reminder` email. Profile: producthunt.com/@semliapp. Link: `https://www.semli.app/get?r=producthunt`, so the day shows up in `beta_clicks` and App Store campaigns.
+
+**Name:** Semli
+
+**Tagline** (60 characters at most): **Your syllabus and work schedule, in one plan** (44). Spares: "The planner that reads your syllabus" (36), "Turn every syllabus into a semester plan" (40).
+
+**Description:** Drop in a syllabus PDF, a screenshot of your shifts, or a message from class. Semli finds the dates, you check them, and your classes, shifts and deadlines land in one week with reminders. Works with Canvas and Brightspace. Free on iPhone.
+
+**Topics:** Productivity, Calendar, Task Management, Education, iOS.
+
+**Thumbnail:** the app icon (`design/png/app-icon-512.png`). **Gallery:** the nine store screenshots in order (`design/screenshots/`), syllabus review second, since it's the thing nobody else does.
+
+**First comment, from the maker:**
+
+> Hi Product Hunt 👋
+>
+> Earlier this year I surveyed more than 50 college students about keeping track of classes and work. 83% had missed or nearly missed an assignment because the date was buried somewhere: a syllabus PDF, a Canvas page, a group chat, a shift schedule taped to a wall.
+>
+> Semli is built around that one problem. You give it the syllabus, the screenshot or the message, it pulls out the dates, and you check them before anything is saved. Classes repeat on their own, exams get reminders, and when your manager posts next week's shifts, Semli shows what changed.
+>
+> The calendar, to-dos and reminders are free, and so are five imports to start. Plus is for unlimited imports and keeping Canvas or Brightspace in sync.
+>
+> It's iPhone only for now [and on the web at app.semli.app, if the web planner ships with 1.2]. I'd love to hear where the plan it built for you was wrong. I read every comment today.
+
+Rules for the day: reply to every comment within the hour, never ask for upvotes (Product Hunt penalises it), and share the launch link, not "please upvote", in the survey and waitlist emails and on the brand accounts.

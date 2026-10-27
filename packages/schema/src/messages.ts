@@ -15,6 +15,8 @@ export const IMPORT_MESSAGES = {
   quota: "You've used this month's free imports. Semli Plus has unlimited imports, or add things by hand for free.",
   demoLimit: "That's the limit for previews today. Get the iPhone app to keep going.",
   session: "Semli couldn't confirm this phone. Close and reopen Semli, then try again.",
+  /** Many guest imports from one network today; signing in (free) lifts it. Never shown to a signed-in user. */
+  guestLimit: "Lots of people on this network are importing today. Sign in (it's free) to keep going.",
 } as const;
 
 /** Even a schema-valid server error must be known product copy before it reaches a screen. */

@@ -14,6 +14,13 @@ export const FREE_IMPORTS_PER_MONTH = 3;
 export const FREE_IMPORTS_TO_START = 5;
 export const START_WINDOW_DAYS = 30;
 export const DEMO_PREVIEWS_PER_DAY = 5;
+/**
+ * Free imports from guests (not signed in) per network per day (Oct 27, 2026). A guest is free to
+ * make, so this is what stops a script minting guests to spend the AI budget. A dorm or campus
+ * network shares it; past it, a guest sees "sign in to keep going", and signing in lifts it.
+ * Signed-in and Plus users never count against it.
+ */
+export const GUEST_IMPORTS_PER_IP_PER_DAY = 20;
 const PLUS_ENTITLEMENT = 'semli_plus';
 
 export type Access =
@@ -68,11 +75,52 @@ export async function checkImportAccess(request: Request): Promise<Access> {
 
   const user = await fetch(`${base.url}/auth/v1/user`, { headers: { apikey: base.key, authorization: `Bearer ${token}` } });
   if (!user.ok) return { ok: false, status: 401, error: IMPORT_MESSAGES.session };
-  const userId = ((await user.json().catch(() => null)) as { id?: string } | null)?.id ?? null;
+  const who = (await user.json().catch(() => null)) as { id?: string; is_anonymous?: boolean } | null;
+  const userId = who?.id ?? null;
 
   if (await hasPlus(purchaserFor(userId, request.headers.get('x-revenuecat-app-user-id')))) return { ok: true, refund: free, plus: true };
 
+  // A guest's import also counts against its network's daily allowance, before its own.
+  const guest = who?.is_anonymous ? await claimGuest(request) : null;
+  if (guest && !guest.ok) return { ok: false, status: 429, error: IMPORT_MESSAGES.guestLimit };
+
   const allowed = await rpc(base, 'claim_import', { p_limit: FREE_IMPORTS_PER_MONTH, p_start_limit: FREE_IMPORTS_TO_START, p_start_days: START_WINDOW_DAYS }, token);
-  if (allowed !== true) return { ok: false, status: 402, error: IMPORT_MESSAGES.quota };
-  return { ok: true, refund: () => rpc(base, 'refund_import', {}, token).then(() => {}, () => {}) };
+  if (allowed !== true) {
+    await guest?.refund();
+    return { ok: false, status: 402, error: IMPORT_MESSAGES.quota };
+  }
+  return {
+    ok: true,
+    refund: async () => {
+      await Promise.all([rpc(base, 'refund_import', {}, token).then(() => {}, () => {}), guest?.refund()]);
+    },
+  };
+}
+
+/**
+ * Claims one of a network's guest imports for today. Runs as the service role, so nobody can spend
+ * another network's allowance. Without the service key, or if the database can't answer, the
+ * import goes ahead: a missing setting must never stop real students importing.
+ */
+async function claimGuest(request: Request): Promise<{ ok: boolean; refund: () => Promise<void> }> {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const open = { ok: true, refund: free };
+  if (!url || !key) {
+    console.warn('[import.guest_limit_unconfigured]', { code: 'no_service_key' });
+    return open;
+  }
+  const service = { url: url.replace(/\/$/, ''), key };
+  const ipHash = createHash('sha256').update(`semli-guest:${clientIp(request)}`).digest('hex');
+  try {
+    const allowed = await rpc(service, 'claim_guest_import', { p_ip_hash: ipHash, p_limit: GUEST_IMPORTS_PER_IP_PER_DAY });
+    if (allowed !== true) {
+      console.info('[import.guest_limit]', { code: 'guest_network_limit' });
+      return { ok: false, refund: free };
+    }
+    return { ok: true, refund: () => rpc(service, 'refund_guest_import', { p_ip_hash: ipHash }).then(() => {}, () => {}) };
+  } catch (error) {
+    console.error('[import.guest_limit_check]', error instanceof Error ? error.message : 'unknown');
+    return open;
+  }
 }
