@@ -94,6 +94,15 @@ Keep this as the release scratchpad. Unchecked means work or device verification
 
 ## Outstanding
 
+**After the web app is finished (deferred Oct 27, 2026)**
+From the Oct 27 audit; the founder's call is to finish the web app first.
+- [ ] Undoing a Canvas sync doesn't last: the next sync adds the items back. Remember undone UIDs as dismissed, or say so in the toast.
+- [ ] A paid read is lost if review is closed or the app restarts mid-review: `pending` isn't persisted, and there's no cancel or timeout while reading.
+- [ ] Undo history (`batches`) has no cap and is saved whole on every change. Pick a cap with the founder (e.g. last 100 or 60 days) and name it in the Recent changes footer.
+- [ ] Recent changes shows 3 rows; imports sink under edits.
+- [ ] CourseDetail's "Last one" can only shorten a class, not extend it.
+- [ ] Nothing reads an exported plan file back in; the copy no longer promises it.
+
 **Needs the backend**
 - Schedule sharing direction: a named, private read-only link that friends or parents can open in a browser without installing Semli. Show a useful message preview (owner and date range); allow hiding titles or sharing school/work only, and let the owner revoke access. A live view should show when it last updated. Image/PDF export can be a fallback; links are not implemented yet.
 - Streaming "Found so far" while reading (Capture board).
