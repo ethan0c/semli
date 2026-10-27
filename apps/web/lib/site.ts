@@ -13,6 +13,18 @@ export const SITE_NAME = 'Semli';
 /** The App Store record (not live yet); the listing name is "Semli: AI Student Planner". */
 export const APP_STORE_ID = '6824600264';
 export const APP_STORE_URL = 'https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264';
+
+/**
+ * The listing with an App Store Connect campaign, so App Analytics → Campaigns counts installs
+ * per tag. `providerToken` is the account's `pt` (App Store Connect → App Analytics → Campaigns →
+ * Generate campaign link); without it, or without a tag, this is the plain listing. Apple keeps
+ * campaign names to 40 characters.
+ */
+export function appStoreLink(campaign: string | null, providerToken: string | null | undefined): string {
+  const pt = providerToken?.trim();
+  if (!campaign || !pt || !/^\d+$/.test(pt)) return APP_STORE_URL;
+  return `${APP_STORE_URL}?pt=${pt}&ct=${encodeURIComponent(campaign.slice(0, 40))}&mt=8`;
+}
 /** Flip when the App Store listing goes live; until then app links lead to the beta waitlist. */
 export const APP_STORE_LIVE = true;
 export const SUPPORT_EMAIL = 'hello@semli.app';

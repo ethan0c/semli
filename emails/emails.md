@@ -83,7 +83,7 @@ Semli is on the App Store. Thanks for being here while I built it.
 
 Add your syllabi, work schedule, or class messages to start your plan. The calendar, to-dos, and reminders are free. You get five imports to start.
 
-Button: [Get Semli on iPhone](https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264)
+Button: [Get Semli on iPhone](https://www.semli.app/beta?r=email-launch)
 
 Tried the beta? Thank you for helping me get here. Let me know how it fits into your week.
 
@@ -104,7 +104,7 @@ If you've picked your spring classes, you can add them to Semli now.
 
 Take a screenshot of the schedule in your school's portal. Add it in Semli, check the class times, and save them. They'll repeat through the term.
 
-Button: [Get Semli on iPhone](https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264)
+Button: [Get Semli on iPhone](https://www.semli.app/beta?r=email-spring)
 
 > Already have Semli? Open the app and tap Add.
 
@@ -127,7 +127,7 @@ Getting ready for the semester? You don't need your whole schedule to get starte
 
 Add a syllabus or a week of shifts to Semli. Check the dates before saving, then add the rest as you get them.
 
-Button: [Get Semli on iPhone](https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264)
+Button: [Get Semli on iPhone](https://www.semli.app/beta?r=email-semester)
 
 > Already have Semli? Open the app and tap Add.
 
