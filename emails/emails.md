@@ -16,6 +16,7 @@ How this file works:
 - Use `[words](https://…)` for a purple underlined link and `**words**` for medium weight text.
 - `Button: [label](https://…)` adds a black pill button. Paragraphs appear above or below it in the same order as this file. Use only one button per email.
 - Put `> text` immediately after the button to add a small grey note beneath it.
+- Link to the app with `https://www.semli.app/beta?r=email-<name>`, never the App Store directly. The site counts the click under that tag and passes it on to the App Store as a campaign, so App Store Connect counts installs per email too.
 - The send command fills in `{about}` and `{reply}` in `feedback-thank-you`.
 
 Write like the founder talking to one person, and sign off as Semli. Use everyday words, short sentences, and sentence case. Skip all caps and em or en dashes. Keep group emails under 80 words from greeting to sign-off, with one main thing to do.

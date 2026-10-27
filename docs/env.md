@@ -34,6 +34,7 @@ Sentry token is.
 | `SUPABASE_URL`, `SUPABASE_KEY` | Import limits and the beta waitlist. Same project as the app. |
 | `REVENUECAT_SECRET_KEY` | Confirms a Plus subscriber before a paid import. Secret. Production only. |
 | `TESTFLIGHT_URL` | Set once the public TestFlight link exists; `semli.app/beta` then redirects there. |
+| `APP_STORE_PROVIDER_TOKEN` | The `pt=` number from any App Store Connect campaign link (App Analytics → Campaigns). With it, `semli.app/beta?r=<tag>` sends people to the App Store with `ct=<tag>`, so installs are counted per tag. Not secret. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Reads and clears `email_outbox` for transactional email (`app/api/emails`). Secret; never in the app. |
 | `RESEND_API_KEY` | Sends transactional email and keeps Resend's App users group in step with accounts (adds each welcomed address, deletes a deleted account's contact). Needs a full-access key for the group; with a send-only key the emails still go and `npm run email sync` catches the group up. Secret. |
 | `CRON_SECRET` | Vercel sends it to the daily `/api/emails` cron (`vercel.json`); any long random string. Secret. |

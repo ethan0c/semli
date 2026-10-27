@@ -55,7 +55,7 @@ describe('emails.md', () => {
 
   it('reads the button, its note and who each broadcast goes to', () => {
     expect(emails['spring-schedule'].segment).toEqual(['survey', 'waitlist', 'users']);
-    expect(emails['spring-schedule'].action).toEqual({ label: 'Get Semli on iPhone', url: expect.stringContaining('apps.apple.com'), note: 'Already have Semli? Open the app and tap Add.' });
+    expect(emails['spring-schedule'].action).toEqual({ label: 'Get Semli on iPhone', url: 'https://www.semli.app/beta?r=email-spring', note: expect.stringContaining('Already have Semli?') });
   });
 
   it('fills the feedback reply', async () => {
@@ -69,5 +69,19 @@ describe('emails.md', () => {
   it('uses the wordmark image only when given one', () => {
     expect(renderHtml(transactional.welcome, POSTAL)).not.toContain('<img');
     expect(renderHtml(transactional.welcome, POSTAL, { wordmark: 'https://x.test/w.png' })).toContain('<img src="https://x.test/w.png" width="84"');
+  });
+});
+
+describe('app links', () => {
+  it('every App Store button goes through the tagged click link, with its own tag', () => {
+    const store = Object.entries(emails).filter(([, e]) => e.action && /apps\.apple\.com|semli\.app\/beta/.test(e.action.url) && !/testflight/.test(e.action.url));
+    const tags = new Set();
+    for (const [name, e] of store) {
+      expect(e.action.url, name).not.toContain('apps.apple.com');
+      const tag = new URL(e.action.url).searchParams.get('r');
+      expect(tag, name).toMatch(/^email-[\w-]+$/);
+      expect(tags.has(tag), `${name} reuses ${tag}`).toBe(false);
+      tags.add(tag);
+    }
   });
 });
