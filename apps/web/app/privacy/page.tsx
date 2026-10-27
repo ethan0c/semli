@@ -66,8 +66,9 @@ export default function PrivacyPage() {
             about Semli, such as a reminder before a new semester. Every one of those update emails has an unsubscribe link.
           </p>
           <p>
-            If you join the beta waitlist, we store your email address and any referral tag attached to your signup so we can send
-            your invitation and track referrals. The website preview uses a hash of your IP address to count daily previews.
+            If you joined the waitlist before Semli launched, we keep your email address and any referral tag attached to your
+            signup so we can tell you about the app and credit referrals. The website preview uses a hash of your IP address to
+            count daily previews.
           </p>
           <h3>2.4 Purchases</h3>
           <p>
@@ -183,7 +184,7 @@ export default function PrivacyPage() {
             separately. You can export a copy first. For the full steps, see <Link href="/delete-account">Delete your data</Link>.
           </p>
           <p>Usage records and diagnostic reports are kept for no longer than one year, then deleted.</p>
-          <p>If you want a beta signup removed or need help with data you cannot delete in the app, email us.</p>
+          <p>If you want a waitlist signup removed or need help with data you cannot delete in the app, email us.</p>
         </section>
 
         <section>

@@ -108,7 +108,7 @@ export default function TermsPage() {
               . Manage or cancel in your iPhone&apos;s Settings, under your name, then Subscriptions.
             </li>
             <li>
-              <strong>On the web:</strong> This website offers a schedule preview and beta signup. Web purchases of Plus are not currently available.
+              <strong>On the web:</strong> This website offers a schedule preview. Web purchases of Plus are not currently available.
             </li>
           </ul>
           <h3>6.4 Trials and renewals</h3>

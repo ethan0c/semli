@@ -43,13 +43,13 @@ export default function DeleteAccountPage() {
         </section>
 
         <section>
-          <h2>Uploads and beta signups</h2>
+          <h2>Uploads and waitlist signups</h2>
           <p>
             Semli’s servers do not save the original messages or files you send to be read. Account information and plan backups
             are separate from uploads. See the <a href="/privacy">Privacy Policy</a> for details.
           </p>
           <p>
-            If you joined the beta waitlist, email us to remove your signup. You can also contact us if you no longer have access
+            If you joined the waitlist before launch, email us to remove your signup. You can also contact us if you no longer have access
             to the app and need help deleting an account.
           </p>
         </section>
