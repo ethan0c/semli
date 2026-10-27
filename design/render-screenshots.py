@@ -133,7 +133,7 @@ SHOTS: list[tuple[str, str, str, str]] = [
     ("today-hours", "Your day, ~hour by hour~.", "Classes, shifts, and the gaps between them on one timeline.", "sky"),
     ("school", "Keep your ~course dates~ together.", "Courses, due dates, and the weeks left in the term.", "sky"),
     ("item", "Choose your ~reminders~.", "A reminder before class, or before the things you can't miss.", "sky"),
-    ("canvas", "Bring ~Canvas~ into your plan.", "Import your Canvas calendar. With Plus, Semli checks for updates when you open the app.", "sky"),
+    ("canvas", "Bring in ~Canvas or Brightspace~.", "Import your class calendar. With Plus, Semli checks for updates when you open the app.", "sky"),
 ]
 # No paywall shot: App Review rejected 1.0 under 2.3.7 (Oct 23, 2026) because a screenshot showed
 # prices and a "free" caption. Screenshots show the app, never prices, trials or "free".
