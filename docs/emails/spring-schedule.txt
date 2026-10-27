@@ -6,7 +6,7 @@ If you've picked your spring classes, you can add them to Semli now.
 
 Take a screenshot of the schedule in your school's portal. Add it in Semli, check the class times, and save them. They'll repeat through the term.
 
-Get Semli on iPhone: https://www.semli.app/beta?r=email-spring
+Get Semli on iPhone: https://www.semli.app/get?r=email-spring
 
 Already have Semli? Open the app and tap Add.
 

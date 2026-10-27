@@ -6,9 +6,7 @@ Thanks for waiting. You can now try Semli on your iPhone.
 
 Start with a syllabus, a screenshot of your shifts, or a class message. Check the dates Semli finds, then save them to your calendar.
 
-Try Semli on iPhone: https://semli.app/beta?r=email-waitlist
-
-If asked, install Apple's free TestFlight app, then reopen this invite. There's room for 200 testers.
+Get Semli on iPhone: https://www.semli.app/get?r=email-waitlist
 
 Let me know how it goes. I read every reply.
 
@@ -16,7 +14,7 @@ Thanks for trying it,
 Semli
 
 --
-You joined the Semli beta waitlist.
+You joined the Semli waitlist.
 441 Country Club Road, York, PA 17403-3651, USA
 Contact Semli: hello@semli.app
 Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}
