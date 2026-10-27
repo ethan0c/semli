@@ -64,13 +64,13 @@ describe('the outbox sender', () => {
   const groups = { data: [{ id: 'g-users', name: 'App users' }, { id: 'g-survey', name: 'Survey' }, { id: 'g-wait', name: 'Waitlist' }] };
   const calls = (method: string) => fetchMock.mock.calls.filter(([, i]) => ((i as RequestInit | undefined)?.method ?? 'GET') === method).map(([u]) => String(u));
 
-  function resendWith(contact: (url: string, method: string) => Response) {
+  function resendWith(contact: (url: string, method: string) => Response, segments = () => ok(groups)) {
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? 'GET';
       if (url.includes('email_outbox?select')) return ok([{ ...row, kind: 'welcome' }]);
       if (url.includes('email_outbox')) return ok(null, 204);
       if (url.endsWith('/emails')) return ok({ id: 'e1' });
-      if (url.endsWith('/segments')) return ok(groups);
+      if (url.endsWith('/segments')) return segments();
       return contact(url, method);
     });
   }
@@ -102,10 +102,8 @@ describe('the outbox sender', () => {
 
   it('still clears the row when the contact update fails, so the welcome is never sent twice', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    resendWith(() => ok({ name: 'restricted_api_key' }, 401));
-    fetchMock.mockImplementationOnce(async () => ok([{ ...row, kind: 'welcome' }]));
-    const segments = fetchMock.getMockImplementation()!;
-    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => (url.endsWith('/segments') ? ok({ name: 'restricted_api_key' }, 401) : segments(url, init)));
+    const restricted = () => ok({ name: 'restricted_api_key' }, 401);
+    resendWith(restricted, restricted);
     expect(await (await POST()).json()).toEqual({ ok: true, sent: 1, failed: 0 });
     expect(calls('DELETE').some((u) => u.includes('id=eq.7'))).toBe(true);
     expect(log).toHaveBeenCalledWith('[emails.contacts]', { code: 'resend_contacts_failed', status: 401, kind: 'welcome' });
