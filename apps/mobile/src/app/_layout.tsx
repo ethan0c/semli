@@ -265,6 +265,7 @@ function RootLayout() {
             <Stack.Screen name="create" options={sidebar ? dialogScreen : { presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
             <Stack.Screen name="share-schedule" options={{ presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
             <Stack.Screen name="item/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
+            <Stack.Screen name="repeat/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
             <Stack.Screen name="course/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
             <Stack.Screen name="employer/[name]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />
             <Stack.Screen name="import/[id]" options={{ headerShown: true, ...navigationButtonOptions('back') }} />

@@ -4,7 +4,7 @@ import { buildManualItem, defaultManualTimes, type ManualDraft } from './manual-
 const draft: ManualDraft = {
   kind: 'task', title: ' Read chapter 4 ', category: 'personal', date: '2026-10-21',
   start: '09:00', end: '10:00', allDay: false, hasDueTime: false, isDeadline: false,
-  courseId: 'course-1', employer: 'Cafe', notes: ' Bring notes ',
+  courseId: 'course-1', employer: 'Cafe', notes: ' Bring notes ', repeat: null,
 };
 
 describe('manual planner items', () => {
@@ -13,6 +13,8 @@ describe('manual planner items', () => {
     [{ hasDueTime: true, start: '24:00' }, 'time'],
     [{ kind: 'event', end: 'noon' }, 'end time'],
     [{ kind: 'event', end: '09:00' }, 'different'],
+    [{ repeat: { every: 1, days: [], until: '2026-12-11', skipped: [], start: null, end: null } }, 'day'],
+    [{ repeat: { every: 1, days: ['wed'], until: '2026-10-20', skipped: [], start: null, end: null } }, 'last date'],
   ])('rejects invalid input before a write: %j', (patch, message) => {
     const result = buildManualItem({ ...draft, ...patch } as ManualDraft);
     expect(result.ok).toBe(false);
@@ -21,7 +23,7 @@ describe('manual planner items', () => {
 
   it('keeps the chosen calendar date, trims text, and clears irrelevant fields', () => {
     const result = buildManualItem(draft);
-    expect(result).toEqual({ ok: true, item: {
+    expect(result).toEqual({ ok: true, repeat: null, item: {
       kind: 'task', title: 'Read chapter 4', category: 'personal', icon: 'check', date: '2026-10-21',
       start: null, end: null, isDeadline: false, done: false, completedAt: null,
       courseId: null, employer: null, notes: 'Bring notes', sourceId: null,

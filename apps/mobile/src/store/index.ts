@@ -176,7 +176,7 @@ interface State {
    */
   applySeries: (seriesId: string, rule: SeriesRule, from: string, today: string, label: string) => { created: number; updated: number; removed: number; kept: number; batchId: string | null };
   /** Make a one-off repeat: it becomes the first occurrence of a new series under `rule`. */
-  startSeries: (id: string, rule: SeriesRule, today: string) => string;
+  startSeries: (id: string, rule: SeriesRule, today: string) => { seriesId: string; created: number; batchId: string | null };
   removeItem: (id: string) => void;
   /** Delete several at once as one undoable batch: a week of lectures, the rest of a series. */
   removeItems: (ids: string[], label: string) => void;
@@ -336,11 +336,11 @@ export const useStore = create<State>()(
 
       startSeries: (id, rule, today) => {
         const it = get().items[id];
-        if (!it) return '';
+        if (!it) return { seriesId: '', created: 0, batchId: null };
         const seriesId = it.seriesId ?? `series-${id}`;
         if (!it.seriesId) set({ items: { ...get().items, [id]: { ...it, seriesId } } });
-        get().applySeries(seriesId, rule, it.date, today, `${it.title} repeats`);
-        return seriesId;
+        const r = get().applySeries(seriesId, rule, it.date, today, `${it.title} repeats`);
+        return { seriesId, created: r.created, batchId: r.batchId };
       },
 
       removeItem: (id) => {

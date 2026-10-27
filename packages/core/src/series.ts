@@ -1,5 +1,5 @@
 import type { Item, SeriesRule, Weekday } from '@dayli/schema';
-import { WEEKDAYS, addDays, dayNumber, weekOf, weekdayOf } from './dates';
+import { WEEKDAYS, addDays, dayNumber, typicalTermEnd, weekOf, weekdayOf } from './dates';
 
 /**
  * Repeating items. A series is ordinary items sharing a seriesId plus one SeriesRule. Every edit
@@ -9,6 +9,32 @@ import { WEEKDAYS, addDays, dayNumber, weekOf, weekdayOf } from './dates';
 
 /** At most a year of occurrences from any one rule. */
 export const MAX_SERIES_DAYS = 366;
+
+/** The latest end a rule starting on `from` may have: a year on. */
+export function lastUntil(from: string): string {
+  return addDays(from, MAX_SERIES_DAYS - 1);
+}
+
+/**
+ * A rule for an item on `from` that is starting to repeat: weekly on its own weekday, through the
+ * end of the term it falls in, at its own times.
+ */
+export function defaultRule(from: string, times: { start: string | null; end: string | null }, every: SeriesRule['every'] = 1): SeriesRule {
+  return anchorRule({ every, days: [weekdayOf(from)], until: typicalTermEnd(from).date, skipped: [], start: times.start, end: times.end }, from);
+}
+
+/**
+ * A rule made to fit the occurrence it is edited from: that day stays one of the rule's days (so
+ * the occurrence on screen is never one the rule removes), and the end is between the occurrence
+ * and a year on.
+ */
+export function anchorRule(rule: SeriesRule, from: string): SeriesRule {
+  const day = weekdayOf(from);
+  const days = rule.every > 0 && !rule.days.includes(day) ? WEEKDAYS.filter((d) => d === day || rule.days.includes(d)) : rule.days;
+  const cap = lastUntil(from);
+  const until = rule.until < from ? from : rule.until > cap ? cap : rule.until;
+  return days === rule.days && until === rule.until ? rule : { ...rule, days, until };
+}
 
 export type Break = { start: string; end: string };
 type Occurrence = Pick<Item, 'id' | 'date' | 'start' | 'end' | 'done' | 'editedAt'>;

@@ -1,6 +1,6 @@
 # Editing: dates, times and repeats
 
-Status: decided Oct 27, 2026, built in three steps (core and data; the item screen; the Repeat screen and Create). Replaces the compact pickers and the shorten-only "until" on the item screen.
+Status: decided and built Oct 27, 2026, in three steps (core and data, #37; the item screen, #38; the Repeat screen and Create). Replaces the compact pickers and the shorten-only "until" on the item screen.
 
 ## 1. What was wrong
 
@@ -16,7 +16,7 @@ Status: decided Oct 27, 2026, built in three steps (core and data; the item scre
 
 **Times.** Changing the start moves the end with it, keeping the length; changing the end alone changes the length. An end before the start is "ends next day" for shifts and amber for anything else. "No time" removes the time. Moving into the past is allowed; the item becomes overdue, which is the truth. A move that creates an overlap shows the overlap at once.
 
-**Repeats.** A series is its occurrences (ordinary items sharing a `seriesId`) plus one stored rule (`SeriesRule`: weekdays, every N weeks or every day, until, skipped dates, start, end). Series made before rules existed get one read off their occurrences the first time it is needed. The Repeat screen edits the rule with a live preview (count and dots); the end date defaults to the end of term and is capped at a year. Tasks can repeat too.
+**Repeats.** A series is its occurrences (ordinary items sharing a `seriesId`) plus one stored rule (`SeriesRule`: weekdays, every N weeks or every day, until, skipped dates, start, end). Series made before rules existed get one read off their occurrences the first time it is needed. The Repeat screen (`/repeat/[id]`, pushed from the repeat row, which reads "Doesn't repeat" on a one-off) edits the rule with a live preview (count and four weeks of dots) and says what the change comes to before it is saved (adds, removes and how many of those have notes, how many hand-moved stay); the end date defaults to the end of term and is capped at a year. The day of the occurrence being edited always stays in the rule, so the thing on screen is never one the rule removes. Create has the same editor under a Repeats row; the rest of the series is a second batch after the first item. Tasks can repeat too.
 
 **Scope on a repeating item**, asked inline, never as a pop-up: "This one" or "Every one from now". Time and repeat default to every one from now; date defaults to this one. "From now" means from the occurrence being edited; earlier ones keep what they had. `rebuildSeries` in core applies a rule from a date onward and never touches the past, done occurrences, or occurrences the person moved by hand (`editedAt`); those still hold their date, so nothing lands on top of them, and the result says how many were left alone. Deleting one occurrence adds its date to the rule's skips. Breaks in the term calendar (`settings.breaks`) are skipped. Turning repeat off keeps this one and asks before removing the rest. Every change is one undoable batch.
 

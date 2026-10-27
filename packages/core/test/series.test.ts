@@ -1,6 +1,6 @@
 import type { SeriesRule } from '@dayli/schema';
 import { describe, expect, it } from 'vitest';
-import { describeRule, inferRule, rebuildSeries, seriesDates } from '../src';
+import { anchorRule, defaultRule, describeRule, inferRule, rebuildSeries, seriesDates } from '../src';
 
 const rule: SeriesRule = { every: 1, days: ['mon', 'wed'], until: '2026-11-18', skipped: [], start: '09:00', end: '10:15' };
 const occ = (id: string, date: string, over: Partial<{ start: string | null; end: string | null; done: boolean; editedAt: string | null }> = {}) =>
@@ -50,5 +50,14 @@ describe('series rules', () => {
     expect(describeRule({ ...rule, days: ['mon', 'tue', 'wed', 'thu', 'fri'] })).toBe('Every weekday');
     expect(describeRule({ ...rule, every: 2, days: ['fri'] })).toBe('Every 2 weeks on Fri');
     expect(describeRule({ ...rule, every: 0 })).toBe('Every day');
+  });
+  it('starts a new series on the item’s own day through the end of its term, and keeps that day when the rule is edited', () => {
+    const r = defaultRule('2026-10-27', { start: '09:00', end: '10:15' });
+    expect(r).toMatchObject({ every: 1, days: ['tue'], start: '09:00', end: '10:15', skipped: [] });
+    expect(r.until).toBe('2026-12-11');
+    expect(anchorRule({ ...r, days: ['mon', 'wed'] }, '2026-10-27').days).toEqual(['mon', 'tue', 'wed']);
+    expect(anchorRule({ ...r, every: 0, days: [] }, '2026-10-27').days).toEqual([]);
+    expect(anchorRule({ ...r, until: '2026-10-01' }, '2026-10-27').until).toBe('2026-10-27');
+    expect(anchorRule({ ...r, until: '2028-01-01' }, '2026-10-27').until).toBe('2027-10-27');
   });
 });
