@@ -86,3 +86,19 @@ describe('rows as they are read', () => {
     expect(await requestExtraction('https://semli.test', request, {}, { onItem: () => {} })).toEqual({ ok: true, extraction });
   });
 });
+
+describe('apiBase', () => {
+  it('calls www directly, so the sign-in header is never lost to a redirect', async () => {
+    const { apiBase } = await import('./api');
+    expect(apiBase('https://semli.app')).toBe('https://www.semli.app');
+    expect(apiBase('https://semli.app/')).toBe('https://www.semli.app');
+    expect(apiBase('https://www.semli.app')).toBe('https://www.semli.app');
+    expect(apiBase('http://localhost:3000/')).toBe('http://localhost:3000');
+    expect(apiBase('https://semli.application.dev')).toBe('https://semli.application.dev');
+  });
+  it('sends imports to www even when settings hold the old address', async () => {
+    const fetch = vi.fn().mockRejectedValue(new TypeError('stop')); vi.stubGlobal('fetch', fetch);
+    await requestExtraction('https://semli.app', request);
+    expect(fetch.mock.calls[0]![0]).toBe('https://www.semli.app/api/extract');
+  });
+});
