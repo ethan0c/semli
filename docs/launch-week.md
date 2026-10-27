@@ -4,25 +4,25 @@ Status: Oct 27, 2026. The App Store listing went public today, ten weeks before 
 
 ## What changed, honestly
 
-- **There is no beta any more; there is a public app.** The purchase test (50 engaged users, real price, 10 or more subscribe, [strategy.md](strategy.md) §2) now runs in production from today to Dec 15. The TestFlight groups and `semli.app/get` are history; the link goes to the store and the `r` tag rides on it as `ct=`.
+- **There is no beta any more; there is a public app.** The purchase test (50 engaged users, real price, 10 or more subscribe, [strategy.md](strategy.md) §2) now runs in production from today to Dec 15. The TestFlight groups are history. The one link is `semli.app/get?r=<tag>` (`/beta` still works for anything already posted or printed); it goes to the store and the `r` tag rides on it as `ct=`.
 - **Late October is the worst buying window of the year.** Midterms are over, Thanksgiving and finals are ahead, and nobody buys six months of a planner six weeks before the semester ends. The monthly plan gets tested now. The six-month plan gets its test on Jan 5, same as before. Do not read November's numbers as the verdict on the price.
 - **None of the supplies exist yet.** Every marketing row in the checklist's Oct 20 to 26 block is still open: brand accounts, Product Hunt page, creator list, Reddit account with history. That, not a missing plan, is the gap. The next two weeks are the four-hour setup from marketing-500 §3, spread out.
-- **One thing only a live store can prove:** a real-money purchase on the production build unlocks Plus and shows in RevenueCat → Customers with `semli_pro` active. Buy the $4.99 month yourself today, check, then refund it through reportaproblem.apple.com. Sandbox and TestFlight never proved this.
+- **One thing only a live store can prove:** a real-money purchase on the production build unlocks Plus and shows in RevenueCat → Customers with `semli_plus` active. Buy the $4.99 month yourself today, check, then refund it through reportaproblem.apple.com. Sandbox and TestFlight never proved this.
 
 ## Days 1 to 14
 
 ### Tue Oct 27, today
 
-- [ ] Real purchase on the production build, RevenueCat shows the entitlement, refund.
-- [ ] `npm run email send app-store-launch --yes` to the Survey and Waitlist groups, this evening. The template is written ([emails/emails.md](../emails/emails.md) `app-store-launch`); its link already goes to the store. These ~60 survey respondents and the waitlist are the warmest list there will ever be, and the email was always meant to go the day the listing was public.
-- [ ] Brand TikTok and Instagram created with the names, bios and links in marketing-500 §3.4, with the bio's last line as `Free on iPhone ↓` from day one. Link: `semli.app/get?r=tiktok` and `?r=ig` (both redirect to the store, tagged).
-- [ ] `apps/mobile/store.config.json`: confirm the live listing's promotional text matches [aso-log.md](aso-log.md) (the 2.3.7 rewrite). Nothing else on the listing moves this week.
+- [x] Real purchase on the production build, RevenueCat shows the entitlement, refund (Oct 27).
+- [x] Launch emails scheduled for Wed Oct 28, 10 am Eastern: `survey-invite` to Survey (their own email: they gave their address on the survey form) and `app-store-launch` to Waitlist. Cancel the two Oct 27 `app-store-launch` broadcasts in Resend first, then `npm run email send survey-invite -- --at "2026-10-28T14:00:00Z" --yes` and the same for `app-store-launch`. The template is written ([emails/emails.md](../emails/emails.md) `app-store-launch`); its link already goes to the store. These ~60 survey respondents and the waitlist are the warmest list there will ever be, and the email was always meant to go the day the listing was public.
+- [x] Brand TikTok and Instagram created and finished (Oct 27). Was: with the names, bios and links in marketing-500 §3.4, with the bio's last line as `Free on iPhone ↓` from day one. Link: `semli.app/get?r=tiktok` and `?r=ig` (both redirect to the store, tagged).
+- [x] Promotional text in `store.config.json` matches the 2.3.7 rewrite in aso-log.md, in all four locales (checked Oct 27). The live description is 1.1.2's, without Brightspace; that waits for the next store build.
 
 ### Wed Oct 28 to Fri Oct 30
 
 - [ ] Schedule the eight clips (`design/clips/out/`), one a week on both accounts, syllabus clip first, with a licensed or in-app sound (marketing-500 §3.3). After this the video channel costs nothing until January.
 - [ ] Product Hunt: skip the coming-soon page, there is nothing to wait for now. Pick the launch day instead: **Tue Jan 5**, the semester push, when the two creator videos go live. Save the tagline and first comment in [beta-copy.md](beta-copy.md).
-- [ ] Reddit: start the pseudonymous account's two weeks of helpful comments today, r/college and r/StudentNurse, no links. Ten comments before the first post.
+- [ ] Reddit: the founder's own seven-year-old account, not a new pseudonymous one (Oct 27: age and karma clear the filters a new account trips). Skim its history first; say "I built this" in every post. Still leave a few helpful comments in r/college and r/StudentNurse before posting, and read each subreddit's self-promotion rules. No second account, ever.
 - [ ] Creator list: twenty names, 5k to 50k, their own screen in their last five videos. Send the first ten DMs Friday with the brief (beta-copy §4), the ask now "it's free on the App Store, link in bio".
 - [ ] Fri: first build-in-public post on the brand account. The number is the store's first-week downloads, whatever it is.
 
@@ -68,6 +68,27 @@ Replaces beta-copy §2's TestFlight version. Adjust the first paragraph per subr
 > Things it doesn't do yet: Android, Google Calendar sync, anything outside iPhone. If you try it, I'd genuinely like to hear where the schedule it built was wrong. I read every reply.
 >
 > [Today screenshot]
+
+## Weekly installs: target and actual
+
+First-time downloads from App Store Connect → Analytics → Units, Monday to Sunday, read every Monday and written in the Actual column the same day. The targets add up to the milestones below (50 by Nov 15, 150 by mid-December, 400 by Jan 17) and are shaped by the calendar: the Reddit posts and creator videos lift a week, Thanksgiving, finals and the break sink one, and the semester push is most of the total. A miss is a question to answer that Monday, not a failure: which channel was quiet (`select ref, count(*) from beta_clicks where at > now() - interval '7 days' group by ref`), and did people who installed import something (first-import rate, PostHog).
+
+| Week (Mon) | What happens | Target | Running target | Actual | Running actual |
+|---|---|---|---|---|---|
+| Oct 26 | Launch Tue; launch emails Wed; first clips | 12 | 12 | | |
+| Nov 2 | r/StudentNurse post Tue; ten creator DMs | 18 | 30 | | |
+| Nov 9 | r/college post Tue; Discord; creator video 1 | 20 | 50 | | |
+| Nov 16 | r/GetStudying; creator video 2; `spring-schedule` email Tue | 30 | 80 | | |
+| Nov 23 | Thanksgiving: expect a dip | 15 | 95 | | |
+| Nov 30 | r/sideproject; optional finals email Tue | 30 | 125 | | |
+| Dec 7 | Finals: no posts | 25 | 150 | | |
+| Dec 14 | Purchase test read Dec 15; r/iosapps | 15 | 165 | | |
+| Dec 21 | Break: flyers ordered by Dec 20, nothing else | 10 | 175 | | |
+| Dec 28 | Break | 15 | 190 | | |
+| Jan 4 | Product Hunt + two creator videos Tue Jan 5; `semester-reminder` email | 120 | 310 | | |
+| Jan 11 | Campus cards at York, Pomona and UGA; ambassadors | 90 | 400 | | |
+
+If two weeks in a row land under half their target before Thanksgiving, run the mid-November check below early: the message, not the channel, is what to change.
 
 ## What good looks like now
 
