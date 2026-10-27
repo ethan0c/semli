@@ -6,7 +6,8 @@
  *   wordmark-ink-{1440,720}.png     ink wordmark, lavender dot, transparent
  *   wordmark-white-{1440,720}.png   white wordmark for dark grounds, transparent
  *   app-icon-{1024,512,180}.png     the two-dot app mark on its dark square
- *   app-mark-{1024,512}.png         the two dots alone, transparent
+ *   app-mark-on-dark-{1024,512}.png   the two dots alone (white, lavender), transparent
+ *   app-mark-on-light-{1024,512}.png  the two dots in ink and the deeper lavender, transparent
  *
  * The email wordmark has the email page's paper (#FAF9F6) baked in, so Gmail's dark mode, which
  * darkens the page but never images, can't put ink letters on a dark ground. Shown at 84 px wide;
@@ -35,8 +36,9 @@ for (const tone of ['ink', 'white']) for (const w of [1440, 720]) await render(`
 
 const icon = await readFile(file('design/icon-b-dots.svg'), 'utf8');
 for (const w of [1024, 512, 180]) await render(Buffer.from(icon), `design/png/app-icon-${w}.png`, w);
-const mark = Buffer.from(icon.replace(/<rect\b[^>]*\/>/, ''));
-for (const w of [1024, 512]) await render(mark, `design/png/app-mark-${w}.png`, w);
+const onDark = icon.replace(/<rect\b[^>]*\/>/, '');
+const onLight = onDark.replace('#FFFFFF', '#222320').replace('#C3AFF8', '#7057BD');
+for (const [tone, svg] of [['on-dark', onDark], ['on-light', onLight]]) for (const w of [1024, 512]) await render(Buffer.from(svg), `design/png/app-mark-${tone}-${w}.png`, w);
 
 await render('design/wordmark-ink.svg', EMAIL_WORDMARK.path, EMAIL_WORDMARK.width * 3, { flatten: PAPER });
 
