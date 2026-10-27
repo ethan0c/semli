@@ -439,7 +439,7 @@
   align-items: start;
 }
 
-/* The close: the serif line, then the beta signup or the store link. */
+/* The close: the serif line, then the store link. */
 .closing {
   display: flex;
   flex-direction: column;
@@ -451,91 +451,11 @@
 .closing :global(.section-title) {
   max-width: 16ch;
 }
-.closingBeta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.closingBeta :global(.lede) {
-  margin-top: 16px;
-  max-width: 46ch;
-}
-.closingBeta .waitlist {
-  justify-content: center;
-  margin-top: 28px;
-}
-/* On the photo the field is frosted glass and the one action is the solid white pill: paper on
-   dark, the photo's version of an ink button. */
-.closingBeta .waitlistInput {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--white);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.closingBeta .waitlistInput::placeholder {
-  color: rgba(255, 255, 255, 0.72);
-}
-.closingBeta .waitlistInput:focus {
-  border-color: var(--white);
-}
+/* On the photo, the one action is the solid white pill. */
 .closing :global(.btn) {
   background: var(--white);
   color: var(--brand-ink);
 }
-.closingBeta .waitlistError {
-  color: var(--photo-conflict);
-}
-.closingBeta .waitlistNote,
-.closingBeta .waitlistError {
-  text-align: center;
-}
-
-/* Beta waitlist: one field and one pill */
-.waitlist {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-  max-width: 520px;
-}
-.waitlistInput {
-  flex: 1 1 220px;
-  min-width: 0;
-  height: 52px;
-  padding: 0 20px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--canvas);
-  font-size: 16px;
-}
-.waitlistInput::placeholder {
-  color: var(--ink-2);
-}
-.waitlistInput:focus {
-  border-color: var(--ink);
-  outline: none;
-}
-.waitlistNote,
-.waitlistError,
-.waitlistDone {
-  flex-basis: 100%;
-  margin: 4px 0 0;
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--ink-2);
-}
-.waitlistError {
-  color: var(--conflict);
-}
-.waitlistDone {
-  margin-top: 16px;
-  font-size: 15px;
-  line-height: 22px;
-  color: var(--ink);
-  max-width: 40ch;
-}
-
 @media (max-width: 820px) {
   .home {
     --section-gap: 96px;

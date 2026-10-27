@@ -11,10 +11,10 @@ Everything the campaign needs to have ready, with where it lives. Make these onc
 | App Store record, every field | App Store Connect, from [app-store-connect.md](app-store-connect.md) | Pasted and saved, screenshots uploaded for 6.9 and 6.3 inch |
 | Store screenshots, header, search card | `design/screenshots`, `6.3-inch`, `header` (rerendered Oct 21, 2026) | Uploaded |
 | TestFlight Survey link, cap 60 for 58 respondents | [Survey invite](https://testflight.apple.com/join/vG3RD6EJ), survey emails only | The invite accepts testers and installs the build from an iPhone |
-| Separate TestFlight Beta link, cap 200, behind `semli.app/beta?r=name` | [Public Beta invite](https://testflight.apple.com/join/j15Rp5m4), `apps/web/app/beta/route.ts` | A tap on the link from a phone installs the build and PostHog logs the `r` tag |
+| Separate TestFlight Beta link, cap 200, behind `semli.app/get?r=name` | [Public Beta invite](https://testflight.apple.com/join/j15Rp5m4), `apps/web/app/beta/route.ts` | A tap on the link from a phone installs the build and PostHog logs the `r` tag |
 | Waitlist on semli.app | Live | A signup lands in the Supabase `waitlist` table with its `r` tag |
 | Eight faceless clips from the simulator | `design/clips/` | Eight MP4s, captions burned in, scheduled on the brand accounts |
-| Brand TikTok and Instagram accounts | Not personal; bio link `semli.app/beta` | Clips scheduled one a week through December |
+| Brand TikTok and Instagram accounts | Not personal; bio link `semli.app/get` | Clips scheduled one a week through December |
 | Founder post, written once | [marketing-500.md](marketing-500.md) §3.6, "more than 50 students" | Saved as a text file with the Today screenshot |
 | Survey email | One paragraph, from you, to the survey respondents | Drafted, sent Nov 3 |
 | Creator brief and DM | One page: $75 on publish, free Plus for a year, one real import on screen, link in bio, we may repost with credit | Sent to 20 nursing and study creators; 4 booked |
@@ -23,7 +23,7 @@ Everything the campaign needs to have ready, with where it lives. Make these onc
 | Reddit account with history | Pseudonymous, helpful answers for two weeks before any post | 10 comments in, no links |
 | Discord servers joined | Study Together, nursing student servers; rules read | List with the channel that allows self-promo |
 | Waitlist email 1 and 2 | "Semester starts next week, set it up in two minutes" (Jan 5) and day-one email (Jan 11) | Drafted in December |
-| Flyer and sticker | One page, QR to `semli.app/beta`, the Today screenshot, "Set up your semester in two minutes" | Ordered by Dec 20, delivered by Jan 8 |
+| Flyer and sticker | One page, QR to `semli.app/get`, the Today screenshot, "Set up your semester in two minutes" | Ordered by Dec 20, delivered by Jan 8 |
 | Ambassador agreement | Two people, $50 after 25 installs each, free Plus | Two names by Dec 15 |
 | Support playbook | [todo.md](todo.md): Restore, reminders, wrong schedule, export | One page |
 | Beta tester quotes | With permission, after Dec 15 | Three lines for the site |
@@ -58,7 +58,7 @@ One person runs this. The toolkit is the rating prompt in the app, App Store Con
 
 - [ ] External TestFlight group "Survey", separate invite link, cap 60 for 58 respondents, reviewed build available.
 - [ ] External TestFlight group "Beta", public link, cap 200, Beta App Review passed.
-- [ ] `semli.app/beta` redirects to the public link and logs `r` to PostHog.
+- [ ] `semli.app/get` redirects to the public link and logs `r` to PostHog.
 - [ ] Eight clips rendered from the simulator, captioned, scheduled weekly on both brand accounts.
 - [ ] Founder post written and saved. Survey email drafted.
 - [ ] Twenty creator DMs sent. Two booked for the weeks of Nov 3 and Nov 17.

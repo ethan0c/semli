@@ -31,7 +31,7 @@ print art only, like the italic in the store captions. Sentence case throughout,
 Postcard: landscape 152.4 x 101.6 mm with 3 mm bleed and 5 mm safe. The C front's cut word ends
 at the trim on purpose; a 1.5 mm cut either way still reads as cut, which the proof run checks.
 
-Every QR goes to semli.app/beta?r=<tag>, which logs the scan in beta_clicks before it redirects,
+Every QR goes to semli.app/get?r=<tag>, which logs the scan in beta_clicks before it redirects,
 so `select ref, count(*) from beta_clicks group by ref` counts scans per front and, for E, per
 school. Installs are only attributable per tag once the route points at an App Store link with a
 campaign token; see docs/school-flyer-outreach.md.
@@ -97,7 +97,7 @@ HOOK = "Buried?"
 FIX = "Sorted."
 PAYOFF = "Turn your syllabus into a plan."
 PILE_CTA = "Scan to try Semli"
-BETA = "Free iPhone beta"  # "Free on iPhone" after the App Store release
+BETA = "Free on iPhone"  # was "Free iPhone beta" before the App Store release (Oct 27, 2026)
 
 # (title, detail, fill, text): the class palette (packages/tokens) pushed to print saturation,
 # text in each color's own ink; the behind-red and ink ones carry paper text.
@@ -357,7 +357,7 @@ def scan_block(img: Image.Image, fmt: Format, cta: str, url: str) -> None:
 
 
 def beta_url(tag: str) -> str:
-    return f"{SITE_URL}/beta?r={tag}"
+    return f"{SITE_URL}/get?r={tag}"
 
 
 # The fronts.

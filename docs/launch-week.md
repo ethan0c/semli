@@ -4,7 +4,7 @@ Status: Oct 27, 2026. The App Store listing went public today, ten weeks before 
 
 ## What changed, honestly
 
-- **There is no beta any more; there is a public app.** The purchase test (50 engaged users, real price, 10 or more subscribe, [strategy.md](strategy.md) §2) now runs in production from today to Dec 15. The TestFlight groups and `semli.app/beta` are history; the link goes to the store and the `r` tag rides on it as `ct=`.
+- **There is no beta any more; there is a public app.** The purchase test (50 engaged users, real price, 10 or more subscribe, [strategy.md](strategy.md) §2) now runs in production from today to Dec 15. The TestFlight groups and `semli.app/get` are history; the link goes to the store and the `r` tag rides on it as `ct=`.
 - **Late October is the worst buying window of the year.** Midterms are over, Thanksgiving and finals are ahead, and nobody buys six months of a planner six weeks before the semester ends. The monthly plan gets tested now. The six-month plan gets its test on Jan 5, same as before. Do not read November's numbers as the verdict on the price.
 - **None of the supplies exist yet.** Every marketing row in the checklist's Oct 20 to 26 block is still open: brand accounts, Product Hunt page, creator list, Reddit account with history. That, not a missing plan, is the gap. The next two weeks are the four-hour setup from marketing-500 §3, spread out.
 - **One thing only a live store can prove:** a real-money purchase on the production build unlocks Plus and shows in RevenueCat → Customers with `semli_pro` active. Buy the $4.99 month yourself today, check, then refund it through reportaproblem.apple.com. Sandbox and TestFlight never proved this.
@@ -15,7 +15,7 @@ Status: Oct 27, 2026. The App Store listing went public today, ten weeks before 
 
 - [ ] Real purchase on the production build, RevenueCat shows the entitlement, refund.
 - [ ] `npm run email send app-store-launch --yes` to the Survey and Waitlist groups, this evening. The template is written ([emails/emails.md](../emails/emails.md) `app-store-launch`); its link already goes to the store. These ~60 survey respondents and the waitlist are the warmest list there will ever be, and the email was always meant to go the day the listing was public.
-- [ ] Brand TikTok and Instagram created with the names, bios and links in marketing-500 §3.4, with the bio's last line as `Free on iPhone ↓` from day one. Link: `semli.app/beta?r=tiktok` and `?r=ig` (both redirect to the store, tagged).
+- [ ] Brand TikTok and Instagram created with the names, bios and links in marketing-500 §3.4, with the bio's last line as `Free on iPhone ↓` from day one. Link: `semli.app/get?r=tiktok` and `?r=ig` (both redirect to the store, tagged).
 - [ ] `apps/mobile/store.config.json`: confirm the live listing's promotional text matches [aso-log.md](aso-log.md) (the 2.3.7 rewrite). Nothing else on the listing moves this week.
 
 ### Wed Oct 28 to Fri Oct 30
@@ -51,7 +51,7 @@ Status: Oct 27, 2026. The App Store listing went public today, ten weeks before 
 
 The semester plan sells in the two weeks before classes. This was always the moment, and the early release does not move it.
 
-- Dec 20: flyers and stickers ordered, QR to `semli.app/beta?r=campus`.
+- Dec 20: flyers and stickers ordered, QR to `semli.app/get?r=campus`.
 - Jan 5: Product Hunt launch, two creator videos live, `spring-schedule` email to everyone on the list ("Classes start next week; add your new syllabi").
 - Jan 11: campus push, two ambassadors, `semester-reminder` email on day one of classes.
 

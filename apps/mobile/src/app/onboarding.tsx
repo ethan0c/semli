@@ -622,7 +622,7 @@ function PhoneStep({ onDone }: { onDone: (scanned: boolean) => void }) {
         <T token="callout" color={c.inkSecondary}>Scan with your iPhone camera to get Semli. Sign in with the same account and your term is already there.</T>
       </View>
       <View style={styles.phone}>
-        <QrCode text="https://www.semli.app/beta?r=web-onboarding" ink={c.inkPrimary} paper={c.surface} />
+        <QrCode text="https://www.semli.app/get?r=web-onboarding" ink={c.inkPrimary} paper={c.surface} />
         <View style={{ flex: 1, gap: space.snug }}>
           <T token="headline">Semli for iPhone</T>
           <T token="callout" color={c.inkSecondary}>Free · reminders the evening before each deadline, ringing alarms, the Today widget</T>

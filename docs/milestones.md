@@ -115,6 +115,6 @@ One person runs this, so the kit is three things. Everything else (rank trackers
 
 1. **The rating prompt in the app.** Built: `apps/mobile/src/lib/store-review.ts` asks with the system prompt after the second confirmed import on a second day, at most once every 120 days, never right after a Plus gate. "Rate Semli" in You stays as the manual path. Ratings are the biggest lever on the product page after screenshots, and this one runs itself.
 2. **App Store Connect, App Analytics.** Free and already there. The Monday read adds one number: product page conversion (installs divided by page views). AppTweak's 2025 category median is 56%; under 40% means the first three screenshots or the subtitle are wrong. Reply to every review from the same console within a week; replies show on the listing.
-3. **The `?r=` link.** Already built: `semli.app/beta?r=name` logs to PostHog before the redirect. It is the only attribution needed to decide which creator to rebook.
+3. **The `?r=` link.** Already built: `semli.app/get?r=name` logs to PostHog before the redirect. It is the only attribution needed to decide which creator to rebook.
 
 Two notes that save time later: keep `canvas` as the last keyword (the two drafts in the repo disagree), and when a testimonial is wanted on the site, take it from a paying beta tester with permission, never from anywhere else.

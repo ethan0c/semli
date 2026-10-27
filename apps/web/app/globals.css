@@ -188,12 +188,6 @@ textarea {
   margin-left: 4px;
   font-size: 15px;
 }
-/* Phones: "Join the waitlist", so the one action stays inside the bar. */
-@media (max-width: 540px) {
-  .nav-beta {
-    display: none;
-  }
-}
 
 /* ---------- Type ---------- */
 /* The marketing serif: headlines only, never body, never the app's screens. */
