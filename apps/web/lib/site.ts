@@ -25,8 +25,6 @@ export function appStoreLink(campaign: string | null, providerToken: string | nu
   if (!campaign || !pt || !/^\d+$/.test(pt)) return APP_STORE_URL;
   return `${APP_STORE_URL}?pt=${pt}&ct=${encodeURIComponent(campaign.slice(0, 40))}&mt=8`;
 }
-/** Flip when the App Store listing goes live; until then app links lead to the beta waitlist. */
-export const APP_STORE_LIVE = true;
 export const SUPPORT_EMAIL = 'hello@semli.app';
 
 /** Search terms the site is written to answer; used in metadata and the landing pages. */
