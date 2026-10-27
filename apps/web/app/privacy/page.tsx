@@ -38,7 +38,9 @@ export default function PrivacyPage() {
           <p>
             When you ask Semli to read something, you send it one of: a typed message, a screenshot or photo, or a PDF. Semli reads the
             dates, times, courses, employers, and tasks in it. Along with the content, the app sends today&apos;s date, your time zone, and
-            the names of courses and employers you already have, so the result lines up with your existing plan.
+            the names of courses and employers you already have, so the result lines up with your existing plan. With a typed or dictated
+            message, it also sends the titles and times of your timed events for the next three weeks, so a request like &ldquo;cardio before
+            work&rdquo; can be placed around your shifts. Screenshots and PDFs don&apos;t include them.
           </p>
           <h3>2.2 Your plan</h3>
           <p>
