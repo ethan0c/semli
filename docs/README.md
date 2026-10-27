@@ -40,7 +40,7 @@ Start with the [repository README](../README.md) for the current implementation 
 | [Launch guide](launch-guide.md) | Apple setup and marketing guidance |
 | [Marketing budget](marketing-500.md) | Acquisition experiments and budget |
 | [Survey follow-up emails](emails/survey-follow-up.txt) | Gift-card winner and participant email drafts |
-| [Email templates](beta-copy.md#other-email-templates) | Branded beta invite, tester check-in, feedback reply, App Store launch, and semester reminder; HTML, plain text, and sending notes |
+| [Email templates](beta-copy.md#other-email-templates) | Branded beta invite, feedback reply, App Store launch, spring schedule and semester reminder; the welcome email; groups, HTML, plain text, and sending notes |
 
 ## Current implementation decisions
 

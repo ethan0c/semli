@@ -1,0 +1,19 @@
+Subject: Your Semli account has been deleted
+
+Hi {{{NAME}}},
+
+We've removed your sign-in details, email address, and plan backup from our servers. This is the last email we'll send to this address about your account.
+
+The plan saved on your phone is still there, and you can keep using Semli as a guest. To remove that plan too, delete the app or clear it in You → Your data.
+
+Deleting your account does not cancel Semli Plus. Apple manages your subscription. To cancel it, open your iPhone's Settings, tap your name, then Subscriptions, and choose Semli.
+
+If you didn't ask to delete your account, please reply or email hello@semli.app (mailto:hello@semli.app) today.
+
+Thanks for using Semli,
+Semli
+
+--
+You got this email because your Semli account was deleted.
+441 Country Club Road, York, PA 17403-3651, USA
+Contact Semli: hello@semli.app

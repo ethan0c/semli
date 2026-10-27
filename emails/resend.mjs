@@ -44,13 +44,22 @@ export function client(apiKey) {
     createSegment: (name) => call('POST', '/segments', { name }),
     renameSegment: (id, name) => call('PATCH', `/segments/${id}`, { name }),
     contacts: (segmentId) => all(segmentId ? `/contacts?segment_id=${segmentId}` : '/contacts'),
+    contact: (email) => call('GET', `/contacts/${encodeURIComponent(email)}`).catch((err) => { if (err.status === 404) return null; throw err; }),
+    // Resend's create overwrites an existing contact, unsubscribed flag included: call it only after contact() returns null.
     createContact: (c) => call('POST', '/contacts', c),
     updateContact: (email, c) => call('PATCH', `/contacts/${encodeURIComponent(email)}`, c),
     addToSegment: (email, segmentId) => call('POST', `/contacts/${encodeURIComponent(email)}/segments/${segmentId}`),
+    removeFromSegment: (email, segmentId) => call('DELETE', `/contacts/${encodeURIComponent(email)}/segments/${segmentId}`),
+    deleteContact: (email) => call('DELETE', `/contacts/${encodeURIComponent(email)}`),
     properties: () => all('/contact-properties'),
     createProperty: (key) => call('POST', '/contact-properties', { key, type: 'string' }),
     broadcasts: () => all('/broadcasts'),
     createBroadcast: (b) => call('POST', '/broadcasts', b),
     sendEmail: (e) => call('POST', '/emails', e),
+    templates: () => all('/templates'),
+    template: (idOrAlias) => call('GET', `/templates/${encodeURIComponent(idOrAlias)}`).catch((err) => { if (err.status === 404) return null; throw err; }),
+    createTemplate: (t) => call('POST', '/templates', t),
+    updateTemplate: (id, t) => call('PATCH', `/templates/${id}`, t),
+    publishTemplate: (id) => call('POST', `/templates/${id}/publish`),
   };
 }

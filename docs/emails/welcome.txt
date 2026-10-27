@@ -1,0 +1,17 @@
+Subject: Welcome to Semli
+
+Hi {{{NAME}}},
+
+Thanks for signing up. Your plan now backs up to your account, so you can get it back when you switch phones.
+
+To get started, add a syllabus or screenshot of your shifts. Check the dates Semli finds, then save them.
+
+If a date looks wrong or something's confusing, reply and tell me. I read every reply.
+
+Thanks,
+Semli
+
+--
+You got this email because you created a Semli account.
+441 Country Club Road, York, PA 17403-3651, USA
+Contact Semli: hello@semli.app

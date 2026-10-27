@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { APP_STORE_URL } from '../../lib/site';
+import { APP_STORE_URL, appStoreLink } from '../../lib/site';
 import { GET } from './route';
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn((to: string) => { throw new Error(`REDIRECT ${to}`); }) }));
@@ -26,6 +26,21 @@ describe('/beta', () => {
     vi.stubEnv('TESTFLIGHT_URL', 'https://testflight.apple.com/join/abc');
     expect(await target('https://semli.app/beta?r=jess')).toBe(APP_STORE_URL);
     expect(fetchMock).toHaveBeenCalledWith('https://db.test/rest/v1/rpc/log_beta_click', expect.objectContaining({ body: JSON.stringify({ p_ref: 'jess' }) }));
+  });
+
+  it('carries the tag to the App Store as a campaign once the provider token is set', async () => {
+    vi.stubEnv('APP_STORE_PROVIDER_TOKEN', '123456');
+    expect(await target('https://semli.app/beta?r=email-semester')).toBe(`${APP_STORE_URL}?pt=123456&ct=email-semester&mt=8`);
+    expect(await target('https://semli.app/beta')).toBe(APP_STORE_URL);
+  });
+
+  it('ignores a provider token that is not a number', async () => {
+    vi.stubEnv('APP_STORE_PROVIDER_TOKEN', 'abc');
+    expect(await target('https://semli.app/beta?r=jess')).toBe(APP_STORE_URL);
+  });
+
+  it('keeps campaign names inside Apple\'s 40 characters', () => {
+    expect(appStoreLink('x'.repeat(64), '1')).toBe(`${APP_STORE_URL}?pt=1&ct=${'x'.repeat(40)}&mt=8`);
   });
 
   it('still redirects when the click cannot be counted', async () => {

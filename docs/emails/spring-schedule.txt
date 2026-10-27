@@ -2,15 +2,15 @@ Subject: Registered for spring? Add your classes now
 
 Hi {{{FIRST_NAME|there}}},
 
-If you've registered for spring, your new class times are already in your school's portal.
+If you've picked your spring classes, you can add them to Semli now.
 
-Take a screenshot of that schedule and add it in Semli. Your classes repeat through the term, and you check each one before it saves.
+Take a screenshot of the schedule in your school's portal. Add it in Semli, check the class times, and save them. They'll repeat through the term.
 
-Get Semli on iPhone: https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264
+Get Semli on iPhone: https://www.semli.app/beta?r=email-spring
 
 Already have Semli? Open the app and tap Add.
 
-When your syllabi arrive in January, add them too, and the exams land on the same plan.
+When you get your syllabi in January, add those too to bring in your exam dates.
 
 Good luck with registration,
 Semli

@@ -180,12 +180,12 @@ Photos permission is used only to show recent screenshots on the Add tab. Notifi
 
 ## 5. App Privacy (the nutrition label)
 
-Data collected, with purpose. Nothing is used for tracking; do not check "Tracking".
+Data collected, with purpose. Nothing is used for tracking; do not check "Tracking". Oct 27, 2026: Name and Email Address gained "Developer's Advertising or Marketing" when account holders joined the email list. Update the label in App Store Connect (no new build needed).
 
 | Data type | Linked to you? | Purpose | Source |
 |---|---|---|---|
-| Contact Info → Name | Linked | App Functionality | Account metadata, only when they sign up with a name |
-| Contact Info → Email Address | Linked | App Functionality (account) | Supabase, only when they sign up |
+| Contact Info → Name | Linked | App Functionality, Developer's Advertising or Marketing | Account metadata, only when they sign up with a name; greets them in the welcome and semester emails |
+| Contact Info → Email Address | Linked | App Functionality (account), Developer's Advertising or Marketing | Supabase, only when they sign up; account holders get the welcome email and the semester broadcasts (Resend "App users" group) |
 | Identifiers → User ID | Linked | App Functionality | Supabase user id, RevenueCat app user id |
 | Purchases → Purchase History | Linked | App Functionality | RevenueCat |
 | User Content → Other User Content | Not linked | App Functionality | Messages, screenshots and PDFs sent for extraction; not stored |

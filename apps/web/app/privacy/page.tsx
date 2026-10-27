@@ -56,6 +56,10 @@ export default function PrivacyPage() {
             your subscription, and your free monthly imports stay attached to you.
           </p>
           <p>
+            If you make an account, we send a welcome email from the founder, emails about your account, and a few emails a year
+            about Semli, such as a reminder before a new semester. Every one of those update emails has an unsubscribe link.
+          </p>
+          <p>
             If you join the beta waitlist, we store your email address and any referral tag attached to your signup so we can send
             your invitation and track referrals. The website preview uses a hash of your IP address to count daily previews.
           </p>
@@ -121,6 +125,7 @@ export default function PrivacyPage() {
             <li>To understand which features people use, so we know what to improve.</li>
             <li>To process your Plus purchase and know which plan you&apos;re on.</li>
             <li>To answer you when you write to us.</li>
+            <li>To email you about your account and, unless you unsubscribe, occasional Semli updates.</li>
           </ul>
           <p>We don&apos;t sell your information, and we don&apos;t share it with advertisers.</p>
         </section>
@@ -137,6 +142,9 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>A database and authentication provider</strong> hosts accounts and plan backups, and counts free imports.
+            </li>
+            <li>
+              <strong>An email delivery provider</strong> sends account emails and updates to the addresses on our list.
             </li>
             <li>
               <strong>A subscription management provider</strong> keeps track of Plus so it works across your devices.
@@ -165,7 +173,7 @@ export default function PrivacyPage() {
             phone. Deleting the app does not delete your account or its cloud backup.
           </p>
           <p>
-            Delete your account in Account settings to remove the account and its plan backup. Your local plan remains until you clear it
+            Delete your account in Account settings to remove the account and its plan backup, and to take your address off our email list. Your local plan remains until you clear it
             separately. You can export a copy first. For the full steps, see <Link href="/delete-account">Delete your data</Link>.
           </p>
           <p>Usage records and diagnostic reports are kept for no longer than one year, then deleted.</p>

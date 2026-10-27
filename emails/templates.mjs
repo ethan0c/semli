@@ -1,162 +1,164 @@
 /**
- * Every marketing email, as data. `npm run email build` renders them through layout.mjs into
- * docs/emails; `npm run email send <name>` turns one into a Resend broadcast to its segment.
- *
- * Rules: under 80 words between the greeting and the sign-off, one action at most, no
- * re-explaining the product in every email, sentence case, the founder's voice signed Semli.
- * One ~accent word~ per heading, the only purple besides the wordmark dot and links.
+ * Reads emails/emails.md, where every word of every email lives, into the shapes layout.mjs
+ * renders. Edit emails.md, not this file. `npm run email build` renders docs/emails,
+ * `npm run email publish` updates the Resend templates, `npm run email send <name>` broadcasts.
  */
-
-export const SURVEY_TESTFLIGHT = 'https://testflight.apple.com/join/vG3RD6EJ';
-/** Logs the click in Supabase and forwards to the public Beta TestFlight link. */
-export const BETA_LINK = 'https://semli.app/beta?r=email-waitlist';
-export const APP_STORE_URL = 'https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264';
+import { readFileSync } from 'node:fs';
 
 /**
  * Groups in Resend. The free plan allows three segments, so there are exactly three:
  *
- *   Survey    the spring 2026 survey respondents
- *   Waitlist  people who signed up on semli.app
- *   Testers   people confirmed to have installed the beta; added by hand with `email add testers`
+ *   Survey     the spring 2026 survey respondents
+ *   Waitlist   people who signed up on semli.app
+ *   App users  everyone with a Semli account (a confirmed, non-guest address in Supabase auth).
+ *              The site adds each one after their welcome email; `npm run email sync` and every
+ *              broadcast to the group reconcile it with Supabase. Was Testers until Oct 27, 2026.
  *
- * Survey and Waitlist never overlap (each address has one source), so "everyone" is one
- * broadcast to each. Testers are also in one of the two, so the check-in is its own send.
+ * The three never overlap: an address with an account leaves Survey and Waitlist, so a
+ * broadcast to several groups reaches each person once.
  */
 export const segments = {
   survey: 'Survey',
   waitlist: 'Waitlist',
-  testers: 'Testers',
+  users: 'App users',
 };
 
-/** Everyone who signed up for anything: one broadcast per segment, no duplicates. */
+/** Everyone who signed up for anything but has no account yet: one broadcast per segment. */
 export const EVERYONE = ['survey', 'waitlist'];
 
-const HI = 'Hi {{{FIRST_NAME|there}}},';
+/** The footer's reason for the App users copy of a broadcast. */
+export const USERS_REASON = "You're getting this because you have a Semli account.";
 
-export const emails = {
-  'survey-invite': {
-    segment: 'survey',
-    plan: 'Nov 3, 2026, once the Survey TestFlight link accepts testers',
-    subject: 'An update on that student planner survey',
-    preheader: 'The app you helped shape is ready to try on iPhone.',
-    heading: 'Your Semli ~invite~.',
-    greeting: HI,
-    before: [
-      "Earlier this year, you answered my survey about classes and work. I built Semli with your feedback, and it's ready to try.",
-      'Add a syllabus or screenshot of your shifts, check the dates Semli finds, and save them to one calendar.',
-    ],
-    action: { label: 'Try Semli on iPhone', url: SURVEY_TESTFLIGHT, note: "Install Apple's free TestFlight app if prompted, then reopen this invite." },
-    after: ["If a date's wrong or something's confusing, just reply here. I'd like to hear about it."],
-    signoff: 'Thanks again,',
-    reason: 'You shared your email in the student planning survey.',
-    unsubscribe: true,
-  },
-
-  'public-beta-invite': {
-    segment: 'waitlist',
-    plan: 'When the public Beta group has room and TESTFLIGHT_URL is set on Vercel',
-    subject: 'Your Semli beta invite is here',
-    preheader: 'Try it with your own classes and work schedule.',
-    heading: 'Your ~invite~ is here.',
-    greeting: HI,
-    before: [
-      'You joined the waitlist, and the iPhone beta is ready. Thanks for waiting.',
-      'Add a syllabus, screenshot of your shifts, or class message. Check the dates Semli finds before saving them to your calendar.',
-    ],
-    action: { label: 'Try Semli on iPhone', url: BETA_LINK, note: "Install Apple's free TestFlight app if prompted, then reopen this invite. Beta capped at 200 testers." },
-    after: ["If something's wrong or confusing, just reply here. I read every reply."],
-    signoff: 'Thanks for giving it a try,',
-    reason: 'You joined the Semli beta waitlist.',
-    unsubscribe: true,
-  },
-
-  'tester-check-in': {
-    segment: 'testers',
-    plan: 'Three to five days after someone installs; add them to Testers first',
-    subject: 'Had a chance to try Semli?',
-    preheader: 'Were the dates right? Was anything confusing?',
-    heading: "How's Semli ~working~ for you?",
-    greeting: HI,
-    before: [
-      "Thanks for trying the beta. If you've had a chance to add a schedule, I've got two questions:",
-      'Did the dates come out right?',
-      'Was anything confusing or hard to find?',
-    ],
-    after: ['Just reply here. A sentence is plenty, even if you only opened it once.'],
-    signoff: 'Thanks for your help,',
-    reason: "You're receiving this because you're testing the Semli beta.",
-    unsubscribe: true,
-  },
-
-  'app-store-launch': {
-    segment: EVERYONE,
-    plan: 'Tue Nov 3, 2026, 10 am Eastern, once the listing is public (released early, Oct 26 plan)',
-    subject: 'Semli is on the App Store',
-    preheader: 'Your classes, shifts, and deadlines in one plan.',
-    heading: 'Semli is on the ~App Store~.',
-    greeting: HI,
-    before: [
-      'Thanks for following along. Semli is now available for iPhone.',
-      'Bring your syllabi, work schedule and class messages into one plan. Calendar, to-dos and reminders are free, with five imports to start.',
-    ],
-    action: { label: 'Get Semli on iPhone', url: APP_STORE_URL },
-    after: ["If you tried the beta, thank you for helping me get here. I'd love to hear how Semli fits into your week. Just reply here."],
-    signoff: 'Thanks,',
-    reason: 'You asked to hear when Semli launched.',
-    unsubscribe: true,
-  },
-
-  'spring-schedule': {
-    segment: EVERYONE,
-    plan: 'Tue Nov 17, 2026, 10 am Eastern: spring registration is open at most schools (Nov 2 to 23)',
-    subject: 'Registered for spring? Add your classes now',
-    preheader: 'One screenshot of your schedule fills the whole term.',
-    heading: 'Spring, ~already planned~.',
-    greeting: HI,
-    before: [
-      "If you've registered for spring, your new class times are already in your school's portal.",
-      'Take a screenshot of that schedule and add it in Semli. Your classes repeat through the term, and you check each one before it saves.',
-    ],
-    action: { label: 'Get Semli on iPhone', url: APP_STORE_URL, note: 'Already have Semli? Open the app and tap Add.' },
-    after: ['When your syllabi arrive in January, add them too, and the exams land on the same plan.'],
-    signoff: 'Good luck with registration,',
-    reason: 'You signed up for Semli updates.',
-    unsubscribe: true,
-  },
-
-  'semester-reminder': {
-    segment: EVERYONE,
-    plan: 'Tue Jan 5, 2027, 10 am Eastern: the week before most spring terms start (Jan 11 to 20)',
-    subject: 'Got your new syllabus yet?',
-    preheader: 'Start with one syllabus or a week of shifts.',
-    heading: 'New semester, ~one plan~.',
-    greeting: HI,
-    before: [
-      "If you're getting ready for a new semester, put your class dates and work shifts in one place.",
-      'Add one syllabus or a week of shifts. Check the dates, save them, and add the rest as you get them.',
-    ],
-    action: { label: 'Get Semli on iPhone', url: APP_STORE_URL, note: 'Already have Semli? Open the app and tap Add.' },
-    after: ["If an import doesn't look right, reply and tell me what happened."],
-    signoff: 'Hope the semester starts well,',
-    reason: 'You signed up for Semli updates.',
-    unsubscribe: true,
-  },
+/**
+ * Template variables, with the words used when the sender leaves one out. Resend reserves
+ * FIRST_NAME for contacts and rejects the broadcast fallback syntax in templates, so templates
+ * say {{{NAME}}}; broadcasts fill the name from the contact instead.
+ */
+export const templateVariables = {
+  NAME: 'there',
+  ABOUT: 'your message',
+  REPLY: 'Thanks for writing.',
 };
+
+const BROADCAST_NAME = '{{{FIRST_NAME|there}}}';
+const TEMPLATE_NAME = '{{{NAME}}}';
+
+const FIELDS = { to: 'To', when: 'When', subject: 'Subject', preview: 'Preview', signoff: 'Sign-off', footer: 'Footer', kind: 'Kind', button: 'Button' };
+const FIELD_LINE = new RegExp(`^(${Object.values(FIELDS).join('|')}):\\s*(.+)$`);
+
+/** emails.md writes **bold**; layout.mjs reads *medium*. Links and ~accent~ pass straight through. */
+const inline = (s) => s.replace(/\*\*([^*]+)\*\*/g, '*$1*');
+
+/** One raw email per `## name`, in the order written, with the guide at the top skipped. */
+export function parse(text) {
+  const out = {};
+  let cur = null;
+  let para = [];
+  const flush = () => {
+    if (cur && para.length) cur.blocks.push({ type: 'p', text: para.join(' ') });
+    para = [];
+  };
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    const name = line.match(/^## (\S+)$/);
+    if (name) {
+      flush();
+      cur = out[name[1]] = { fields: {}, heading: null, blocks: [] };
+      continue;
+    }
+    if (!cur) continue;
+    const field = line.match(FIELD_LINE);
+    if (field) {
+      flush();
+      const key = Object.keys(FIELDS).find((k) => FIELDS[k] === field[1]);
+      if (key === 'button') cur.blocks.push({ type: 'button', text: field[2] });
+      else cur.fields[key] = field[2];
+    } else if (line.startsWith('### ')) {
+      flush();
+      cur.heading = line.slice(4);
+    } else if (line.startsWith('> ')) {
+      flush();
+      cur.blocks.push({ type: 'note', text: line.slice(2) });
+    } else if (!line) {
+      flush();
+    } else {
+      para.push(line);
+    }
+  }
+  flush();
+  return out;
+}
+
+const groupKey = Object.fromEntries(Object.entries(segments).map(([k, v]) => [v.toLowerCase(), k]));
+
+/** The shape layout.mjs renders. `name` is what {name} becomes. */
+function shape(key, raw, name) {
+  const f = raw.fields;
+  for (const need of ['subject', 'preview', 'signoff', 'footer', 'when']) if (!f[need]) throw new Error(`emails.md: ${key} has no ${FIELDS[need]}:`);
+  if (!raw.heading) throw new Error(`emails.md: ${key} has no ### heading`);
+  const [greeting, ...rest] = raw.blocks;
+  if (greeting?.type !== 'p') throw new Error(`emails.md: ${key} must start with the greeting paragraph`);
+  const fill = (s) => inline(s.replaceAll('{name}', name));
+  const e = { plan: f.when, subject: f.subject, preheader: f.preview, heading: inline(raw.heading), greeting: fill(greeting.text), before: [], after: [], signoff: f.signoff, reason: f.footer };
+  let side = e.before;
+  for (const b of rest) {
+    if (b.type === 'button') {
+      const m = b.text.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (!m) throw new Error(`emails.md: ${key} Button: must look like [label](https://…)`);
+      if (e.action) throw new Error(`emails.md: ${key} has two buttons; one action at most`);
+      e.action = { label: m[1], url: m[2] };
+      side = e.after;
+    } else if (b.type === 'note') {
+      if (!e.action || side.length) throw new Error(`emails.md: ${key} has a > note that isn't right after the button`);
+      e.action.note = inline(b.text);
+    } else {
+      side.push(fill(b.text));
+    }
+  }
+  return e;
+}
+
+function load() {
+  const raw = parse(readFileSync(new URL('./emails.md', import.meta.url), 'utf8'));
+  const emails = {};
+  const transactional = {};
+  let feedback = null;
+  for (const [key, r] of Object.entries(raw)) {
+    const to = (r.fields.to ?? '').toLowerCase();
+    if (r.fields.kind === 'account') {
+      transactional[key] = { kind: 'account', ...shape(key, r, TEMPLATE_NAME), unsubscribe: false };
+    } else if (to === 'one person') {
+      feedback = r;
+    } else {
+      const keys = to.split('+').map((g) => g.trim()).map((g) => {
+        if (!groupKey[g]) throw new Error(`emails.md: ${key} To: names an unknown group "${g}"; use ${Object.values(segments).join(', ')} or one person`);
+        return groupKey[g];
+      });
+      emails[key] = { segment: keys.length === 1 ? keys[0] : keys, ...shape(key, r, BROADCAST_NAME), unsubscribe: true };
+    }
+  }
+  return { emails, transactional, feedback };
+}
+
+const loaded = load();
+
+/** Broadcasts to a Resend group, by name. */
+export const emails = loaded.emails;
+
+/**
+ * Emails the site sends after something the person did, through the Resend templates of the
+ * same name (`npm run email publish`; apps/web/app/api/emails sends `template: { id }`). No
+ * unsubscribe link and no contact fields: Resend leaves both empty in an API send.
+ */
+export const transactional = loaded.transactional;
 
 /**
  * The one-to-one reply. Not a broadcast: `email send feedback --to a@b.edu --name Ana
  * --about "the overlap warning" --reply "..."` fills it and sends it through the Emails API.
  */
 export function feedbackThankYou({ name, about, reply }) {
-  return {
-    subject: 'Thanks for the Semli feedback',
-    preheader: 'Thanks for taking the time to write.',
-    heading: 'Thanks for ~letting me know~.',
-    greeting: `Hi ${name || 'there'},`,
-    before: [`Thanks for telling me about ${about}.`, reply],
-    after: ["If there's anything else you'd like me to know, just reply here."],
-    signoff: 'Thanks again,',
-    reason: "You're receiving this reply because you sent feedback about Semli.",
-    unsubscribe: false,
-  };
+  if (!loaded.feedback) throw new Error('emails.md has no email with To: one person');
+  const filled = structuredClone(loaded.feedback);
+  for (const b of filled.blocks) b.text = b.text.replaceAll('{about}', about).replaceAll('{reply}', reply);
+  return { ...shape('feedback-thank-you', filled, name || 'there'), unsubscribe: false };
 }

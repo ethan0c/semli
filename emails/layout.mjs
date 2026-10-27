@@ -2,8 +2,13 @@
  * The one email layout. Every marketing email in docs/emails is rendered from here so the
  * brand lives in one place: paper #FAF9F6, ink #222320, secondary #686963, hairline #E5E4DE,
  * Geist if installed (system stack otherwise), ink pill for the one action, purple only on
- * the wordmark dot and links. No images, no tinted cards, no uppercase.
+ * the wordmark dot, the heading's accent word and links (underlined). One image, the wordmark
+ * PNG (design/render-pngs.mjs) with the paper baked in; until the site serves it, the header is
+ * the same wordmark set in type. No tinted cards, no uppercase.
  */
+
+/** Served by the site from apps/web/public/email/wordmark.png; 252 x 79, shown at 84 px wide. */
+export const WORDMARK_URL = 'https://www.semli.app/email/wordmark.png';
 
 export const brand = {
   paper: '#FAF9F6',
@@ -40,8 +45,12 @@ const p = (text, extra = '') => `<p style="margin:0 0 16px 0;font-size:16px;line
  * @param {string} e.reason      why they got it, one sentence
  * @param {boolean} e.unsubscribe  broadcast token in the footer
  * @param {string} postalAddress sender's postal address for the footer
+ * @param {{wordmark?: string|null}} options  the wordmark image URL, once it is live
  */
-export function renderHtml(e, postalAddress) {
+export function renderHtml(e, postalAddress, { wordmark = null } = {}) {
+  const header = wordmark
+    ? `<img src="${wordmark}" width="84" height="26" alt="semli." style="display:block;width:84px;height:auto;border:0;outline:none;text-decoration:none;font-family:${brand.wordmarkFont};font-size:22px;font-weight:600;color:${brand.ink};">`
+    : `semli<span style="color:${brand.accent};">.</span>`;
   const action = e.action
     ? `<tr><td style="padding:4px 0 20px 0;">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -74,7 +83,7 @@ export function renderHtml(e, postalAddress) {
     <tr><td align="center" style="padding:40px 20px;">
       <!--[if mso]><table role="presentation" width="480" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
-        <tr><td style="padding:0 0 32px 0;font-family:${brand.wordmarkFont};font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.6px;color:${brand.ink};">semli<span style="color:${brand.accent};">.</span></td></tr>
+        <tr><td style="padding:0 0 32px 0;font-family:${brand.wordmarkFont};font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.6px;color:${brand.ink};">${header}</td></tr>
         <tr><td style="padding:0 0 16px 0;"><h1 style="margin:0;font-family:${brand.font};font-size:28px;line-height:36px;font-weight:400;letter-spacing:-0.5px;color:${brand.ink};">${inline(e.heading)}</h1></td></tr>
         <tr><td>
           ${p(e.greeting)}
