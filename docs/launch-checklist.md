@@ -1,6 +1,6 @@
 # Launch checklist: Oct 20, 2026 to Jan 11, 2027
 
-Status: Oct 20, 2026. One list, in date order, of everything that has to exist before the beta opens the week of Nov 3 and before classes start Jan 11. Sources: [app-store-connect.md](app-store-connect.md) §8, [todo.md](todo.md), [marketing-500.md](marketing-500.md), [milestones.md](milestones.md). Tick things here; the other docs explain how.
+Status: Oct 20, 2026; superseded Oct 27 by [launch-week.md](launch-week.md), since the app released that day instead of Jan 5. The supplies table still applies. One list, in date order, of everything that has to exist before the beta opens the week of Nov 3 and before classes start Jan 11. Sources: [app-store-connect.md](app-store-connect.md) §8, [todo.md](todo.md), [marketing-500.md](marketing-500.md), [milestones.md](milestones.md). Tick things here; the other docs explain how.
 
 ## The supplies, all of them
 
