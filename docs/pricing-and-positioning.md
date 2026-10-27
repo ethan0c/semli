@@ -68,6 +68,8 @@ Student pricing is on the honor system. The toggle in onboarding says so plainly
 
 Plus includes unlimited AI imports, work-schedule update comparisons, suggested times for overlapping plans, and urgent items with ringing alarms (decided Oct 20, 2026; standard reminders stay free). Voice capture on Add is free, like typing; adding by Siri will be Plus when it ships (decided Oct 21, 2026, `voice-capture.md`). Syllabi count toward the three free monthly imports; Plus removes that limit. Canvas sync is still planned.
 
+**Plus shows its work (Oct 27, 2026).** A founder test found Plus invisible: a subscriber never saw it do anything. Now the Plus page says what it did this month ("6 imports this month, 3 past the free limit · 1 urgent alarm ready", `lib/plus-month.ts`); the first import past the free allowance says "Plus covered this one" on its toast; a move to a suggested time says "a free time Plus found"; every Canvas resync says "Plus synced Canvas". All imports read in fast mode, for free users too: speed is part of the product, not a tier (`docs/import-speed.md`).
+
 ### Access audit (Oct 19, 2026)
 
 | Feature | Access and enforcement |

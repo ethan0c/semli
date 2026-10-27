@@ -18,9 +18,9 @@ import { useTheme, space } from '@/theme';
  */
 const STEPS = {
   // Timings from the fast-mode benchmark (Oct 27, 2026): medians 1.2 s, 3.4 s and 8.3 s; slowest 25 s.
-  message: { lines: ['Reading your message', 'Matching it to your plan', 'Working out the times', 'Almost there'], every: 1500, usually: 'Usually a few seconds' },
-  image: { lines: ['Reading the schedule', 'Finding your shifts', 'Checking every day', 'Checking what changed'], every: 1500, usually: 'Usually under 10 seconds' },
-  pdf: { lines: ['Reading the document', 'Finding every due date', 'Checking the schedule tables', 'Putting your term together', 'Almost there'], every: 4000, usually: 'A long syllabus can take up to half a minute' },
+  message: { lines: ['Reading your message', 'Finding dates and times', 'Comparing with your plan', 'Getting your review ready'], every: 1500, usually: 'Usually a few seconds' },
+  image: { lines: ['Reading your image', 'Finding dates and times', 'Comparing with your plan', 'Getting your review ready'], every: 1500, usually: 'Usually under 10 seconds' },
+  pdf: { lines: ['Reading your document', 'Finding dates and deadlines', 'Checking the schedule', 'Comparing with your plan', 'Getting your review ready'], every: 4000, usually: 'Allow around 30 seconds for a long document' },
 } as const;
 /** Past this, the screen says they can leave: about where attention runs out (Nielsen's 10 seconds). */
 const LEAVE_AFTER_MS = 10_000;
@@ -62,8 +62,8 @@ export function Reading({ source, chart = 'week' }: { source: string; chart?: 'w
         <Swap value={`${steps.lines[line]}…`} token="display" />
         <T token="callout" color={c.inkSecondary}>
           {long
-            ? 'You can keep using Semli. Your review opens when it’s ready.'
-            : `${source[0]?.toUpperCase() + source.slice(1)} · ${steps.usually}. Nothing is saved until you confirm.`}
+            ? 'You can keep using Semli while you wait. Your review will open when it’s ready.'
+            : `${source[0]?.toUpperCase() + source.slice(1)} · ${steps.usually}. You’ll review the dates before anything is added to your plan.`}
         </T>
       </View>
       <SkeletonReview chart={chart} />

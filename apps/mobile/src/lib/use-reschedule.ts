@@ -51,7 +51,7 @@ export function useReschedule(item: Item | null, items: Item[]) {
       }
       store.updateItem(item.id, slot);
       const batchId = useStore.getState().batches[0]?.id;
-      store.showToast(`Moved ${latest.title} to ${formatRange(slot.start, slot.end)}.`, batchId);
+      store.showToast(`Moved ${latest.title} to ${formatRange(slot.start, slot.end)} with Plus.`, batchId);
       feedback('success');
     } catch (error) {
       setNotice(purchaseErrorMessage(error));

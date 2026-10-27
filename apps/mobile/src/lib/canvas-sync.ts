@@ -75,7 +75,9 @@ async function run(feedUrl?: string): Promise<SyncResult> {
 
   if (summary || newCourses.length) {
     const batchId = state.applyPlan(plan, `Canvas · ${summary ?? 'courses added'}`, { source: CANVAS_SOURCE, courses: newCourses });
-    useStore.getState().showToast(`Canvas · ${summary ?? 'up to date'}`, batchId);
+    // Every sync after the first pull is Plus's; it says so, so a subscriber sees it working.
+    const byPlus = !!state.settings.canvas.lastSyncedAt;
+    useStore.getState().showToast(`${byPlus ? 'Canvas synced with Plus' : 'Canvas synced'} · ${summary ?? 'up to date'}`, batchId);
   }
   setCanvas({ feedUrl: url, lastSyncedAt: new Date().toISOString(), lastError: null });
   track('canvas_synced', { total: res.entries.length, added: plan.added, moved: plan.moved, dropped: plan.dropped });

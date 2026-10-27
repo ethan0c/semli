@@ -318,7 +318,7 @@ export default function ReviewScreen() {
     const goOn = () => {
       const { settings: now, setSettings: save } = useStore.getState();
       // The first read Plus pays for says so: otherwise a subscriber never sees what they bought.
-      const plusNote = pending?.plus && !now.firsts.plusImport ? ' Plus covered this one, past your free imports.' : '';
+      const plusNote = pending?.plus && !now.firsts.plusImport ? ' This import is included with Plus.' : '';
       if (plusNote) save({ firsts: { ...now.firsts, plusImport: true } });
       showToast(importLine(parts, ex.detected_type, firstOf(now.name)) + plusNote, id);
       if (!now.remindersAsked) {

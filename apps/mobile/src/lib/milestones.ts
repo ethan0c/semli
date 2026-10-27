@@ -16,9 +16,9 @@ const with_ = (first: string | null) => (first ? `, ${first}` : '');
 /** "Your shifts are in, Ethan. 5 added · 1 updated." */
 export function importLine(parts: (string | null)[], kind: Extraction['detected_type'], first: string | null): string {
   const lead = kind === 'work_schedule' ? 'Your shifts are in'
-    : kind === 'syllabus' ? 'Your syllabus is in'
+    : kind === 'syllabus' ? 'Your syllabus dates are in'
       : kind === 'course_schedule' ? 'Your classes are in'
-        : 'Added to your plan';
+        : 'Your plan is updated';
   const said = parts.filter(Boolean);
   return `${lead}${with_(first)}.${said.length ? ` ${said.join(' · ')}.` : ''}`;
 }

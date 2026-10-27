@@ -347,7 +347,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
                   <T token="subhead">Just this one</T>
                 </Press>
                 <Press accessibilityRole="button" haptic="select" onPress={() => commitTimes(times, 'series')} style={[styles.askPill, { backgroundColor: c.controlFill }]}>
-                  <T token="subhead" color={c.controlInk} numberOfLines={1}>{seriesOnly ? 'This and later' : `This and ${alike.length + (repeats ? fromNow.filter((it) => it.id !== item.id && !it.done && !it.editedAt && !alike.includes(it)).length : 0)} more`}</T>
+                  <T token="subhead" color={c.controlInk} numberOfLines={1}>{seriesOnly ? 'This and later' : `All ${alike.length + 1 + (repeats ? fromNow.filter((it) => it.id !== item.id && !it.done && !it.editedAt && !alike.includes(it)).length : 0)} ${noun}s`}</T>
                 </Press>
               </View>
               <TextButton label="Cancel time change" tone="muted" onPress={() => { feedback('select'); setTimes(null); setAsking(false); }} style={{ alignSelf: 'flex-start' }} />
