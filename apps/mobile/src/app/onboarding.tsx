@@ -8,7 +8,7 @@ import type { StreamedItem } from "@/lib/api";
 import { firstOf, readyLine } from "@/lib/milestones";
 
 import { Composer } from "@/components/Composer";
-import { Chip, PickerPill, Radio } from "@/components/Controls";
+import { Chip, PickerPill, Radio, TextButton } from "@/components/Controls";
 import { InlinePicker } from "@/components/Native";
 import { ResumeReview } from "@/components/ResumeReview";
 import { RecentShots } from "@/components/RecentShots";
@@ -464,6 +464,8 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
           <T token="subhead" color={c.conflict} style={{ flex: 1 }}>
             {error}
           </T>
+          {/* Many guests on one network today: signing in (free) lifts the server's cap. */}
+          {error === IMPORT_MESSAGES.guestLimit ? <TextButton label="Sign in" onPress={() => router.push("/auth")} /> : null}
         </View>
       ) : null}
       {!busy ? <RecentShots onPick={(uri) => void openShot(uri)} /> : null}

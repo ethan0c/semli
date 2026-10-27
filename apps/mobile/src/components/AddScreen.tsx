@@ -203,6 +203,8 @@ export function AddScreen() {
             <T token="subhead" color={c.conflict} style={{ flex: 1 }}>{shownError}</T>
             {/* Microphone access was turned off: the way back is one tap, not a trip through Settings. */}
             {!error && voice.openSettings ? <TextButton label="Open Settings" onPress={() => void voice.openSettings!()} /> : null}
+            {/* Many guests on one network today: signing in (free) lifts the server's cap. */}
+            {error === IMPORT_MESSAGES.guestLimit ? <TextButton label="Sign in" onPress={() => router.push('/auth')} /> : null}
           </View>
         ) : null}
 

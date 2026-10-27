@@ -46,3 +46,7 @@ revoke execute on function public.claim_guest_import(text, int) from public, ano
 revoke execute on function public.refund_guest_import(text) from public, anon, authenticated;
 grant execute on function public.claim_guest_import(text, int) to service_role;
 grant execute on function public.refund_guest_import(text) to service_role;
+
+-- The waitlist closed at launch: its form and endpoint are gone, so nothing calls join_waitlist,
+-- and left open to the public key a bot could still fill the table by calling it directly.
+revoke execute on function public.join_waitlist(text, text) from public, anon, authenticated;
