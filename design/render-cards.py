@@ -478,8 +478,8 @@ def brand_postcard_front() -> Image.Image:
     draw_wordmark(img, f.edge(8), f.edge(8), f.px(26), INK, ACCENT)
     d.text((f.edge(7.3), f.edge(43)), HOOK, font=store.font(f.px(22), "Regular"), fill=INK, anchor="ls")
     text_block(img, f, STAT, 8, 56, 69, 4.2, 6)
-    for i, (x, y, angle) in enumerate(((116, 25, -9), (112, 39, 5), (119, 52, -4), (113, 66, 6), (120, 80, -5))):
-        place(img, loose_event(f, i % len(EVENTS), 57), f, x, y, angle)
+    for i, (x, y, angle) in enumerate(((116, 30, -9), (112, 44, 5), (119, 58, -4), (113, 72, 6))):
+        place(img, loose_event(f, i, 57), f, x, y, angle)
     flip_cue(d, f, f.edge(8), f.edge(93), 3.5)
     return img
 
@@ -561,7 +561,7 @@ def comparison_previews() -> None:
         canvas = Image.new("RGB", ((w + pad) * (1 if vertical else 2) + pad,
                                    (h + header + pad) * (2 if vertical else 1) + pad), PAPER)
         d = ImageDraw.Draw(canvas)
-        for i, (preview, title) in enumerate(zip(previews, ("01 / Maximalist", "02 / Closer to the app"))):
+        for i, (preview, title) in enumerate(zip(previews, ("01 / Maximalist", "02 / Minimalist + clouds"))):
             x = pad if vertical else pad + i * (w + pad)
             y = pad + i * (h + header + pad) if vertical else pad
             d.text((x, y + 10), title, font=store.font(38, "Medium"), fill=INK)
@@ -575,7 +575,8 @@ def main(tags: list[str], style: str = "both") -> None:
         sys.exit(f"tags must be letters, digits, dots, dashes or underscores (cleanRef drops others): {bad}")
     for selected in (("maximalist", "brand") if style == "both" else (style,)):
         render_set(tags, selected)
-    if style == "both":
+    if all((path / f"{name}-preview.png").exists()
+           for path in (OUT, OUT / "brand") for name in ("postcard", "flyer")):
         comparison_previews()
 
 
