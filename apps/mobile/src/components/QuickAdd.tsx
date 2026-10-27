@@ -45,7 +45,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
     { id: 'you', label: t`Go to You`, hint: '4', run: go('/you') },
     { id: 'create', label: t`New to-do or event`, hint: 'N', run: () => router.push({ pathname: '/create', params: { kind: 'task' } }) },
     ...courses.map((k) => ({ id: `course-${k.id}`, label: t`Go to ${k.code ?? k.title}`, hint: t`Course`, run: () => router.push(`/course/${k.id}`) })),
-    ...([['reminders', t`Reminders`], ['appearance', t`Appearance`], ['canvas', 'Canvas'], ['data', t`Your data`]] as const).map(([key, name]) => ({
+    ...([['reminders', t`Reminders`], ['appearance', t`Appearance`], ['canvas', 'Canvas or Brightspace'], ['data', t`Your data`]] as const).map(([key, name]) => ({
       id: `setting-${key}`, label: name, hint: t`Setting`, run: () => router.navigate({ pathname: '/you', params: { open: key } }),
     })),
   ];
