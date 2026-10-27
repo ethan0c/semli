@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Render the campus print pieces, one set per school: a 4 x 6 in hand-out postcard and a
-letter-size flyer for bulletin boards.
+letter-size flyer for bulletin boards, in maximalist and brand directions.
 
 The concept is "Buried? / Sorted." The front is a wall-to-wall pile of due-date stickers in the
 app's class colors, pushed to print saturation and tilted every which way, burying the card. One
@@ -11,7 +11,12 @@ straight, "Sorted.", and a plain square QR with an uninterrupted quiet zone. The
 code, beta label, and URL share a left edge. "Turn your syllabus into a plan." sits beneath
 "Sorted." The scan block and sorted stickers finish on the same bottom margin.
 The stickers are the problem, the app is the fix, the code is the way there. The flyer is the
-same on one portrait page: the pile on top, the sorted band below.
+same on one portrait page: the pile on top, the sorted band below. The postcard front includes
+"Flip for the fix" and an arrow, so the two-sided concept is explicit.
+
+The brand alternative keeps the same copy and plain QR. Morning clouds fade into warm paper;
+Regular Geist headings, a serif payoff, course dots, and plain rows follow the app's design system.
+Its front has a small overlapping stack of paper events; its back resolves them into rows.
 
 Oct 26, 2026, founder's call: maximalist, first-glance, the brand serif optional; only the
 wordmark and the QR destination stay fixed. Geist Bold appears in print art only, like the italic in the
@@ -27,10 +32,13 @@ piece, sends installs. Every school gets the same front.
 
     python3 design/render-cards.py                       # york, pomona, gatech
     python3 design/render-cards.py emory gsu             # one set per tag
+    python3 design/render-cards.py --style brand         # brand direction only
 
 Output in design/cards/out: <tag>-postcard.pdf (front, then back, 600 dpi) and <tag>-flyer.pdf
 (300 dpi), plus postcard-front.png, <tag>-postcard-back.png and <tag>-flyer.png for shops that
 want images, and postcard-preview.png and flyer-preview.png for a look at trim before ordering.
+The brand direction has the same files in design/cards/out/brand. The default renders both,
+plus postcard-comparison.png and flyer-comparison.png so the options can be compared at trim.
 Needs Pillow and the repo's node_modules (toqr).
 """
 from __future__ import annotations
@@ -45,7 +53,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "design" / "cards" / "out"
@@ -387,6 +395,127 @@ def flyer(tag: str) -> Image.Image:
     return img
 
 
+EVENTS = [
+    ("Stats lecture", "STAT 200", "9:00 am", (31, 74, 128)),
+    ("Café shift", "Campus Café", "4 to 9 pm", (122, 62, 26)),
+    ("Essay due", "ENGL 102", "Thu", (107, 79, 0)),
+    ("Study group", "Personal", "7:00 pm", ACCENT),
+]
+
+
+def text_block(img: Image.Image, fmt: Format, text: str, left: float, baseline: float,
+               width: float, size: float, leading: float, color=INK) -> float:
+    d = ImageDraw.Draw(img)
+    font = store.font(fmt.px(size), "Regular")
+    for line in store.wrap(d, text, font, fmt.px(width)):
+        d.text((fmt.edge(left), fmt.edge(baseline)), line, font=font, fill=color, anchor="ls")
+        baseline += leading
+    return baseline
+
+
+def agenda_rows(img: Image.Image, fmt: Format, left: float, top: float, width: float,
+                scale: float = 1, count: int = 4) -> None:
+    """The app's plain rows: course marks, primary titles, secondary context, and time pills."""
+    d = ImageDraw.Draw(img)
+    mm = lambda n: fmt.px(n * scale)
+    x = fmt.edge(left)
+    title_font = store.font(mm(3.3), "Medium")
+    detail_font = store.font(mm(2.4), "Regular")
+    time_font = store.font(mm(2.6), "Medium")
+    for i, (title, detail, time, color) in enumerate(EVENTS[:count]):
+        y = fmt.edge(top + i * 12 * scale)
+        cx, cy, r = x + mm(1), y + mm(5), mm(0.75)
+        if title == "Essay due":
+            d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=color, width=max(SS, mm(0.3)))
+        else:
+            d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=color)
+        d.text((x + mm(5), y + mm(5)), title, font=title_font, fill=INK, anchor="ls")
+        d.text((x + mm(5), y + mm(9)), detail, font=detail_font, fill=MUTED, anchor="ls")
+        pill_w = round(d.textlength(time, font=time_font)) + mm(5)
+        right = x + fmt.px(width)
+        d.rounded_rectangle((right - pill_w, y + mm(2.2), right, y + mm(8.2)), radius=mm(3), fill=ROW)
+        d.text((right - pill_w / 2, y + mm(6.2)), time, font=time_font, fill=INK, anchor="ms")
+        if i < count - 1:
+            d.line((x, y + mm(12), right, y + mm(12)), fill=LINE, width=max(SS, mm(0.15)))
+
+
+def loose_event(fmt: Format, index: int, width: float, scale: float = 1) -> Image.Image:
+    """A quiet paper event for the less crowded front; restrained course color and no shadow."""
+    title, detail, time, color = EVENTS[index]
+    mm = lambda n: fmt.px(n * scale)
+    w, h = fmt.px(width), mm(14)
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=mm(2), fill=PAPER + (255,),
+                        outline=LINE + (255,), width=max(SS, mm(0.2)))
+    d.ellipse((mm(3), mm(5), mm(4.5), mm(6.5)), fill=color)
+    d.text((mm(7), mm(5.8)), title, font=store.font(mm(3), "Medium"), fill=INK, anchor="ls")
+    d.text((mm(7), mm(10.3)), detail, font=store.font(mm(2.3), "Regular"), fill=MUTED, anchor="ls")
+    font = store.font(mm(2.5), "Medium")
+    pill_w = round(d.textlength(time, font=font)) + mm(4)
+    right = w - mm(3)
+    d.rounded_rectangle((right - pill_w, mm(4), right, mm(10)), radius=mm(3), fill=ROW)
+    d.text((right - pill_w / 2, mm(8.1)), time, font=font, fill=INK, anchor="ms")
+    return img
+
+
+def cloud_paper(fmt: Format, strength: float = 0.85, fade_at: float = 0.8) -> Image.Image:
+    """The app's existing morning clouds, fading smoothly into warm paper."""
+    paper = fmt.canvas(PAPER)
+    with Image.open(store.SKY) as source:
+        photo = ImageOps.fit(source.convert("RGB"), paper.size, Image.Resampling.LANCZOS,
+                             centering=(0.5, 0.38))
+    mask = Image.new("L", (1, paper.height))
+    mask.putdata([round(255 * strength * max(0, 1 - y / (paper.height * fade_at)))
+                  for y in range(paper.height)])
+    return Image.composite(photo, paper, mask.resize(paper.size))
+
+
+def brand_postcard_front() -> Image.Image:
+    f = POSTCARD
+    img = cloud_paper(f)
+    d = ImageDraw.Draw(img)
+    draw_wordmark(img, f.edge(8), f.edge(8), f.px(26), INK, ACCENT)
+    d.text((f.edge(7.3), f.edge(43)), HOOK, font=store.font(f.px(22), "Regular"), fill=INK, anchor="ls")
+    text_block(img, f, STAT, 8, 56, 69, 4.2, 6)
+    for i, (x, y, angle) in enumerate(((116, 25, -9), (112, 39, 5), (119, 52, -4), (113, 66, 6), (120, 80, -5))):
+        place(img, loose_event(f, i % len(EVENTS), 57), f, x, y, angle)
+    flip_cue(d, f, f.edge(8), f.edge(93), 3.5)
+    return img
+
+
+def brand_postcard_back(tag: str) -> Image.Image:
+    f = POSTCARD
+    img = cloud_paper(f, 0.6, 0.48)
+    d = ImageDraw.Draw(img)
+    d.text((f.edge(7.3), f.edge(28)), FIX, font=store.font(f.px(22), "Regular"), fill=INK, anchor="ls")
+    d.text((f.edge(8), f.edge(37)), PAYOFF, font=store.serif(f.px(5.3), 400), fill=ACCENT, anchor="ls")
+    agenda_rows(img, f, 8, 43, 73)
+    scan_block(img, f, 118.4, 93.6, 38, 7, 6, 4.6, 3.1,
+               f"{SITE_URL}/beta?r={tag}", light=True)
+    return img
+
+
+def brand_flyer(tag: str) -> Image.Image:
+    f = FLYER
+    img = cloud_paper(f, 0.9, 0.65)
+    d = ImageDraw.Draw(img)
+    draw_wordmark(img, f.edge(12), f.edge(12), f.px(38), INK, ACCENT)
+    d.text((f.edge(11), f.edge(75)), HOOK, font=store.font(f.px(34), "Regular"), fill=INK, anchor="ls")
+    text_block(img, f, STAT, 12, 94, 109, 6.6, 9)
+    for i, (x, y, angle) in enumerate(((168, 105, -6), (162, 125, 5), (169, 145, -4), (163, 165, 3))):
+        place(img, loose_event(f, i, 76, 1.35), f, x, y, angle)
+    band = 177
+    d.rectangle((0, f.edge(band), img.width, img.height), fill=SOFT)
+    d.line((0, f.edge(band), img.width, f.edge(band)), fill=LINE, width=f.px(0.2))
+    d.text((f.edge(11), f.edge(202)), FIX, font=store.font(f.px(26), "Regular"), fill=INK, anchor="ls")
+    d.text((f.edge(12), f.edge(215)), PAYOFF, font=store.serif(f.px(6.8), 400), fill=ACCENT, anchor="ls")
+    agenda_rows(img, f, 12, 224, 115, 1.1, count=3)
+    scan_block(img, f, 174.9, 266.4, 42, 9, 8, 5.6, 3.7,
+               f"{SITE_URL}/beta?r={tag}-flyer", light=True)
+    return img
+
+
 def finish(img: Image.Image) -> Image.Image:
     return img.resize((img.width // SS, img.height // SS), Image.LANCZOS)
 
@@ -396,33 +525,63 @@ def at_trim(img: Image.Image, fmt: Format) -> Image.Image:
     return img.crop((b, b, img.width - b, img.height - b))
 
 
-def main(tags: list[str]) -> None:
-    bad = [t for t in tags if not re.fullmatch(r"[\w.-]{1,57}", t)]
-    if bad:
-        sys.exit(f"tags must be letters, digits, dots, dashes or underscores (cleanRef drops others): {bad}")
-    OUT.mkdir(parents=True, exist_ok=True)
-    front = finish(postcard_front())
-    front.save(OUT / "postcard-front.png", dpi=(POSTCARD.dpi,) * 2)
+def render_set(tags: list[str], style: str) -> None:
+    output = OUT if style == "maximalist" else OUT / style
+    front_fn, back_fn, flyer_fn = ((postcard_front, postcard_back, flyer) if style == "maximalist"
+                                   else (brand_postcard_front, brand_postcard_back, brand_flyer))
+    output.mkdir(parents=True, exist_ok=True)
+    front = finish(front_fn())
+    front.save(output / "postcard-front.png", dpi=(POSTCARD.dpi,) * 2)
     for i, tag in enumerate(tags):
-        back = finish(postcard_back(tag))
-        back.save(OUT / f"{tag}-postcard-back.png", dpi=(POSTCARD.dpi,) * 2)
-        front.save(OUT / f"{tag}-postcard.pdf", save_all=True, append_images=[back], resolution=POSTCARD.dpi)
-        page = finish(flyer(tag))
-        page.save(OUT / f"{tag}-flyer.png", dpi=(FLYER.dpi,) * 2)
-        page.save(OUT / f"{tag}-flyer.pdf", resolution=FLYER.dpi)
-        if i == 0:  # a look at trim before ordering, small enough to open anywhere
+        back = finish(back_fn(tag))
+        back.save(output / f"{tag}-postcard-back.png", dpi=(POSTCARD.dpi,) * 2)
+        front.save(output / f"{tag}-postcard.pdf", save_all=True, append_images=[back], resolution=POSTCARD.dpi)
+        page = finish(flyer_fn(tag))
+        page.save(output / f"{tag}-flyer.png", dpi=(FLYER.dpi,) * 2)
+        page.save(output / f"{tag}-flyer.pdf", resolution=FLYER.dpi)
+        if i == 0:
             sides = [at_trim(front, POSTCARD), at_trim(back, POSTCARD)]
             gap = 160
             preview = Image.new("RGB", (sides[0].width * 2 + gap * 3, sides[0].height + gap * 2), (214, 212, 206))
             for j, side in enumerate(sides):
                 preview.paste(side, (gap + j * (side.width + gap), gap))
             preview.thumbnail((3000, 3000), Image.LANCZOS)
-            preview.save(OUT / "postcard-preview.png")
+            preview.save(output / "postcard-preview.png")
             small = at_trim(page, FLYER)
             small.thumbnail((1400, 1400), Image.LANCZOS)
-            small.save(OUT / "flyer-preview.png")
-    print(f"wrote {OUT.relative_to(ROOT)}: " + ", ".join(f"{t}-postcard.pdf, {t}-flyer.pdf" for t in tags))
+            small.save(output / "flyer-preview.png")
+    print(f"wrote {style}: " + ", ".join(f"{t}-postcard.pdf, {t}-flyer.pdf" for t in tags), flush=True)
+
+
+def comparison_previews() -> None:
+    for name, vertical in (("postcard", True), ("flyer", False)):
+        previews = [Image.open(path / f"{name}-preview.png") for path in (OUT, OUT / "brand")]
+        w, h = previews[0].size
+        pad, header = 40, 80
+        canvas = Image.new("RGB", ((w + pad) * (1 if vertical else 2) + pad,
+                                   (h + header + pad) * (2 if vertical else 1) + pad), PAPER)
+        d = ImageDraw.Draw(canvas)
+        for i, (preview, title) in enumerate(zip(previews, ("01 / Maximalist", "02 / Closer to the app"))):
+            x = pad if vertical else pad + i * (w + pad)
+            y = pad + i * (h + header + pad) if vertical else pad
+            d.text((x, y + 10), title, font=store.font(38, "Medium"), fill=INK)
+            canvas.paste(preview, (x, y + header))
+        canvas.save(OUT / f"{name}-comparison.png")
+
+
+def main(tags: list[str], style: str = "both") -> None:
+    bad = [t for t in tags if not re.fullmatch(r"[\w.-]{1,57}", t)]
+    if bad:
+        sys.exit(f"tags must be letters, digits, dots, dashes or underscores (cleanRef drops others): {bad}")
+    for selected in (("maximalist", "brand") if style == "both" else (style,)):
+        render_set(tags, selected)
+    if style == "both":
+        comparison_previews()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:] or SCHOOLS)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("tags", nargs="*", help="school referral tags")
+    parser.add_argument("--style", choices=("both", "maximalist", "brand"), default="both")
+    args = parser.parse_args()
+    main(args.tags or SCHOOLS, args.style)
