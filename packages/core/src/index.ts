@@ -13,3 +13,4 @@ export * from './notes';
 export * from './assessment';
 export * from './hours';
 export * from './words';
+export * from './series';

@@ -60,6 +60,7 @@ export type AnalyticsEvent =
   | 'manual_item_created'
   | 'item_completion_changed'
   | 'item_deleted'
+  | 'item_edited'
   | 'auth_completed'
   | 'account_signed_out'
   | 'first_note'

@@ -157,9 +157,15 @@ export function planCanvasSync(
       continue;
     }
     const patch: Partial<Item> = {};
-    if (before.date !== e.date) patch.date = e.date;
-    if (before.start !== e.start) patch.start = e.start;
-    if (before.end !== e.end) patch.end = e.end;
+    if (before.editedAt) {
+      // The person moved it by hand: their date stands. Remember what Canvas says, so the item can offer it.
+      const feed = { date: e.date, start: e.start, end: e.end };
+      if (before.feed?.date !== feed.date || before.feed?.start !== feed.start || before.feed?.end !== feed.end) patch.feed = feed;
+    } else {
+      if (before.date !== e.date) patch.date = e.date;
+      if (before.start !== e.start) patch.start = e.start;
+      if (before.end !== e.end) patch.end = e.end;
+    }
     if (normalizeTitle(before.title) !== normalizeTitle(e.title)) patch.title = e.title;
     if (Object.keys(patch).length === 0) plan.skipped++;
     else {

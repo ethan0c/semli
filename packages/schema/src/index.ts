@@ -86,10 +86,29 @@ export const Item = z.object({
   urgent: z.boolean().optional(),
   /** A synced source's own id ("canvas:event-assignment-123"), so a resync updates instead of duplicating. */
   externalId: z.string().nullable().optional(),
+  /** When the person last changed the date or time by hand. A sync never moves an edited item; a series rebuild leaves it be. */
+  editedAt: z.string().nullable().optional(),
+  /** What the synced source last said, kept while the person's own edit stands, so the item can offer to follow the source again. */
+  feed: z.object({ date: LocalDate, start: LocalTime.nullable(), end: LocalTime.nullable() }).nullable().optional(),
   notes: z.string().nullable(),
   createdAt: z.string(),
 });
 export type Item = z.infer<typeof Item>;
+
+/**
+ * How a repeating item repeats: which weekdays, every N weeks (0 means every day), until when,
+ * and the dates skipped by hand. The occurrences are still ordinary items sharing a seriesId;
+ * the rule is what lets the days or the end change without guessing from the occurrences.
+ */
+export const SeriesRule = z.object({
+  every: z.number().int().min(0).max(4),
+  days: z.array(Weekday),
+  until: LocalDate,
+  skipped: z.array(LocalDate),
+  start: LocalTime.nullable(),
+  end: LocalTime.nullable(),
+});
+export type SeriesRule = z.infer<typeof SeriesRule>;
 
 export const Course = z.object({
   id: z.string(),
