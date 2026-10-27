@@ -2,13 +2,13 @@ Subject: Semli is on the App Store
 
 Hi {{{FIRST_NAME|there}}},
 
-Thanks for following along. Semli is now available for iPhone.
+Semli is on the App Store. Thanks for being here while I built it.
 
-Bring your syllabi, work schedule and class messages into one plan. Calendar, to-dos and reminders are free, with five imports to start.
+Add your syllabi, work schedule, or class messages to start your plan. The calendar, to-dos, and reminders are free. You get five imports to start.
 
 Get Semli on iPhone: https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264
 
-If you tried the beta, thank you for helping me get here. I'd love to hear how Semli fits into your week. Just reply here.
+Tried the beta? Thank you for helping me get here. Let me know how it fits into your week.
 
 Thanks,
 Semli

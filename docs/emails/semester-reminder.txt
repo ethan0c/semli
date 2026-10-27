@@ -1,18 +1,18 @@
-Subject: Got your new syllabus yet?
+Subject: Got a syllabus for the new semester?
 
 Hi {{{FIRST_NAME|there}}},
 
-If you're getting ready for a new semester, put your class dates and work shifts in one place.
+Getting ready for the semester? You don't need your whole schedule to get started.
 
-Add one syllabus or a week of shifts. Check the dates, save them, and add the rest as you get them.
+Add a syllabus or a week of shifts to Semli. Check the dates before saving, then add the rest as you get them.
 
 Get Semli on iPhone: https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264
 
 Already have Semli? Open the app and tap Add.
 
-If an import doesn't look right, reply and tell me what happened.
+If the dates don't look right, reply and tell me what happened.
 
-Hope the semester starts well,
+Hope your semester gets off to a good start,
 Semli
 
 --
