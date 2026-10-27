@@ -1,7 +1,7 @@
 import { localParts } from '@dayli/core';
 import { Button as SwiftButton, DatePicker, Host, Toggle } from '@expo/ui/swift-ui';
 import type { ComponentProps } from 'react';
-import { accessibilityLabel, buttonBorderShape, buttonStyle, controlSize, datePickerStyle, labelsHidden, tint } from '@expo/ui/swift-ui/modifiers';
+import { accessibilityLabel, buttonBorderShape, buttonStyle, controlSize, datePickerStyle, fixedSize, labelsHidden, tint } from '@expo/ui/swift-ui/modifiers';
 
 import type { DateFieldProps, InlinePickerProps, NativeButtonProps, ToggleProps } from '@/components/Native';
 import { useTheme, size } from '@/theme';
@@ -62,8 +62,10 @@ export function NativeToggle({ value, onChange, label, activeColor }: ToggleProp
   return (
     // The React Native row owns sizing and safe-area placement. Letting each
     // tiny host adapt to the screen edge moves its switch as the row scrolls.
-    <Host style={{ width: 52, height: 32, flexShrink: 0 }} alignment="center" ignoreSafeArea="all">
-      <Toggle isOn={value} onIsOnChange={onChange} modifiers={[tint(activeColor ?? c.added), ...(label ? [accessibilityLabel(label)] : [])]} />
+    // 64 wide holds the iOS 26 switch (about 62pt); trailing keeps an older,
+    // narrower switch flush with the row's right edge too.
+    <Host style={{ width: 64, height: 32, flexShrink: 0 }} alignment="trailing" ignoreSafeArea="all">
+      <Toggle isOn={value} onIsOnChange={onChange} modifiers={[labelsHidden(), fixedSize(), tint(activeColor ?? c.added), ...(label ? [accessibilityLabel(label)] : [])]} />
     </Host>
   );
 }

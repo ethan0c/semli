@@ -111,7 +111,7 @@ export default function CreateScreen() {
     </>}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <TextInput accessibilityLabel={event ? 'Event title' : 'To-do title'} value={draft.title} onChangeText={(title) => patch({ title })}
-          placeholder={event ? 'What’s happening?' : 'What needs doing?'} placeholderTextColor={c.inkSecondary}
+          placeholder={event ? 'What’s happening?' : 'What do you need to do?'} placeholderTextColor={c.inkSecondary}
           onFocus={() => setFocus('title')} onBlur={() => setFocus((f) => (f === 'title' ? null : f))}
           maxLength={500} returnKeyType="done" style={pillField('title')} />
 
@@ -141,8 +141,8 @@ export default function CreateScreen() {
               {draft.hasDueTime ? inlinePicker('time') : null}
             </>
           )}
-          <FieldRow label="Repeats" last>
-            <PickerPill label={draft.repeat ? describeRule(draft.repeat) : 'Never'} open={picker === 'repeat'} accessibilityLabel={`Repeats, ${draft.repeat ? describeRule(draft.repeat) : 'never'}`} onPress={() => toggle('repeat')} />
+          <FieldRow label="Repeat" last>
+            <PickerPill label={draft.repeat ? describeRule(draft.repeat) : 'Never'} open={picker === 'repeat'} accessibilityLabel={`Repeat, ${draft.repeat ? describeRule(draft.repeat) : 'never'}`} onPress={() => toggle('repeat')} />
           </FieldRow>
           {picker === 'repeat' ? (
             <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.repeat}>
@@ -159,7 +159,7 @@ export default function CreateScreen() {
         </View>
 
         <View style={styles.section}>
-          <GroupLabel>Keep it with</GroupLabel>
+          <GroupLabel>Category</GroupLabel>
           <Segmented options={categories} value={draft.category} onChange={(category) => patch({ category, courseId: null })} label="Category" />
           {draft.category === 'school' && courses.length > 0 ? (
             <View style={styles.chips} accessibilityRole="radiogroup" accessibilityLabel="Course">

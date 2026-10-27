@@ -68,7 +68,7 @@ export function RepeatEditor({ rule, from, today, times, noun, breaks, onChange 
 
   return (
     <View style={styles.root}>
-      <View accessibilityRole="radiogroup" accessibilityLabel="Repeats">
+      <View accessibilityRole="radiogroup" accessibilityLabel="How often to repeat">
         {EVERY.map((o, i) => {
           const selected = rule ? String(rule.every) === o.key : o.key === 'never';
           return <FieldRow key={o.key} label={o.label} radio={selected} last={i === EVERY.length - 1} onPress={() => { if (!selected) setEvery(o.key); }} />;
@@ -79,8 +79,8 @@ export function RepeatEditor({ rule, from, today, times, noun, breaks, onChange 
         <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.root}>
           {rule.every > 0 ? (
             <View style={styles.group}>
-              <GroupLabel>On</GroupLabel>
-              <View style={styles.days} accessibilityLabel="Days">
+              <GroupLabel>Repeat on</GroupLabel>
+              <View style={styles.days} accessibilityLabel="Days to repeat">
                 {WEEKDAYS.map((d) => {
                   const picked = rule.days.includes(d);
                   return (
@@ -91,21 +91,21 @@ export function RepeatEditor({ rule, from, today, times, noun, breaks, onChange 
                   );
                 })}
               </View>
-              {nudged ? <T token="caption" color={c.inkSecondary}>{`${weekdayLong(from)} stays: it’s the day of this ${noun}.`}</T> : null}
+              {nudged ? <T token="caption" color={c.inkSecondary}>{`${weekdayLong(from)} must stay selected because this ${noun} is on that day.`}</T> : null}
             </View>
           ) : null}
 
           <View>
-            <FieldRow label="Until" last>
+            <FieldRow label="Last date" last>
               <PickerPill label={atTermEnd ? `End of ${term.name}` : `${weekdayShort(rule.until)}, ${monthDay(rule.until)}`} open={untilOpen}
-                accessibilityLabel={`Until ${monthDay(rule.until)}`} onPress={() => setUntilOpen((v) => !v)} />
+                accessibilityLabel={`Last date, ${monthDay(rule.until)}`} onPress={() => setUntilOpen((v) => !v)} />
             </FieldRow>
             {untilOpen ? (
               <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.group}>
                 <InlinePicker mode="date" date={rule.until} time={null} onChange={(date) => isLocalDate(date) && set({ ...rule, until: date })} />
-                {rule.until === lastUntil(from) ? <T token="caption" color={c.inkSecondary}>Up to a year at a time.</T> : null}
+                {rule.until === lastUntil(from) ? <T token="caption" color={c.inkSecondary}>You can repeat this for up to a year at a time.</T> : null}
                 {!atTermEnd ? (
-                  <TextButton label={`End of ${term.name}, ${monthDay(term.date)}`} tone="muted" style={{ alignSelf: 'flex-start' }}
+                  <TextButton label={`Use end of ${term.name}, ${monthDay(term.date)}`} tone="muted" style={{ alignSelf: 'flex-start' }}
                     onPress={() => { setUntilOpen(false); set({ ...rule, until: term.date }); }} />
                 ) : null}
               </Animated.View>
@@ -114,7 +114,7 @@ export function RepeatEditor({ rule, from, today, times, noun, breaks, onChange 
 
           <View style={styles.group} accessibilityLabel={`${plural(dates.length)} through ${monthDay(rule.until)}`}>
             <T token="body">
-              {dates.length ? `${plural(dates.length)} through ${monthDay(rule.until)}` : `No ${noun}s before ${monthDay(rule.until)}`}
+              {dates.length ? `${plural(dates.length)} through ${monthDay(rule.until)}` : `No ${noun}s through ${monthDay(rule.until)}`}
               {skippedByBreaks.length ? <T token="body" color={c.inkSecondary}>{` · skips ${skippedByBreaks.map((b) => b.label ?? 'the break').join(', ')}`}</T> : null}
             </T>
             <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

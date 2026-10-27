@@ -56,7 +56,7 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
     return (
       <Sheet title="Item unavailable" nav="push" inline={!!onClose} onClose={onClose}>
         <T token="callout" color={c.inkSecondary} style={{ padding: space.lg, paddingHorizontal: SCREEN_GUTTER }}>
-          We couldn’t find this item. It may have been deleted. Go back to return to your plan.
+          This item may have been deleted. Go back to your plan to see what’s there.
         </T>
       </Sheet>
     );
@@ -144,7 +144,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
 
   const lead = reminders.eventLead === 60 ? '1 hour' : `${reminders.eventLead} min`;
   // The summary stands in for the morning reminder when it is on.
-  const morning = reminders.briefing ? 'morning summary' : reminders.morning !== false ? 'morning of' : null;
+  const morning = reminders.briefing ? 'morning summary' : reminders.morning !== false ? 'that morning' : null;
   const reminderValue = !reminders.enabled ? 'Off'
     : isEvent && item.start
       ? isClass(item) && !reminders.classReminders ? 'Off for classes' : `${lead} before`
@@ -163,7 +163,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
   };
   const timeText = (t: Times) => (t.start ? (t.end ? formatRange(t.start, t.end) : formatTime(t.start, true)) : isEvent ? 'all day' : 'no time');
   const seriesLabel = (what: string) => `${what} ${count(fromNow.filter((it) => !it.done && !it.editedAt).length)}`;
-  const leftAlone = (kept: number) => (kept ? ` ${kept} you moved ${kept === 1 ? 'stays' : 'stay'}.` : '');
+  const leftAlone = (kept: number) => (kept ? ` ${count(kept)} you moved won't change.` : '');
 
   /** Saves times to this occurrence, or to every one from it on. */
   const commitTimes = (t: Times, reach: 'one' | 'series') => {
@@ -250,8 +250,8 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
             <GroupLabel>{`Delete which ${seriesNoun}s?`}</GroupLabel>
             {[
               { label: 'Just this one', value: `${weekdayShort(item.date)}, ${monthDay(item.date)}`, run: () => removeItem(item.id) },
-              { label: 'This week', value: count(thisWeek.length), run: () => removeItems(thisWeek.map((it) => it.id), `Deleted ${count(thisWeek.length)}`) },
-              { label: 'From now on', value: count(fromNow.length), run: () => removeItems(fromNow.map((it) => it.id), `Deleted ${count(fromNow.length)}`) },
+              { label: 'Rest of this week', value: count(thisWeek.length), run: () => removeItems(thisWeek.map((it) => it.id), `Deleted ${count(thisWeek.length)}`) },
+              { label: 'This and later ones', value: count(fromNow.length), run: () => removeItems(fromNow.map((it) => it.id), `Deleted ${count(fromNow.length)}`) },
             ].map((o) => (
               <PressRow key={o.label} accessibilityRole="button" accessibilityLabel={`${o.label}, ${o.value}`} onPress={() => { feedback('remove'); deleteAndLeave(o.run); }}
                 bleed={8} round={radius.small} style={[styles.scopeRow, { borderBottomColor: c.line }]}>
@@ -260,7 +260,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
               </PressRow>
             ))}
             <TextButton label="Cancel" tone="muted" onPress={() => setScope(false)} style={{ alignSelf: 'center' }} />
-            <T token="caption" color={c.inkSecondary} style={{ textAlign: 'center' }}>Tap Undo after deleting, or open Your data → Recent changes to restore deleted items.</T>
+            <T token="caption" color={c.inkSecondary} style={{ textAlign: 'center' }}>You can undo this after deleting, or restore items in You → Your data → Recent changes.</T>
           </Animated.View>
         ) : (
           <>
@@ -299,14 +299,14 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
 
         {/* When: the date, the time and how it repeats. */}
         <Animated.View layout={layout}>
-          <FieldRow label={item.isDeadline ? 'Due' : 'Date'}>
+          <FieldRow label={item.isDeadline ? 'Due date' : 'Date'}>
             <PickerPill label={`${weekdayShort(shownDate)}, ${monthDay(shownDate)}`} open={picker === 'date'}
-              accessibilityLabel={`Date, ${weekdayLong(shownDate)}, ${longMonthDay(shownDate)}`} onPress={() => togglePicker('date')} />
+              accessibilityLabel={`${item.isDeadline ? 'Due date' : 'Date'}, ${weekdayLong(shownDate)}, ${longMonthDay(shownDate)}`} onPress={() => togglePicker('date')} />
           </FieldRow>
           {picker === 'date' ? (
             <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.pickerNote}>
               <InlinePicker mode="date" date={shownDate} time={shown.start} onChange={(next) => isLocalDate(next) && setDate(next)} />
-              {repeats ? <T token="caption" color={c.inkSecondary}>{`Moves this ${seriesNoun} only. To change the days it meets, use Repeat.`}</T> : null}
+              {repeats ? <T token="caption" color={c.inkSecondary}>{`Only this ${seriesNoun} will move. To change which days it repeats, open Repeat.`}</T> : null}
             </Animated.View>
           ) : null}
           <FieldRow label={isEvent ? 'All day' : 'Set a time'}>
@@ -321,32 +321,32 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
               {isEvent ? (
                 <>
                   <FieldRow label="Ends">
-                    <PickerPill label={shown.end ? formatTime(shown.end) : 'Add'} open={picker === 'end'} accessibilityLabel={`Ends, ${shown.end ? formatTime(shown.end) : 'none'}`} onPress={() => togglePicker('end')} />
+                    <PickerPill label={shown.end ? formatTime(shown.end) : 'Add time'} open={picker === 'end'} accessibilityLabel={shown.end ? `Ends, ${formatTime(shown.end)}` : 'Add an end time'} onPress={() => togglePicker('end')} />
                   </FieldRow>
                   {timePicker('end')}
-                  {endsNextDay ? <T token="caption" color={isWork(item) ? c.inkSecondary : c.changed} style={styles.pickerNote}>{isWork(item) ? 'Ends the next day.' : 'Ends before it starts, so it runs into the next day.'}</T> : null}
+                  {endsNextDay ? <T token="caption" color={isWork(item) ? c.inkSecondary : c.changed} style={styles.pickerNote}>{isWork(item) ? 'Ends the next day.' : 'This ends the next day. Check the end time if that wasn’t intended.'}</T> : null}
                 </>
               ) : null}
             </>
           ) : null}
           {asking && times ? (
             <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.ask}>
-              <T token="callout" color={c.inkSecondary}>{`Change the time to ${timeText(times)} for`}</T>
+              <T token="callout" color={c.inkSecondary}>Apply this time change to:</T>
               <View style={styles.askRow}>
                 <Press accessibilityRole="button" haptic="select" onPress={() => commitTimes(times, 'one')} style={[styles.askPill, { backgroundColor: c.row }]}>
-                  <T token="subhead">{`Just this ${seriesNoun}`}</T>
+                  <T token="subhead">Just this one</T>
                 </Press>
                 <Press accessibilityRole="button" haptic="select" onPress={() => commitTimes(times, 'series')} style={[styles.askPill, { backgroundColor: c.controlFill }]}>
-                  <T token="subhead" color={c.controlInk}>Every one from now</T>
+                  <T token="subhead" color={c.controlInk}>This and later</T>
                 </Press>
               </View>
-              <TextButton label="Keep the old time" tone="muted" onPress={() => { feedback('select'); setTimes(null); setAsking(false); }} style={{ alignSelf: 'flex-start' }} />
+              <TextButton label="Cancel time change" tone="muted" onPress={() => { feedback('select'); setTimes(null); setAsking(false); }} style={{ alignSelf: 'flex-start' }} />
             </Animated.View>
           ) : null}
           {/* The Repeat screen owns the rule: days, how often, until when, and making a one-off repeat. */}
           <FieldRow label="Repeat" last onPress={() => leave(`/repeat/${item.id}`)}
-            value={repeats && rule ? `${describeRule(rule)}, until ${monthDay(seriesEnd)}` : 'Never'}
-            accessibilityLabel={repeats && rule ? `Repeat, ${describeRule(rule)} until ${monthDay(seriesEnd)}, ${seriesLeft} left` : 'Repeat, never'} />
+            value={repeats && rule ? `${describeRule(rule)}, through ${monthDay(seriesEnd)}` : 'Never'}
+            accessibilityLabel={repeats && rule ? `Repeat, ${describeRule(rule)} through ${monthDay(seriesEnd)}, ${count(seriesLeft)} remaining` : 'Repeat, never'} />
         </Animated.View>
 
         {/* Where it belongs and where it came from. */}
@@ -359,7 +359,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
           ) : null}
           {feedDiffers && item.feed ? (
             <FieldRow label="Canvas has" value={`${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? `, ${formatTime(item.feed.start, true)}` : ''}`} last>
-              <TextButton label="Use it" onPress={followFeed} accessibilityLabel="Use the date Canvas has" />
+              <TextButton label="Use Canvas date" onPress={followFeed} accessibilityLabel="Use the date and time from Canvas" />
             </FieldRow>
           ) : null}
         </Animated.View>
@@ -379,7 +379,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
 
         {showDay ? (
           <View style={styles.around}>
-            <GroupLabel>{`${weekdayLong(item.date)} around it`}</GroupLabel>
+            <GroupLabel>{`Your ${weekdayLong(item.date)}`}</GroupLabel>
             <DayBar items={dayItems} now={{ date: item.date, time: now.time }} conflicts={conflicts} highlight={item.id} />
           </View>
         ) : null}
@@ -411,7 +411,7 @@ function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => voi
 
         {sameWeek.length ? (
           <View>
-            <SectionTitle title="Same week" />
+            <SectionTitle title="Also coming up" />
             {sameWeek.map((it, i) => (
               <Animated.View key={it.id} layout={layout} entering={enter.fade} exiting={exit.fade}>
                 <ItemRow item={it} today={now.date} last={i === sameWeek.length - 1} onPress={() => open(it.id)}

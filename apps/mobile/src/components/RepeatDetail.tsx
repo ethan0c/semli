@@ -37,7 +37,7 @@ export function RepeatDetail({ id }: { id?: string }) {
     return (
       <Sheet title="Repeat" nav="push">
         <T token="callout" color={c.inkSecondary} style={{ padding: space.lg, paddingHorizontal: SCREEN_GUTTER }}>
-          We couldn’t find this item. It may have been deleted. Go back to return to your plan.
+          This item may have been deleted. Go back to your plan to see what’s there.
         </T>
       </Sheet>
     );
@@ -55,10 +55,10 @@ export function RepeatDetail({ id }: { id?: string }) {
   // only worth saying when something else moves.
   const effect = preview ? [
     preview.create.length ? `Adds ${plural(preview.create.length)}` : null,
-    preview.remove.length ? `Removes ${plural(preview.remove.length)}${withNotes ? `, ${withNotes} with notes` : ''}` : null,
+    preview.remove.length ? `Removes ${plural(preview.remove.length)}${withNotes ? ` (${withNotes} with notes)` : ''}` : null,
     preview.update.length && !preview.create.length && !preview.remove.length ? `Updates ${plural(preview.update.length)}` : null,
   ].filter(Boolean) : [];
-  const summary = effect.length ? `${effect.join(' · ')}.${preview?.kept ? ` ${preview.kept} you moved ${preview.kept === 1 ? 'stays' : 'stay'}.` : ''}` : null;
+  const summary = effect.length ? `${effect.join(' · ')}.${preview?.kept ? ` ${plural(preview.kept)} you moved won't change.` : ''}` : null;
   const hasEarlier = !!current && series.some((it) => it.date < item.date);
   const stopping = !draft && !!current;
 
@@ -74,7 +74,7 @@ export function RepeatDetail({ id }: { id?: string }) {
       showToast(`${item.title} repeats ${describeRule(next).toLowerCase()} through ${monthDay(next.until)}.`, r.batchId ?? undefined);
     } else if (next && item.seriesId) {
       const r = applySeries(item.seriesId, next, item.date, now.date, `Changed how ${item.title} repeats`);
-      const kept = r.kept ? ` ${r.kept} you moved ${r.kept === 1 ? 'stays' : 'stay'}.` : '';
+      const kept = r.kept ? ` ${plural(r.kept)} you moved won't change.` : '';
       showToast(`${item.title} repeats ${describeRule(next).toLowerCase()} through ${monthDay(next.until)}.${kept}`, r.batchId ?? undefined);
     }
     feedback('success');
@@ -82,8 +82,8 @@ export function RepeatDetail({ id }: { id?: string }) {
   };
 
   const scopeLine = !current ? `Starts ${weekdayShort(item.date)}, ${monthDay(item.date)}.`
-    : stopping ? `This ${noun} stays. Undo brings the others back.`
-      : hasEarlier ? `From ${weekdayShort(item.date)}, ${monthDay(item.date)} on. Earlier ${noun}s don’t change.` : null;
+    : stopping ? `This ${noun} stays. You can undo this.`
+      : hasEarlier ? `Applies from ${weekdayShort(item.date)}, ${monthDay(item.date)}. Earlier ${noun}s won't change.` : null;
 
   return (
     <Sheet title="Repeat" nav="push" footer={
@@ -94,7 +94,7 @@ export function RepeatDetail({ id }: { id?: string }) {
             {scopeLine ? <T token="caption" color={c.inkSecondary} style={styles.center}>{scopeLine}</T> : null}
           </View>
         ) : null}
-        <Button label={!changed ? 'Done' : stopping ? (preview?.remove.length ? `Stop and remove ${plural(preview.remove.length)}` : 'Stop repeating') : 'Save'} onPress={save} />
+        <Button label={!changed ? 'Done' : stopping ? (preview?.remove.length ? `Stop and remove ${plural(preview.remove.length)}` : 'Stop repeating') : 'Save changes'} onPress={save} />
       </>
     }>
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
