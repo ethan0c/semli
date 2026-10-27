@@ -1,10 +1,11 @@
 import { conflictIds, describeRule, diffDays, formatRange, formatTime, fullDate, inferRule, isFlexibleEvent, isLocalDate, isLocalTime, localParts, monthDay, relativeDay, todayItems, toMinutes, weekOf, weekdayLong, weekdayShort, longMonthDay, clockTime, clockPeriod } from '@dayli/core';
+import type { Item } from '@dayli/schema';
 import { router } from 'expo-router';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { GroupLabel, SectionTitle, StatusPill, TextButton, itemStatus } from '@/components/Controls';
+import { FieldRow, GroupLabel, PickerPill, SectionTitle, StatusPill, TextButton, itemStatus } from '@/components/Controls';
 import { Notes } from '@/components/Notes';
 import { DayBar } from '@/components/DayBar';
 import { ItemRow } from '@/components/ItemRow';
@@ -12,7 +13,6 @@ import { InlinePicker, NativeToggle } from '@/components/Native';
 import { OverlapNotice } from '@/components/OverlapNotice';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
 import { Press, PressRow } from '@/components/Press';
-import { Segmented } from '@/components/Segmented';
 import { Button, Sheet } from '@/components/Sheet';
 import { T } from '@/components/Text';
 import { feedback } from '@/lib/feedback';
@@ -23,7 +23,7 @@ import { isClass } from '@/lib/reminder-plan';
 import { usePlusAccess } from '@/lib/plus-access';
 import { useItemList, useStore } from '@/store';
 import { SAMPLE_SOURCE } from '@/store/sample';
-import { SCREEN_GUTTER, corner, radius, textStyle, useTheme, size, fade, space } from '@/theme';
+import { SCREEN_GUTTER, corner, radius, textStyle, useTheme, size, space } from '@/theme';
 import { sourceName } from '@/lib/source-name';
 
 
@@ -36,56 +36,22 @@ function gap(now: { date: string; time: string }, date: string, time: string | n
   return null;
 }
 
-
-/** A plain text row: body text, 28 high, no icon, no hairline. Highlights when it can be pressed. */
-function Row({ children, trailing, onPress, accessibilityLabel }: { children: ReactNode; trailing?: ReactNode; onPress?: () => void; accessibilityLabel?: string }) {
-  if (!onPress) return <View style={styles.row}>{children}{trailing}</View>;
-  return (
-    <PressRow onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel}
-      bleed={8} round={radius.small} style={styles.row}>
-      {children}
-      {trailing}
-    </PressRow>
-  );
-}
+type Times = { start: string | null; end: string | null };
+type Open = 'start' | 'end' | 'date' | null;
 
 /**
- * One event or to-do: its time, date, repeats, reminders and the day around it. A pushed screen
- * on the phone (app/item/[id].tsx); on a wide web window, a pane beside Plan's list, where
- * `onClose` closes the pane and `onOpen` shows another item in it.
+ * One event or to-do. The big time on top, then labelled rows the way Calendar and Create lay them
+ * out: Date, All day, Starts, Ends and Repeat; then where it belongs and where it came from; then
+ * Urgent, Flexible time and Reminder. A date or time pill opens its picker under its own row, one
+ * at a time, and the change saves when the picker closes or the screen is left. On a repeating
+ * item a changed time then asks, inline, whether it is for just this one or every one from now.
+ *
+ * A pushed screen on the phone (app/item/[id].tsx); on a wide web window, a pane beside Plan's
+ * list, where `onClose` closes the pane and `onOpen` shows another item in it.
  */
 export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () => void; onOpen?: (id: string) => void }) {
   const { c } = useTheme();
-  const now = useNow();
-  const open = (next: string) => (onOpen ? onOpen(next) : router.push(`/item/${next}`));
   const item = useStore((s) => (id ? s.items[id] : undefined));
-  const courses = useStore((s) => s.courses);
-  const batches = useStore((s) => s.batches);
-  const items = useItemList();
-  const reminders = useStore((s) => s.settings.reminders);
-  const toggleDone = useStore((s) => s.toggleDone);
-  const updateItem = useStore((s) => s.updateItem);
-  const { requirePlus } = usePlusAccess();
-  // Urgent items ring like an alarm, which is part of Plus. Turning it off is always allowed.
-  const setUrgent = async (urgent: boolean) => {
-    if (!id || (urgent && !(await requirePlus('urgent')))) return;
-    feedback('select');
-    updateItem(id, { urgent });
-  };
-  const removeItem = useStore((s) => s.removeItem);
-  const removeItems = useStore((s) => s.removeItems);
-  const [title, setTitle] = useState(item?.title ?? '');
-  const [notes, setNotes] = useState(item?.notes ?? '');
-  const [editing, setEditing] = useState<'time' | 'date' | 'notes' | null>(null);
-  const [scope, setScope] = useState(false);
-  // Edits live in a draft until Done, so a wheel scrolled ten times is one change and one undo.
-  const [draft, setDraft] = useState<{ start: string | null; end: string | null; date: string }>({ start: null, end: null, date: '' });
-  /** On a repeating item: this occurrence, or every one from here on. Time defaults to all; date is always this one. */
-  const [reach, setReach] = useState<'one' | 'series'>('series');
-  const applySeries = useStore((s) => s.applySeries);
-  const storedRule = useStore((s) => (item?.seriesId ? s.series[item.seriesId] : undefined));
-  const showToast = useStore((s) => s.showToast);
-
   if (!item) {
     return (
       <Sheet title="Item unavailable" nav="push" inline={!!onClose} onClose={onClose}>
@@ -95,16 +61,58 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
       </Sheet>
     );
   }
+  return <ItemScreen item={item} onClose={onClose} onOpen={onOpen} />;
+}
+
+function ItemScreen({ item, onClose, onOpen }: { item: Item; onClose?: () => void; onOpen?: (id: string) => void }) {
+  const { c } = useTheme();
+  const now = useNow();
+  const open = (next: string) => (onOpen ? onOpen(next) : router.push(`/item/${next}`));
+  const courses = useStore((s) => s.courses);
+  const batches = useStore((s) => s.batches);
+  const items = useItemList();
+  const reminders = useStore((s) => s.settings.reminders);
+  const toggleDone = useStore((s) => s.toggleDone);
+  const updateItem = useStore((s) => s.updateItem);
+  const { requirePlus } = usePlusAccess();
+  // Urgent items ring like an alarm, which is part of Plus. Turning it off is always allowed.
+  const setUrgent = async (urgent: boolean) => {
+    if (urgent && !(await requirePlus('urgent'))) return;
+    feedback('select');
+    updateItem(item.id, { urgent });
+  };
+  const removeItem = useStore((s) => s.removeItem);
+  const removeItems = useStore((s) => s.removeItems);
+  const [title, setTitle] = useState(item.title);
+  const [notes, setNotes] = useState(item.notes ?? '');
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [scope, setScope] = useState(false);
+  /** Which picker is open under its row; one at a time, so a stray scroll never changes a second field. */
+  const [picker, setPicker] = useState<Open>(null);
+  /** The times being edited. Wheels change this, not the item, so ten scrolls are one change and one undo. */
+  const [times, setTimes] = useState<Times | null>(null);
+  const [date, setDate] = useState<string | null>(null);
+  /** A repeating item's changed time, waiting for "Just this one" or "Every one from now". */
+  const [asking, setAsking] = useState(false);
+  const applySeries = useStore((s) => s.applySeries);
+  const storedRule = useStore((s) => (item.seriesId ? s.series[item.seriesId] : undefined));
+  const showToast = useStore((s) => s.showToast);
+  // Leaving the screen saves what is open, as Calendar does; a repeating time defaults to every one from now.
+  const flush = useRef<() => void>(() => {});
+  const gone = useRef(false);
+  useEffect(() => () => { if (!gone.current) flush.current(); }, []);
 
   const isEvent = item.kind === 'event';
   const noun = isEvent ? 'event' : 'to-do';
   const course = item.courseId ? courses.find((k) => k.id === item.courseId) : null;
-  const where = [item.employer ?? course?.code ?? course?.title, item.category === 'school' ? 'Coursework' : item.category === 'work' ? 'Work' : 'Personal'].filter(Boolean).join(' · ');
-  const whereHref = item.employer ? `/employer/${encodeURIComponent(item.employer)}` : item.courseId && course ? `/course/${item.courseId}` : null;
+  const categoryName = item.category === 'school' ? 'Coursework' : item.category === 'work' ? 'Work' : 'Personal';
+  const belongs = item.employer ? { label: 'Job', value: item.employer, href: `/employer/${encodeURIComponent(item.employer)}` }
+    : course ? { label: 'Class', value: course.code ?? course.title, href: `/course/${course.id}` }
+      : { label: 'Category', value: categoryName, href: null };
   const batch = item.batchId ? batches.find((b) => b.id === item.batchId) : undefined;
-  const sourceDate = longMonthDay((batch?.createdAt ?? item.createdAt).slice(0, 10));
-  const source = item.sourceId === SAMPLE_SOURCE ? 'Sample data'
-    : item.sourceId ? `From ${sourceName(item.sourceId)}, ${sourceDate}`
+  const sourceDate = monthDay((batch?.createdAt ?? item.createdAt).slice(0, 10));
+  const sourceLabel = item.sourceId === SAMPLE_SOURCE ? 'Sample data'
+    : item.sourceId ? `${capitalize(sourceName(item.sourceId))}, ${sourceDate}`
       : batch ? `${batch.label}, ${sourceDate}` : null;
   const conflicts = conflictIds(items);
   const status = itemStatus(item, now.date, conflicts.has(item.id));
@@ -112,8 +120,12 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
   const eyebrow = [relativeDay(now.date, item.date), until].filter(Boolean).join(' · ');
   const sameWeek = items.filter((it) => it.id !== item.id && !it.done && it.date >= now.date && diffDays(now.date, it.date) <= 7
     && ((item.employer && it.employer === item.employer) || (item.courseId && it.courseId === item.courseId))).slice(0, 4);
-  const endsNextDay = item.start && item.end && item.end < item.start;
-  const timeLabel = item.start ? `${clockTime(item.start)}${item.end ? ` to ${clockTime(item.end)}` : ''} ${clockPeriod(item.end ?? item.start)}`.trim() : null;
+
+  // What the screen shows: the times being edited while a picker or the scope question is open.
+  const shown: Times = times ?? { start: item.start, end: item.end };
+  const shownDate = date ?? item.date;
+  const endsNextDay = !!shown.start && !!shown.end && shown.end < shown.start;
+  const timeChanged = !!times && (times.start !== item.start || times.end !== item.end);
 
   // The series this occurrence belongs to, when it repeats.
   const series = item.seriesId ? items.filter((it) => it.seriesId === item.seriesId) : [];
@@ -132,65 +144,99 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
 
   const lead = reminders.eventLead === 60 ? '1 hour' : `${reminders.eventLead} min`;
   // The summary stands in for the morning reminder when it is on.
-  const morningWay = reminders.briefing ? 'in the morning summary' : reminders.morning !== false ? 'the morning of' : null;
-  const deadlineLine = reminders.dayBefore !== false
-    ? morningWay ? `Reminder the evening before${reminders.briefing ? ',' : ''} and ${morningWay}` : 'Reminder the evening before'
-    : morningWay ? `Reminder ${morningWay}` : 'No deadline reminders · Turn them on in You';
-  const reminderLine = reminders.enabled
-    ? isEvent && item.start
-      ? isClass(item) && !reminders.classReminders ? 'No reminder before repeating classes · Turn them on in You' : `Reminder ${lead} before`
-      : item.isDeadline ? deadlineLine : 'Included in the daily summary'
-    : 'Reminders are off · Turn them on in You';
+  const morning = reminders.briefing ? 'morning summary' : reminders.morning !== false ? 'morning of' : null;
+  const reminderValue = !reminders.enabled ? 'Off'
+    : isEvent && item.start
+      ? isClass(item) && !reminders.classReminders ? 'Off for classes' : `${lead} before`
+      : item.isDeadline
+        ? reminders.dayBefore !== false ? (morning ? `Evening before and ${morning}` : 'Evening before') : morning ? capitalize(morning) : 'Off'
+        : 'In the daily summary';
 
-  const openEditor = (which: 'time' | 'date') => {
-    feedback('select');
-    if (editing === which) { setEditing(null); return; }
-    const times = item.start ? { start: item.start, end: item.end } : defaultTimes(item);
-    setDraft({ start: times.start, end: times.end, date: item.date });
-    setReach('series');
-    setEditing(which);
-  };
   /** The start drags the end with it, keeping the length; the end alone changes the length. */
   const setStart = (start: string) => {
     if (!isLocalTime(start)) return;
-    setDraft((d) => {
-      const length = d.start && d.end ? (toMinutes(d.end) - toMinutes(d.start) + 1440) % 1440 : null;
-      return { ...d, start, end: isEvent ? (length !== null ? plusMinutes(start, length) : d.end) : null };
+    setTimes((d) => {
+      const base = d ?? shown;
+      const length = base.start && base.end ? (toMinutes(base.end) - toMinutes(base.start) + 1440) % 1440 : null;
+      return { start, end: isEvent ? (length !== null ? plusMinutes(start, length) : base.end) : null };
     });
   };
+  const timeText = (t: Times) => (t.start ? (t.end ? formatRange(t.start, t.end) : formatTime(t.start, true)) : isEvent ? 'all day' : 'no time');
   const seriesLabel = (what: string) => `${what} ${count(fromNow.filter((it) => !it.done && !it.editedAt).length)}`;
   const leftAlone = (kept: number) => (kept ? ` ${kept} you moved ${kept === 1 ? 'stays' : 'stay'}.` : '');
-  const saveTime = (times: { start: string | null; end: string | null }) => {
-    setEditing(null);
-    if (times.start === item.start && times.end === item.end) return;
-    const timeText = times.start ? (times.end ? formatRange(times.start, times.end) : formatTime(times.start, true)) : 'no time';
+
+  /** Saves times to this occurrence, or to every one from it on. */
+  const commitTimes = (t: Times, reach: 'one' | 'series') => {
+    setTimes(null);
+    setAsking(false);
+    if (t.start === item.start && t.end === item.end) return;
     if (repeats && rule && reach === 'series') {
-      const r = applySeries(item.seriesId!, { ...rule, start: times.start, end: times.end }, item.date, now.date, seriesLabel(`Moved`) + ` to ${timeText}`);
+      const r = applySeries(item.seriesId!, { ...rule, start: t.start, end: t.end }, item.date, now.date, `${seriesLabel('Moved')} to ${timeText(t)}`);
       // The occurrence on screen may be hand-moved itself; it follows the rule when it is the one being edited.
-      if (item.editedAt) updateItem(item.id, { start: times.start, end: times.end, editedAt: null }, { silent: true });
-      if (r.kept) showToast(`${seriesLabel('Moved')} to ${timeText}.${leftAlone(r.kept)}`, r.batchId ?? undefined);
+      if (item.editedAt) updateItem(item.id, { start: t.start, end: t.end, editedAt: null }, { silent: true });
+      if (r.kept) showToast(`${seriesLabel('Moved')} to ${timeText(t)}.${leftAlone(r.kept)}`, r.batchId ?? undefined);
     } else {
-      updateItem(item.id, { start: times.start, end: times.end });
+      updateItem(item.id, { start: t.start, end: t.end });
     }
     feedback('success');
   };
-  const saveDate = (date: string) => {
-    setEditing(null);
-    if (!isLocalDate(date) || date === item.date) return;
-    updateItem(item.id, { date });
-    feedback('success');
+  /** New times are settled: saved at once on a one-off, asked about on a repeating item. */
+  const settleTimes = (t: Times) => {
+    if (t.start === item.start && t.end === item.end) { setTimes(null); setAsking(false); return; }
+    if (repeats) { setTimes(t); setAsking(true); return; }
+    commitTimes(t, 'one');
   };
+  const commitDate = () => {
+    if (date && isLocalDate(date) && date !== item.date) { updateItem(item.id, { date }); feedback('success'); }
+    setDate(null);
+  };
+  /** Closes whatever picker is open, saving what it changed, before `next` opens (or nothing does). */
+  const closePicker = (next: Open) => {
+    const timeOpen = picker === 'start' || picker === 'end';
+    if (timeOpen && next !== 'start' && next !== 'end' && times) settleTimes(times);
+    if (picker === 'date') commitDate();
+  };
+  const togglePicker = (which: Exclude<Open, null>) => {
+    feedback('select');
+    const next = picker === which ? null : which;
+    closePicker(next);
+    if (next === 'start' || next === 'end') {
+      setAsking(false);
+      if (!times) setTimes(item.start ? { start: item.start, end: item.end } : defaultTimes(item));
+    }
+    if (next === 'date') setDate(item.date);
+    setPicker(next);
+  };
+  /** All day on an event, Set a time on a to-do. */
+  const setTimed = (timed: boolean) => {
+    feedback('select');
+    closePicker(null);
+    if (!timed) { setPicker(null); settleTimes({ start: null, end: null }); return; }
+    setAsking(false);
+    setTimes(defaultTimes(item));
+    setPicker('start');
+  };
+  useEffect(() => {
+    flush.current = () => {
+      if (picker === 'date') commitDate();
+      if (times && timeChanged) commitTimes(times, repeats ? 'series' : 'one');
+    };
+  });
+  const leave = (to: string) => { closePicker(null); setPicker(null); router.push(to); };
   const followFeed = () => {
     if (!item.feed) return;
     updateItem(item.id, { date: item.feed.date, start: item.feed.start, end: item.feed.end, editedAt: null, feed: null }, { silent: true });
     feedback('success');
   };
   const feedDiffers = !!item.editedAt && !!item.feed && (item.feed.date !== item.date || item.feed.start !== item.start || item.feed.end !== item.end);
-  const reachControl = repeats ? (
-    <Segmented size="small" label="Change which" value={reach} onChange={(next) => { feedback('select'); setReach(next); }}
-      options={[{ key: 'one', label: `This ${seriesNoun}` }, { key: 'series', label: 'Every one from now' }]} />
+  const deleteAndLeave = (fn: () => void) => { gone.current = true; fn(); if (onClose) onClose(); else router.back(); };
+
+  const timePicker = (which: 'start' | 'end') => picker === which && times ? (
+    <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout}>
+      <InlinePicker mode="time" date={item.date} time={which === 'start' ? times.start : times.end}
+        onChange={(value) => { if (which === 'start') setStart(value); else if (isLocalTime(value)) setTimes((d) => ({ ...(d ?? shown), end: value })); }} />
+    </Animated.View>
   ) : null;
-  const deleteAndLeave = (fn: () => void) => { fn(); if (onClose) onClose(); else router.back(); };
 
   return (
     <Sheet
@@ -229,7 +275,8 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
         <View style={styles.head}>
           <View style={styles.eyebrowRow}>
             <T token="callout" color={c.inkSecondary}>{eyebrow}</T>
-            <StatusPill label={status.label} tone={status.tone} />
+            {/* Only a status worth saying: a plain time is already the big number. */}
+            {status.tone !== 'grey' ? <StatusPill label={status.label} tone={status.tone} /> : null}
           </View>
           <TextInput
             accessibilityLabel="Title"
@@ -239,94 +286,95 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
             multiline
             style={[textStyle('displaySm', c.inkPrimary), { padding: 0, minWidth: 0 }]}
           />
-          {item.start ? (
-            <Press accessibilityRole="button" accessibilityLabel={`Time, ${timeLabel}, tap to change`} accessibilityState={{ expanded: editing === 'time' }}
-              onPress={() => openEditor('time')} scale={1} dim={fade.pressed}>
-              <T token="displayXl" tabular style={styles.time}>
-                {clockTime(item.start)}{item.end ? <T token="displayXl" color={c.inkSecondary} style={styles.time}> – </T> : null}{item.end ? clockTime(item.end) : ''}
-                <T token="titleSm" color={c.inkSecondary}> {[clockPeriod(item.end ?? item.start), endsNextDay ? 'next day' : ''].filter(Boolean).join(', ')}</T>
-              </T>
-            </Press>
-          ) : (
-            <Press accessibilityRole="button" accessibilityLabel="Add a time" haptic="select" onPress={() => openEditor('time')} style={[styles.addTime, { backgroundColor: c.row }]}>
-              <T token="subhead">Add a time</T>
-            </Press>
-          )}
-          {editing === 'time' ? (
-            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.editor}>
-              {reachControl}
-              <View style={styles.wheels}>
-                <View style={{ flex: 1, gap: space.xxs }}>
-                  <T token="caption" color={c.inkSecondary}>{isEvent ? 'Starts' : 'Due'}</T>
-                  <InlinePicker mode="time" date={item.date} time={draft.start} onChange={setStart} />
-                </View>
-                {isEvent ? (
-                  <View style={{ flex: 1, gap: space.xxs }}>
-                    <T token="caption" color={c.inkSecondary}>{draft.start && draft.end && draft.end < draft.start ? 'Ends, next day' : 'Ends'}</T>
-                    <InlinePicker mode="time" date={item.date} time={draft.end} onChange={(end) => isLocalTime(end) && setDraft((d) => ({ ...d, end }))} />
-                  </View>
-                ) : null}
-              </View>
-              <View style={styles.editorActions}>
-                <TextButton label="No time" tone="muted" onPress={() => saveTime({ start: null, end: null })} />
-                <View style={{ flex: 1 }} />
-                <TextButton label="Cancel" tone="muted" onPress={() => setEditing(null)} />
-                <TextButton label="Done" onPress={() => saveTime({ start: draft.start, end: isEvent ? draft.end : null })} />
-              </View>
-            </Animated.View>
+          {shown.start ? (
+            <T token="displayXl" tabular style={styles.time} accessibilityLabel={timeText(shown)}>
+              {clockTime(shown.start)}{shown.end ? <T token="displayXl" color={c.inkSecondary} style={styles.time}> – </T> : null}{shown.end ? clockTime(shown.end) : ''}
+              <T token="titleSm" color={c.inkSecondary}> {[clockPeriod(shown.end ?? shown.start), endsNextDay ? 'next day' : ''].filter(Boolean).join(', ')}</T>
+            </T>
           ) : null}
         </View>
 
         {/* Straight under the time, so the overlap and its one action show without scrolling. */}
         <OverlapNotice key={item.id} item={item} items={items} />
 
-        <Animated.View layout={layout} style={styles.rows}>
-          {editing === 'date' ? (
-            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.editor}>
-              <T token="body">{`${weekdayLong(draft.date)}, ${longMonthDay(draft.date)}`}</T>
-              <InlinePicker mode="date" date={draft.date} time={draft.start} onChange={(date) => isLocalDate(date) && setDraft((d) => ({ ...d, date }))} />
-              {repeats ? <T token="caption" color={c.inkSecondary}>{`Moves this ${seriesNoun} only. To change the days it meets, change where it repeats below.`}</T> : null}
-              <View style={styles.editorActions}>
-                <View style={{ flex: 1 }} />
-                <TextButton label="Cancel" tone="muted" onPress={() => setEditing(null)} />
-                <TextButton label="Done" onPress={() => saveDate(draft.date)} />
-              </View>
+        {/* When: the date, the time and how it repeats. */}
+        <Animated.View layout={layout}>
+          <FieldRow label={item.isDeadline ? 'Due' : 'Date'}>
+            <PickerPill label={`${weekdayShort(shownDate)}, ${monthDay(shownDate)}`} open={picker === 'date'}
+              accessibilityLabel={`Date, ${weekdayLong(shownDate)}, ${longMonthDay(shownDate)}`} onPress={() => togglePicker('date')} />
+          </FieldRow>
+          {picker === 'date' ? (
+            <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.pickerNote}>
+              <InlinePicker mode="date" date={shownDate} time={shown.start} onChange={(next) => isLocalDate(next) && setDate(next)} />
+              {repeats ? <T token="caption" color={c.inkSecondary}>{`Moves this ${seriesNoun} only. To change the days it meets, use Repeat.`}</T> : null}
             </Animated.View>
-          ) : (
-            <Row onPress={() => openEditor('date')} accessibilityLabel={`Date, ${weekdayLong(item.date)}, ${longMonthDay(item.date)}, tap to change`}>
-              <T token="body">{`${weekdayLong(item.date)}, ${longMonthDay(item.date)}`}{item.isDeadline ? <T token="body" color={c.inkSecondary}> · Deadline</T> : null}</T>
-            </Row>
-          )}
-          <Row onPress={whereHref ? () => router.push(whereHref) : undefined} accessibilityLabel={whereHref ? `${where}, open` : undefined}>
-            <T token="body">{where}</T>
-          </Row>
-          {source ? (
-            <Row onPress={item.batchId && batch ? () => router.push(`/import/${item.batchId}`) : undefined} accessibilityLabel={batch ? `${source}, open the import` : undefined}>
-              <T token="body">{source}</T>
-            </Row>
           ) : null}
-          {feedDiffers && item.feed ? (
-            <Row trailing={<TextButton label="Use Canvas’s" onPress={followFeed} accessibilityLabel="Use the date Canvas has" />}>
-              <T token="body" color={c.inkSecondary} style={{ flex: 1 }}>{`Canvas has this on ${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? ` at ${formatTime(item.feed.start, true)}` : ''}`}</T>
-            </Row>
+          <FieldRow label={isEvent ? 'All day' : 'Set a time'}>
+            <NativeToggle label={isEvent ? 'All day' : 'Set a time'} value={isEvent ? !shown.start : !!shown.start} onChange={(v) => setTimed(isEvent ? !v : v)} />
+          </FieldRow>
+          {shown.start ? (
+            <>
+              <FieldRow label={isEvent ? 'Starts' : 'Time'}>
+                <PickerPill label={formatTime(shown.start)} open={picker === 'start'} accessibilityLabel={`${isEvent ? 'Starts' : 'Time'}, ${formatTime(shown.start)}`} onPress={() => togglePicker('start')} />
+              </FieldRow>
+              {timePicker('start')}
+              {isEvent ? (
+                <>
+                  <FieldRow label="Ends">
+                    <PickerPill label={shown.end ? formatTime(shown.end) : 'Add'} open={picker === 'end'} accessibilityLabel={`Ends, ${shown.end ? formatTime(shown.end) : 'none'}`} onPress={() => togglePicker('end')} />
+                  </FieldRow>
+                  {timePicker('end')}
+                  {endsNextDay ? <T token="caption" color={isWork(item) ? c.inkSecondary : c.changed} style={styles.pickerNote}>{isWork(item) ? 'Ends the next day.' : 'Ends before it starts, so it runs into the next day.'}</T> : null}
+                </>
+              ) : null}
+            </>
+          ) : null}
+          {asking && times ? (
+            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.ask}>
+              <T token="callout" color={c.inkSecondary}>{`Change the time to ${timeText(times)} for`}</T>
+              <View style={styles.askRow}>
+                <Press accessibilityRole="button" haptic="select" onPress={() => commitTimes(times, 'one')} style={[styles.askPill, { backgroundColor: c.row }]}>
+                  <T token="subhead">{`Just this ${seriesNoun}`}</T>
+                </Press>
+                <Press accessibilityRole="button" haptic="select" onPress={() => commitTimes(times, 'series')} style={[styles.askPill, { backgroundColor: c.controlFill }]}>
+                  <T token="subhead" color={c.controlInk}>Every one from now</T>
+                </Press>
+              </View>
+              <TextButton label="Keep the old time" tone="muted" onPress={() => { feedback('select'); setTimes(null); setAsking(false); }} style={{ alignSelf: 'flex-start' }} />
+            </Animated.View>
           ) : null}
           {/* The Repeat screen owns the rule: days, how often, until when, and making a one-off repeat. */}
-          <Row onPress={() => router.push(`/repeat/${item.id}`)}
-            accessibilityLabel={repeats && rule ? `${describeRule(rule)} until ${monthDay(seriesEnd)}, ${seriesLeft} left, tap to change how it repeats` : 'Doesn’t repeat, tap to make it repeat'}>
-            <T token="body" color={repeats ? c.inkPrimary : c.inkSecondary} style={{ flex: 1 }}>{repeats && rule ? `${describeRule(rule)} until ${monthDay(seriesEnd)} · ${seriesLeft} left` : 'Doesn’t repeat'}</T>
-          </Row>
-          <Row trailing={<NativeToggle label="Urgent" value={!!item.urgent} onChange={(urgent) => void setUrgent(urgent)} />}>
-            <T token="body" style={{ flex: 1 }}>Urgent</T>
-          </Row>
+          <FieldRow label="Repeat" last onPress={() => leave(`/repeat/${item.id}`)}
+            value={repeats && rule ? `${describeRule(rule)}, until ${monthDay(seriesEnd)}` : 'Never'}
+            accessibilityLabel={repeats && rule ? `Repeat, ${describeRule(rule)} until ${monthDay(seriesEnd)}, ${seriesLeft} left` : 'Repeat, never'} />
+        </Animated.View>
+
+        {/* Where it belongs and where it came from. */}
+        <Animated.View layout={layout}>
+          <FieldRow label={belongs.label} value={belongs.value} last={!sourceLabel && !feedDiffers}
+            onPress={belongs.href ? () => leave(belongs.href!) : undefined} />
+          {sourceLabel ? (
+            <FieldRow label="Added from" value={sourceLabel} last={!feedDiffers}
+              onPress={item.batchId && batch ? () => leave(`/import/${item.batchId}`) : undefined} />
+          ) : null}
+          {feedDiffers && item.feed ? (
+            <FieldRow label="Canvas has" value={`${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? `, ${formatTime(item.feed.start, true)}` : ''}`} last>
+              <TextButton label="Use it" onPress={followFeed} accessibilityLabel="Use the date Canvas has" />
+            </FieldRow>
+          ) : null}
+        </Animated.View>
+
+        <Animated.View layout={layout}>
+          <FieldRow label="Urgent">
+            <NativeToggle label="Urgent" value={!!item.urgent} onChange={(urgent) => void setUrgent(urgent)} />
+          </FieldRow>
           {item.urgent && !item.done ? <RingingAlarmInfo timed={!!item.start} itemID={item.id} /> : null}
           {isEvent && !item.isDeadline && item.icon !== 'exam' ? (
-            <Row trailing={<NativeToggle label="Flexible time" value={isFlexibleEvent(item)} onChange={(value) => updateItem(item.id, { timeFlexibility: value ? 'flexible' : 'fixed' })} />}>
-              <T token="body" style={{ flex: 1 }}>Flexible time</T>
-            </Row>
+            <FieldRow label="Flexible time">
+              <NativeToggle label="Flexible time" value={isFlexibleEvent(item)} onChange={(value) => updateItem(item.id, { timeFlexibility: value ? 'flexible' : 'fixed' })} />
+            </FieldRow>
           ) : null}
-          <Row onPress={reminders.enabled ? undefined : () => router.push('/settings/reminders')}>
-            <T token="body" color={reminders.enabled ? c.inkPrimary : c.inkSecondary}>{reminderLine}</T>
-          </Row>
+          <FieldRow label="Reminder" value={reminderValue} last onPress={() => leave('/settings/reminders')} />
         </Animated.View>
 
         {showDay ? (
@@ -338,9 +386,9 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
 
         <View style={{ gap: space.snug }}>
           <GroupLabel>Notes</GroupLabel>
-          {item.notes && editing !== 'notes' ? (
-            <Notes text={item.notes} onEdit={() => setEditing('notes')} onChange={(next) => { setNotes(next); updateItem(item.id, { notes: next }); }} />
-          ) : editing === 'notes' ? (
+          {item.notes && !notesOpen ? (
+            <Notes text={item.notes} onEdit={() => setNotesOpen(true)} onChange={(next) => { setNotes(next); updateItem(item.id, { notes: next }); }} />
+          ) : notesOpen ? (
             <Animated.View entering={enter.drop}>
               <TextInput
                 accessibilityLabel="Notes"
@@ -348,14 +396,14 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
                 multiline
                 value={notes}
                 onChangeText={setNotes}
-                onBlur={() => { const next = notes.trim() || null; if (next !== item.notes) updateItem(item.id, { notes: next }); setEditing(null); }}
+                onBlur={() => { const next = notes.trim() || null; if (next !== item.notes) updateItem(item.id, { notes: next }); setNotesOpen(false); }}
                 placeholder="Add a note…"
                 placeholderTextColor={c.inkTertiary}
                 style={[textStyle('body', c.inkPrimary), styles.notes, { backgroundColor: c.row }]}
               />
             </Animated.View>
           ) : (
-            <TextButton label="Add a note" tone="muted" onPress={() => setEditing('notes')} style={{ alignSelf: 'flex-start', minHeight: 32 }} />
+            <TextButton label="Add a note" tone="muted" onPress={() => setNotesOpen(true)} style={{ alignSelf: 'flex-start', minHeight: 32 }} />
           )}
         </View>
 
@@ -377,18 +425,20 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
   );
 }
 
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** Shifts run past midnight as a matter of course; anything else ending before it starts is a slip worth flagging. */
+const isWork = (item: { category: string; employer?: string | null }) => item.category === 'work' || !!item.employer;
+
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.xs, paddingBottom: space.xl, gap: space.sm },
-  head: { gap: space.sm, paddingBottom: space.xs },
-  eyebrowRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
+  body: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.xs, paddingBottom: space.xl, gap: space.xl },
+  head: { gap: space.sm },
+  eyebrowRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: space.sm, minHeight: size.chip },
   time: { fontSize: 44, lineHeight: 48, letterSpacing: -1.4, paddingTop: space.xxs },
-  addTime: { alignSelf: 'flex-start', height: size.pill, borderRadius: radius.pill, paddingHorizontal: space.sm, alignItems: 'center', justifyContent: 'center', marginTop: space.xs },
-  editor: { gap: space.sm, paddingTop: space.xs },
-  wheels: { flexDirection: 'row', gap: space.sm },
-  editorActions: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  rows: { gap: space.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 28, paddingHorizontal: space.xxs },
-  around: { gap: space.xs, paddingTop: space.sm },
+  pickerNote: { gap: space.xs, paddingBottom: space.xs },
+  ask: { gap: space.xs, paddingVertical: space.sm },
+  askRow: { flexDirection: 'row', gap: space.xs },
+  askPill: { flex: 1, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
+  around: { gap: space.xs },
   notes: { ...corner(radius.field), padding: space.sm, minHeight: 88, textAlignVertical: 'top' },
   scope: { alignSelf: 'stretch' },
   scopeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: size.compact, borderBottomWidth: StyleSheet.hairlineWidth },

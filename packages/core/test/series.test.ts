@@ -1,6 +1,6 @@
 import type { SeriesRule } from '@dayli/schema';
 import { describe, expect, it } from 'vitest';
-import { anchorRule, defaultRule, describeRule, inferRule, rebuildSeries, seriesDates } from '../src';
+import { anchorRule, defaultRule, describeRule, inferRule, rebuildSeries, sameRule, seriesDates } from '../src';
 
 const rule: SeriesRule = { every: 1, days: ['mon', 'wed'], until: '2026-11-18', skipped: [], start: '09:00', end: '10:15' };
 const occ = (id: string, date: string, over: Partial<{ start: string | null; end: string | null; done: boolean; editedAt: string | null }> = {}) =>
@@ -59,5 +59,21 @@ describe('series rules', () => {
     expect(anchorRule({ ...r, every: 0, days: [] }, '2026-10-27').days).toEqual([]);
     expect(anchorRule({ ...r, until: '2026-10-01' }, '2026-10-27').until).toBe('2026-10-27');
     expect(anchorRule({ ...r, until: '2028-01-01' }, '2026-10-27').until).toBe('2027-10-27');
+  });
+});
+
+describe('sameRule', () => {
+  const rule: SeriesRule = { every: 1, days: ['mon', 'wed'], until: '2026-12-11', skipped: [], start: '09:00', end: '10:15' };
+  it('ignores the order of days', () => {
+    expect(sameRule(rule, { ...rule, days: ['wed', 'mon'] })).toBe(true);
+  });
+  it('sees a change of days, end or time', () => {
+    expect(sameRule(rule, { ...rule, days: ['mon'] })).toBe(false);
+    expect(sameRule(rule, { ...rule, until: '2026-12-04' })).toBe(false);
+    expect(sameRule(rule, { ...rule, start: '10:00' })).toBe(false);
+  });
+  it('treats no rule as different from a rule', () => {
+    expect(sameRule(rule, null)).toBe(false);
+    expect(sameRule(null, null)).toBe(true);
   });
 });

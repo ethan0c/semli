@@ -1,11 +1,11 @@
 import { anchorRule, describeRule, formatTime, isLocalDate, localParts, monthDay, weekdayShort } from '@dayli/core';
 import type { Category } from '@dayli/schema';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { CategoryDot, Chip, GroupLabel, PickerPill } from '@/components/Controls';
+import { CategoryDot, Chip, FieldRow, GroupLabel, PickerPill } from '@/components/Controls';
 import { InlinePicker, NativeToggle } from '@/components/Native';
 import { RepeatEditor } from '@/components/RepeatEditor';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
@@ -193,22 +193,10 @@ export default function CreateScreen() {
   );
 }
 
-/** A hairline row: the label on the left, one control on the right. */
-function FieldRow({ label, children, last }: { label: string; children: ReactNode; last?: boolean }) {
-  const { c } = useTheme();
-  return (
-    <View style={[styles.row, !last ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.line } : null]}>
-      <T token="body" style={{ flex: 1 }}>{label}</T>
-      {children}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { paddingHorizontal: SCREEN_GUTTER, paddingTop: space.sm, paddingBottom: space.xl, gap: space.xl },
   pillField: { height: 52, borderRadius: 999, paddingHorizontal: space.lg, paddingVertical: 0, borderWidth: 1.5 },
   rows: { marginTop: -space.hair },
-  row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: space.sm },
   rowNote: { paddingTop: space.xs },
   repeat: { paddingTop: space.sm },
   section: { gap: space.sm },

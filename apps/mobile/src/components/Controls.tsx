@@ -161,6 +161,37 @@ export function ListRow({ title, sub, leading, trailing, onPress, chevron = !!on
   );
 }
 
+/**
+ * A labelled form row, the way Calendar lays out an event: the label on the left, the value or one
+ * control on the right, a chevron when the row leads to another screen. 52 high, hairline under
+ * every row but the last in its group. Shared by Create, the item screen and Repeat.
+ */
+export function FieldRow({ label, value, children, onPress, last, accessibilityLabel, radio }: {
+  label: string; value?: string | null; children?: ReactNode; onPress?: () => void; last?: boolean; accessibilityLabel?: string;
+  /** Set for one choice of several: the row shows a Radio, on when true, instead of a chevron. */
+  radio?: boolean;
+}) {
+  const { c } = useTheme();
+  const line = !last ? { borderBottomColor: c.line, borderBottomWidth: StyleSheet.hairlineWidth } : null;
+  const body = (
+    <>
+      <T token="body" numberOfLines={1} style={styles.fieldLabel}>{label}</T>
+      <View style={styles.fieldValue}>
+        {value ? <T token="body" color={c.inkSecondary} numberOfLines={1} style={styles.fieldText}>{value}</T> : null}
+        {children}
+        {radio !== undefined ? <Radio on={radio} /> : onPress ? <Icon name="chevronRight" size={iconSize.disclosure} color={c.disclosureInk} /> : null}
+      </View>
+    </>
+  );
+  if (!onPress) return <View style={[styles.field, line]}>{body}</View>;
+  return (
+    <PressRow onPress={onPress} accessibilityRole={radio !== undefined ? 'radio' : 'button'} accessibilityState={radio !== undefined ? { selected: radio } : undefined}
+      accessibilityLabel={accessibilityLabel ?? [label, value].filter(Boolean).join(', ')} bleed={8} round={radius.small} style={[styles.field, line]}>
+      {body}
+    </PressRow>
+  );
+}
+
 /** The 36-high grey pill that opens a native date or time picker; white with an ink ring while it is open. */
 export function PickerPill({ label, open, onPress, accessibilityLabel }: { label: string; open: boolean; onPress: () => void; accessibilityLabel?: string }) {
   const { c } = useTheme();
@@ -214,6 +245,10 @@ export function itemStatus(item: Pick<Item, 'kind' | 'date' | 'start' | 'end' | 
 }
 
 const styles = StyleSheet.create({
+  field: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  fieldLabel: { flexShrink: 0, maxWidth: '55%' },
+  fieldValue: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: space.xs },
+  fieldText: { flexShrink: 1, textAlign: 'right' },
   pickerPill: { height: size.pill, paddingHorizontal: space.sm, borderRadius: radius.pill, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   radio: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 7, height: 7, borderRadius: 4 },
