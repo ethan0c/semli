@@ -316,8 +316,11 @@ export default function ReviewScreen() {
     }
     // The toast with Undo and the reminders prompt wait until Plan, so neither lands on the moment.
     const goOn = () => {
-      showToast(importLine(parts, ex.detected_type, firstOf(useStore.getState().settings.name)), id);
       const { settings: now, setSettings: save } = useStore.getState();
+      // The first read Plus pays for says so: otherwise a subscriber never sees what they bought.
+      const plusNote = pending?.plus && !now.firsts.plusImport ? ' Plus covered this one; free plans get 3 a month.' : '';
+      if (plusNote) save({ firsts: { ...now.firsts, plusImport: true } });
+      showToast(importLine(parts, ex.detected_type, firstOf(now.name)) + plusNote, id);
       if (!now.remindersAsked) {
         save({ remindersAsked: true });
         void requestNotifications().then((ok) => ok ? syncReminders() : undefined).catch(() => {});

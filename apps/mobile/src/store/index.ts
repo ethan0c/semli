@@ -44,6 +44,8 @@ export interface Pending {
   source: string;
   /** The web only: what was read, so review can show it beside the results on a wide window. */
   input?: ExtractRequest['input'];
+  /** Plus paid for this read: the free allowance was used up. Review says so, the first time. */
+  plus?: boolean;
 }
 
 export type PlanId = 'monthly' | 'semester' | 'yearly';
@@ -110,7 +112,7 @@ interface Settings {
 }
 
 /** What Semli explains once: an overlap it can move, a close deadline, Canvas left unconnected, a schedule compared with the last one, Plan's chart legend. */
-export type FirstKind = 'overlap' | 'urgent' | 'canvas' | 'reimport' | 'hours' | 'week' | 'added';
+export type FirstKind = 'overlap' | 'urgent' | 'canvas' | 'reimport' | 'hours' | 'week' | 'added' | 'plusImport';
 
 export type Lms = 'canvas' | 'blackboard' | 'brightspace' | 'moodle' | 'classroom' | 'other';
 export type Plate = 'classes' | 'job' | 'clubs';
@@ -205,7 +207,7 @@ interface State {
   clearAll: (scope: 'plan' | 'everything') => void;
 }
 
-const DEFAULT_SETTINGS: Settings = { name: '', apiUrl: DEFAULT_API_URL, seeded: false, onboarded: false, isStudent: true, planIntent: null, weekKinds: [], plate: [], deadlineSource: null, sampleBatchId: null, savePlanDismissed: false, appearance: 'system', language: null, cardStyle: 'raised', todayView: 'list', sounds: true, haptics: true, major: null, reminders: DEFAULT_REMINDERS, remindersAsked: false, onboardingImportDone: false, trial: null, region: null, termSystem: 'semester', lms: null, cloud: { backedUpAt: null, error: null }, canvas: { feedUrl: null, lastSyncedAt: null, lastError: null }, firsts: { overlap: false, urgent: false, canvas: false, reimport: false, hours: false, week: false, added: false } };
+const DEFAULT_SETTINGS: Settings = { name: '', apiUrl: DEFAULT_API_URL, seeded: false, onboarded: false, isStudent: true, planIntent: null, weekKinds: [], plate: [], deadlineSource: null, sampleBatchId: null, savePlanDismissed: false, appearance: 'system', language: null, cardStyle: 'raised', todayView: 'list', sounds: true, haptics: true, major: null, reminders: DEFAULT_REMINDERS, remindersAsked: false, onboardingImportDone: false, trial: null, region: null, termSystem: 'semester', lms: null, cloud: { backedUpAt: null, error: null }, canvas: { feedUrl: null, lastSyncedAt: null, lastError: null }, firsts: { overlap: false, urgent: false, canvas: false, reimport: false, hours: false, week: false, added: false, plusImport: false } };
 
 export const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 const nowIso = () => new Date().toISOString();

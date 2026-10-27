@@ -23,6 +23,7 @@ import { takeDroppedFile } from '@/lib/web-drop';
 import { COLUMN, useWebLayout } from '@/lib/layout';
 import { useNow } from '@/lib/now';
 import { purchaseErrorMessage } from '@/lib/revenuecat';
+import { hasFreeImports } from '@/lib/plans';
 import { useStore } from '@/store';
 import { diffDays, localParts, monthDay, relativeDay , count } from '@dayli/core';
 import { NAV_INSET, SCREEN_GUTTER, useTheme, space } from '@/theme';
@@ -67,6 +68,8 @@ export function AddScreen() {
         setError(purchaseErrorMessage(failure));
         return;
       }
+      // With the free allowance used up, this read is Plus's; review says so the first time.
+      const plusRead = !hasFreeImports(useStore.getState().usage);
       const req = { input, context: extractionContext(input) };
       let res = await requestImport(apiUrl, req);
       // The server's count wins over this phone's (a reinstall resets the local one).
@@ -85,7 +88,7 @@ export function AddScreen() {
       spoke.current = false;
       recordImport();
       track('import_succeeded', { kind: input.kind, items: res.extraction.items.length, type: res.extraction.detected_type });
-      setPending({ extraction: res.extraction, source, ...(Platform.OS === 'web' ? { input } : {}) });
+      setPending({ extraction: res.extraction, source, ...(plusRead ? { plus: true } : {}), ...(Platform.OS === 'web' ? { input } : {}) });
       router.push('/review');
     } catch (failure) {
       reportError('import.prepare_or_review', failure);
