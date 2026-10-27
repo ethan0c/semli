@@ -37,6 +37,21 @@ The 16-item cardio request: 14.0 s on Opus, 5.5 s on Opus fast, about 7 s on Hai
 
 Haiku handing back nothing usable (a refusal, a cut-off answer) is read again by Opus. Fast mode has its own rate limit; a 429 there retries at standard speed. The readers are server settings (`EXTRACT_QUICK_MODEL`, `EXTRACT_DOCUMENT_MODEL`, `EXTRACT_FAST` in `docs/env.md`), never in the app, so a model changes with a Vercel redeploy and no release. Run the benchmark before changing one.
 
+## Reading PDFs as text first (tested Oct 27, 2026)
+
+The API reads a PDF page as both an image and its text, about 7,000 tokens for three pages against about 1,000 for text alone ([PDF support](https://platform.claude.com/docs/en/build-with-claude/pdf-support)). Pulling the text out first with a PDF library takes 30 to 60 ms per syllabus (poppler's `pdftotext -layout` on the five benchmark syllabi, 4 to 20 pages). Read as text by each model, graded by the benchmark's scorer:
+
+| Syllabi read by | Dates and times | Extra items | Median wait | Cost per syllabus |
+|---|---|---|---|---|
+| Opus 5.5, whole PDF (live) | 96.9% | 2.4% | 21.6 s | $0.17 |
+| Opus 5.5, extracted text | 98.0% | 1.2% | 22.4 s | $0.11 |
+| Sonnet 5.5, extracted text | 93.3% | 2.4% | 18.2 s | $0.065 |
+| Haiku 5.5, extracted text | 76.5% | 16.3% | 32.3 s | $0.005 |
+
+Opus on the text is more accurate, back under the 2% extra-item gate, and a third cheaper; the wait doesn't change, because writing the answer, not reading, is now most of both the time and the cost. Lower effort and shorter evidence quotes were also tried on whole PDFs and saved nothing (medium effort: same cost, 96.5%; low: 12% cheaper, 85%).
+
+To build: extract text on the server (a PDF.js build such as unpdf in `packages/extract`), send it as text to the document model, and fall back to the whole PDF when a page carries little text (a scan, a photographed handout) or extraction fails. Also worth building: a cache of finished reads keyed by the file's hash, so a classmate's identical syllabus reads instantly and costs nothing; and rows streamed in as they're written, which is what would make a 20-second read feel instant.
+
 ## The wait itself
 
 `components/Reading.tsx`: the heading steps through what is happening for that kind of input and holds on its last step instead of looping; the line under it says how long it usually takes; after 10 s it says they can keep using Semli and the review opens when ready (the import keeps running while they move between tabs, and the ready sound plays when it lands).

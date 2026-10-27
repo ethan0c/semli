@@ -70,7 +70,7 @@ export type ExtractResult =
   | { ok: false; error: string };
 
 /** Which model reads (default: `modelFor` the input), and whether Opus runs in fast mode (Plus syllabi). */
-export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers };
+export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high' };
 
 export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
   const content: Anthropic.ContentBlockParam[] = [];
@@ -93,7 +93,7 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
     max_tokens: 16000,
     system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
     output_config: {
-      effort: req.input.kind === 'text' ? ('low' as const) : ('high' as const),
+      effort: opts.effort ?? (req.input.kind === 'text' ? ('low' as const) : ('high' as const)),
       format: zodOutputFormat(Extraction),
     },
     messages: [{ role: 'user' as const, content }],
