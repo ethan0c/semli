@@ -59,3 +59,37 @@ describe('readers set on the server', () => {
     expect(standard.mock.calls.map((c) => c[0].model)).toEqual(['claude-sonnet-5-5', 'claude-opus-5']);
   });
 });
+
+describe('streaming', () => {
+  const answer = { detected_type: 'general', employer: null, course: null, covers_from: null, covers_to: null, items: [
+    { kind: 'task', title: 'Quiz 1', category: 'school', date: '2026-10-30', start: null, end: null, is_deadline: true, repeat_weekdays: [], repeat_until: null, course_code: null, evidence: 'Quiz Friday', confidence: 0.9, question: null },
+    { kind: 'task', title: 'Essay', category: 'school', date: '2026-11-02', start: null, end: null, is_deadline: true, repeat_weekdays: [], repeat_until: null, course_code: null, evidence: 'Essay Monday', confidence: 0.9, question: null },
+  ] };
+  /** A fake stream that writes the answer in small pieces, then finishes. */
+  const fakeStream = (final: object) => {
+    const listeners: ((d: string, s: string) => void)[] = [];
+    return {
+      on(_event: 'text', listener: (d: string, s: string) => void) { listeners.push(listener); return this; },
+      async finalMessage() {
+        const text = JSON.stringify(answer);
+        for (let i = 0; i < text.length; i += 9) listeners.forEach((l) => l(text.slice(i, i + 9), text.slice(0, i + 9)));
+        return final;
+      },
+    };
+  };
+  it('hands over items as they are written and returns the validated answer', async () => {
+    const seen: string[] = [];
+    const client = { messages: { stream: vi.fn(() => fakeStream({ stop_reason: 'end_turn', parsed_output: answer, usage: {} })) } } as unknown as Anthropic;
+    const r = await extract(text, client, { onItem: (it) => seen.push(it.title) });
+    expect(seen).toEqual(['Quiz 1', 'Essay']);
+    expect(r.ok && r.extraction.items).toHaveLength(2);
+  });
+  it('tells the app to clear its rows when Opus starts again after the quick reader', async () => {
+    const events: string[] = [];
+    const stream = vi.fn((p: { model: string }) => fakeStream(p.model === QUICK_MODEL ? { stop_reason: 'refusal', parsed_output: null, usage: {} } : { stop_reason: 'end_turn', parsed_output: answer, usage: {} }));
+    const client = { messages: { stream } } as unknown as Anthropic;
+    const r = await extract(text, client, { onItem: (it) => events.push(it.title), onReset: () => events.push('reset') });
+    expect(r.ok).toBe(true);
+    expect(events).toEqual(['Quiz 1', 'Essay', 'reset', 'Quiz 1', 'Essay']);
+  });
+});
