@@ -39,7 +39,11 @@ function ChangeRow({ change, exists, last, onPress }: { change: Change; exists: 
   let pill: { label: string; tone: PillTone; muted?: boolean };
   if (change.op === 'delete') pill = { label: 'Removed', tone: 'redText' };
   else if (!exists) pill = { label: 'Deleted later', tone: 'grey', muted: true };
-  else if (change.op === 'update') pill = { label: 'Moved', tone: 'grey' };
+  else if (change.op === 'update') {
+    // Only a date or time change is a move; a renamed or noted item was edited.
+    const b = change.before!;
+    pill = { label: b.date !== it.date || b.start !== it.start || b.end !== it.end ? 'Moved' : 'Edited', tone: 'grey' };
+  }
   else if (it.start && it.end) pill = { label: compactRange(it.start, it.end), tone: 'grey' };
   else if (it.start) pill = { label: formatTime(it.start, true), tone: 'grey' };
   else if (it.kind === 'event') pill = { label: 'Add a time', tone: 'amber' };
@@ -103,7 +107,9 @@ export default function ImportScreen() {
   const timed = created.filter((it) => it.kind === 'event' && it.start).length;
   const remindersLine = reminders.enabled && timed > 0 ? (timed === created.length ? `Reminders set for all ${timed}.` : `Reminders set for ${timed} of ${created.length}.`) : null;
 
-  const caption = asking ? undoQuestion(batch, items, series, courses) : 'Undo the changes made by this import.';
+  // Every change opens here (from Recent changes, an item's "Added from"); only imports are imports.
+  const imported = !!batch.source;
+  const caption = asking ? undoQuestion(batch, items, series, courses) : imported ? 'Undo the changes made by this import.' : 'Undo this change.';
   const undo = () => {
     if (!asking) { feedback('tap'); setAsking(true); return; }
     feedback('undo');
@@ -113,7 +119,7 @@ export default function ImportScreen() {
 
   return (
     <Sheet
-      title="Import"
+      title={imported ? 'Import' : 'Change'}
       nav="push"
       footer={
         <>
@@ -124,7 +130,7 @@ export default function ImportScreen() {
                   <TextButton label="Cancel" tone="muted" onPress={() => setAsking(false)} />
                   <TextButton label="Undo" tone="danger" haptic="tap" onPress={undo} />
                 </View>
-              : <TextButton label="Undo this import" tone="danger" haptic="tap" onPress={undo} />}
+              : <TextButton label={imported ? 'Undo this import' : 'Undo this change'} tone="danger" haptic="tap" onPress={undo} />}
           {!batch.undone ? <T token="caption" color={c.inkSecondary} style={{ textAlign: 'center' }}>{caption}</T> : null}
         </>
       }>

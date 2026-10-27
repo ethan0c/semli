@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+// vi.mock calls below are hoisted above these imports.
+import { notificationPermission, trialRenews } from './notifications';
 
 const mocks = vi.hoisted(() => ({ platform: { OS: 'ios' }, getPermissionsAsync: vi.fn() }));
 vi.mock('react-native', () => ({ Platform: mocks.platform, AppState: { addEventListener: () => ({ remove: () => undefined }) } }));
@@ -7,8 +9,6 @@ vi.mock('expo-router', () => ({ router: {} }));
 vi.mock('react-native-purchases', () => ({ default: {} }));
 vi.mock('@/lib/revenuecat', () => ({ PLUS_ENTITLEMENT: 'semli_plus', purchasesUnavailableReason: null }));
 vi.mock('@/store', () => ({ useStore: { getState: () => ({}) } }));
-
-import { notificationPermission, trialRenews } from './notifications';
 
 const info = (entitlement: object | undefined) => ({ entitlements: { active: entitlement ? { semli_plus: entitlement } : {} } }) as never;
 

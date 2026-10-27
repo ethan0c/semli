@@ -4,9 +4,10 @@ import { applyRecords, diffRecords, keyOf, latestSeq, recordsOf, snapshotFromRec
 
 const item = (id: string, over: object = {}) => ({ id, kind: 'task', title: id, category: 'school', icon: 'check', date: '2026-10-20', start: null, end: null, isDeadline: false, done: false, completedAt: null, courseId: null, employer: null, sourceId: null, batchId: null, notes: null, createdAt: '2026-10-01T00:00:00Z', ...over });
 const course = (id: string) => ({ id, code: id.toUpperCase(), title: id, instructor: null, sourceId: null });
+const rule = (until: string) => ({ every: 1, days: ['mon'], until, skipped: [] as string[], start: '09:00', end: '10:15' });
 const plan = (over: object = {}) => ({
-  items: {} as Record<string, ReturnType<typeof item>>, courses: [] as ReturnType<typeof course>[], schedules: [], taskWorkDates: {} as Record<string, string>,
-  settings: { name: 'Ama', onboarded: true, isStudent: true, appearance: 'system' },
+  items: {} as Record<string, ReturnType<typeof item>>, courses: [] as ReturnType<typeof course>[], schedules: [], taskWorkDates: {} as Record<string, string>, series: {},
+  settings: { name: 'Ama', onboarded: true, isStudent: true, appearance: 'system', sampleBatchId: null as string | null },
   ...over,
 }) as never;
 
@@ -99,5 +100,41 @@ describe('snapshotFromRecords and latestSeq', () => {
     expect(snapshot.items.map((i) => i.id)).toEqual(['a']);
     expect(snapshot.courses.map((c) => c.id)).toEqual(['bio']);
     expect(snapshot.taskWorkDates).toEqual({ a: '2026-10-19' });
+  });
+});
+
+describe('series rules', () => {
+  it('sync as their own records, the sample’s staying on the device', () => {
+    const records = recordsOf(plan({ series: { s1: rule('2026-12-15'), 'sample-series-0': rule('2026-12-15') } }));
+    expect([...records.keys()].filter((k) => k.startsWith('series:'))).toEqual(['series:s1']);
+    expect(diffRecords(records, recordsOf(plan({ series: { s1: { ...rule('2026-12-15'), skipped: ['2026-10-26'] } } }))).map(keyOf)).toEqual(['series:s1']);
+    expect(diffRecords(records, recordsOf(plan())).map((r) => [keyOf(r), r.deleted])).toEqual([['series:s1', true]]);
+  });
+
+  it('another device’s rule is applied, and a deleted one goes, so a series edit there can’t bring back a lecture deleted here', () => {
+    const local = plan({ series: { s1: rule('2026-12-15'), s2: rule('2026-12-15') } });
+    const skipped = { ...rule('2026-12-15'), skipped: ['2026-10-26'] };
+    const patch = applyRecords(local, [
+      { kind: 'series', id: 's1', data: skipped, deleted: false },
+      { kind: 'series', id: 's2', data: null, deleted: true },
+    ])!;
+    expect(patch.series).toEqual({ s1: skipped });
+  });
+
+  it('round-trip through the account’s records', () => {
+    const snapshot = snapshotFromRecords([...recordsOf(plan({ series: { s1: rule('2026-12-15') } })).values()]);
+    expect(snapshot.series).toEqual({ s1: rule('2026-12-15') });
+  });
+});
+
+describe('the profile', () => {
+  it('never brings another phone’s Canvas feed link', () => {
+    const canvas = { feedUrl: 'https://school.instructure.com/feeds/calendars/user_secret.ics', lastSyncedAt: null, lastError: null };
+    const mine = { feedUrl: null, lastSyncedAt: null, lastError: null };
+    const patch = applyRecords(plan({ settings: { name: 'Ama', onboarded: true, canvas: mine } }), [
+      { kind: 'profile', id: 'me', data: { settings: { name: 'Ama B', canvas }, onboarded: true }, deleted: false },
+    ])!;
+    expect(patch.settings).toMatchObject({ name: 'Ama B', canvas: mine });
+    expect((recordsOf(plan({ settings: { name: 'Ama', canvas } })).get('profile:me')!.data as { settings: object }).settings).not.toHaveProperty('canvas');
   });
 });

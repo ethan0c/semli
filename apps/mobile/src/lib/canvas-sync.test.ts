@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+// vi.mock calls below are hoisted above these imports.
+import { CANVAS_MESSAGES } from './canvas';
+import { syncCanvas } from './canvas-sync';
 
 const mocks = vi.hoisted(() => ({
   fetchCanvasFeed: vi.fn(), applyPlan: vi.fn(() => 'batch'), showToast: vi.fn(),
@@ -13,9 +16,6 @@ vi.mock('../store', () => ({
   newId: () => 'course',
   useStore: { getState: () => mocks.state },
 }));
-
-import { CANVAS_MESSAGES } from './canvas';
-import { syncCanvas } from './canvas-sync';
 
 const FEED = 'https://school.instructure.com/feeds/calendars/user_abc.ics';
 const entry = { externalId: 'canvas:event-assignment-1', kind: 'task', title: 'Essay', courseLabel: null, date: '2099-01-10', start: null, end: null, isDeadline: true, url: null };

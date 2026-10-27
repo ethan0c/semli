@@ -41,7 +41,7 @@ const item = (id: string, over: object = {}) => ({ id, kind: 'task', title: id, 
 const SETTINGS = () => ({ name: 'Ama', onboarded: true, seeded: true, isStudent: true, cloud: { backedUpAt: null, error: null } });
 
 mocks.store = fakeStore(() => ({
-  hydrated: true, items: {} as Record<string, unknown>, courses: [], schedules: [], taskWorkDates: {}, settings: SETTINGS(), planChoice: null, batches: [],
+  hydrated: true, items: {} as Record<string, unknown>, courses: [], schedules: [], taskWorkDates: {}, series: {} as Record<string, unknown>, settings: SETTINGS(), planChoice: null, batches: [],
   setSettings: (patch: object) => mocks.store.setState({ settings: { ...(mocks.store.getState().settings as object), ...patch } }),
 }));
 mocks.session = fakeStore(() => ({ session: { user: { id: 'u1' } }, ready: true }));

@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { Item } from '@dayli/schema';
-import { adoptSnapshot, choosePlan, planDate, snapshotOf } from './cloud-snapshot';
+import { adoptProfile, adoptSnapshot, choosePlan, personalSettings, planDate, snapshotOf } from './cloud-snapshot';
 
 const item = (id: string, over: Partial<Item> = {}): Item => ({
   id, kind: 'task', title: id, category: 'school', icon: 'check', date: '2026-10-20', start: null, end: null, isDeadline: false,
   done: false, completedAt: null, courseId: null, employer: null, sourceId: null, batchId: null, notes: null, createdAt: '2026-10-01T00:00:00Z', ...over,
 });
 
-const settings = { name: '', onboarded: true, seeded: true, isStudent: true, major: null, weekKinds: [], lms: null, canvas: { feedUrl: null, lastSyncedAt: null, lastError: null }, reminders: {}, breaks: [], planIntent: null, appearance: 'dark' } as never;
-const state = (items: Item[], over: object = {}) => ({ items: Object.fromEntries(items.map((i) => [i.id, i])), courses: [], schedules: [], taskWorkDates: {}, settings: { ...(settings as object), ...over } as never });
+const settings = { name: '', onboarded: true, seeded: true, isStudent: true, major: null, weekKinds: [], lms: null, canvas: { feedUrl: null, lastSyncedAt: null, lastError: null }, reminders: {}, breaks: [], planIntent: null, appearance: 'dark', sampleBatchId: null } as never;
+const state = (items: Item[], over: object = {}, plan: object = {}) => ({ items: Object.fromEntries(items.map((i) => [i.id, i])), courses: [], schedules: [], taskWorkDates: {}, series: {}, settings: { ...(settings as object), ...over } as never, ...plan });
+const rule = { every: 1, days: ['mon' as const], until: '2026-12-15', skipped: [], start: '09:00', end: '10:15' };
 
 describe('cloud backup', () => {
   it('leaves sample records and phone-only settings out of the backup', () => {
@@ -67,5 +68,55 @@ describe('cloud backup', () => {
     expect(adoptSnapshot(state([], { onboarded: false }), empty).settings.onboarded).toBe(false);
     const { onboarded: _legacyPlan, ...plan } = snapshotOf(state([item('a')], { onboarded: true }));
     expect(adoptSnapshot(state([], { onboarded: false }), plan).settings.onboarded).toBe(true);
+  });
+
+  it('leaves the onboarding sample out, though it is made as a real import, and it is no plan', () => {
+    // onboarding.tsx: the sample's items carry its batch and the "Sample week" label; its courses and series have sample- ids.
+    const sample = [item('n1', { batchId: 'b-sample', sourceId: 'Sample week' }), item('n2', { batchId: 'b-sample' }), item('sample-3', { sourceId: 'Screenshot' })];
+    const local = state([item('a'), ...sample], { sampleBatchId: 'b-sample' }, {
+      courses: [{ id: 'sample-course-0', code: 'STAT 200', title: 'Statistics', instructor: null, sourceId: 'syllabus.pdf', batchId: 'b-sample' }, { id: 'k1', code: null, title: 'Mine', instructor: null, sourceId: null }],
+      series: { 'sample-series-0': rule, s1: rule },
+      taskWorkDates: { n1: '2026-10-21', a: '2026-10-22' },
+    });
+    const snap = snapshotOf(local);
+    expect(snap.items.map((i) => i.id)).toEqual(['a']);
+    expect(snap.courses.map((c) => c.id)).toEqual(['k1']);
+    expect(Object.keys(snap.series!)).toEqual(['s1']);
+    expect(snap.taskWorkDates).toEqual({ a: '2026-10-22' });
+    // A phone with only the sample signing in to an account with a plan takes it without asking.
+    const onlySample = state(sample, { sampleBatchId: 'b-sample' });
+    expect(choosePlan(onlySample, snapshotOf(state([item('x')])))).toBe('remote');
+    expect(choosePlan(onlySample, null)).toBe('none');
+    // Sample rows another device uploaded before Oct 27 aren't a plan either, and don't come down.
+    const leftover = { ...snapshotOf(state([])), items: [item('n9', { sourceId: 'Sample week' })] };
+    expect(choosePlan(state([item('c')]), leftover)).toBe('local');
+    expect(adoptSnapshot(state([]), { ...leftover, items: [...leftover.items, item('x')] }).items).toHaveProperty('x');
+    expect(Object.keys(adoptSnapshot(state([]), leftover).items)).toEqual([]);
+  });
+
+  it('adopting the account plan replaces the sample too, so Today stops offering to remove it', () => {
+    const adopted = adoptSnapshot(state([item('n1', { batchId: 'b-sample' })], { sampleBatchId: 'b-sample' }), snapshotOf(state([item('x')])));
+    expect(adopted.settings.sampleBatchId).toBeNull();
+    // Taking only the profile (neither side has a plan) leaves the sample where it is.
+    expect(adoptProfile(state([], { sampleBatchId: 'b-sample' }), snapshotOf(state([]))).sampleBatchId).toBe('b-sample');
+  });
+
+  it('carries series rules, and an account saved before them leaves each series to read its rule again', () => {
+    const remote = snapshotOf(state([item('a')], {}, { series: { s1: rule } }));
+    expect(adoptSnapshot(state([], {}, { series: { old: rule } }), remote).series).toEqual({ s1: rule });
+    const { series: _none, ...legacy } = remote;
+    expect(adoptSnapshot(state([], {}, { series: { old: rule } }), legacy).series).toEqual({});
+  });
+
+  it('keeps the Canvas feed link, the only credential, on this phone', () => {
+    const canvas = { feedUrl: 'https://school.instructure.com/feeds/calendars/user_secret.ics', lastSyncedAt: '2026-10-26T00:00:00Z', lastError: null };
+    const snap = snapshotOf(state([item('a')], { canvas, lms: 'canvas' }));
+    expect(snap.settings).not.toHaveProperty('canvas');
+    expect(snap.settings).toMatchObject({ lms: 'canvas' });
+    // A profile an older version saved still carries it; it never lands on another phone.
+    const older = { ...snap, settings: { ...snap.settings, canvas } } as never;
+    const mine = { feedUrl: null, lastSyncedAt: null, lastError: null };
+    expect(adoptSnapshot(state([], { canvas: mine }), older).settings.canvas).toEqual(mine);
+    expect(personalSettings({ name: 'Ama', canvas } as never)).toEqual({ name: 'Ama' });
   });
 });

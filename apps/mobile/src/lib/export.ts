@@ -3,7 +3,7 @@ import { File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 import { reportError } from './errors';
 
-/** Everything that is yours, as one JSON file you can AirDrop, save, or bring to a new phone. */
+/** Everything that is yours, as one JSON file you can AirDrop or save. Nothing reads it back in yet: moving phones goes through an account. */
 export function buildBackup(data: { items: Item[]; courses: Course[]; schedules: ScheduleVersion[]; exportedAt: string }): string {
   return JSON.stringify({ app: 'Semli', version: 1, ...data }, null, 2);
 }

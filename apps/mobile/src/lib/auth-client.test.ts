@@ -80,7 +80,7 @@ const fields = { email: 'ama@example.com', password: 'correct horse' };
 const row = (over: object = {}) => ({ version: 1, items: [], courses: [], schedules: [], taskWorkDates: {}, settings: {}, ...over });
 
 mocks.store = fakeStore(() => ({
-  hydrated: true, items: {} as Record<string, unknown>, courses: [], schedules: [], taskWorkDates: {}, settings: DEFAULTS(), toast: null as unknown,
+  hydrated: true, items: {} as Record<string, unknown>, courses: [], schedules: [], taskWorkDates: {}, series: {}, settings: DEFAULTS(), toast: null as unknown,
   setSettings: (patch: object) => mocks.store.setState((s) => ({ settings: { ...(s.settings as object), ...patch } })),
   showToast: (message: string) => mocks.store.setState({ toast: { message } }),
   planChoice: null as unknown,

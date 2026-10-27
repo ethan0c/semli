@@ -44,8 +44,9 @@ export function RingingAlarmInfo({ timed = true, itemID, draft = false, settings
       // A purchase on the paywall carries on to the enable it was opened for (Oct 27, 2026),
       // instead of returning to this row for a second tap.
       if (!isPlus && !(await requirePlus('urgent', { onError: setError }))) return;
-      if (!isPlus) await enableRingingAlarms();
-      else if (state.error) await syncRingingAlarms();
+      // Where a subscriber gets no button (no time yet, iOS too old, a build without alarms), the message explains.
+      if (!isPlus && (unavailable || !timed)) return;
+      if (state.error) await syncRingingAlarms();
       else if (state.authorization === 'denied') { if (!(await openSystemSettings())) setError('Open Settings → Semli → Alarms.'); }
       else if (enabled && settings) await disableRingingAlarms();
       else if (enabled && state.authorization === 'authorized') await syncRingingAlarms();

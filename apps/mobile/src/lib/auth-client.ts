@@ -7,7 +7,7 @@ import Purchases from 'react-native-purchases';
 import { Platform } from 'react-native';
 
 import { ACCOUNTS_ENABLED, AuthUnavailableError, unavailableClient, type AuthClient, type SignInResult } from './auth';
-import { restoreFromCloud, saveToCloud, stopSync } from './cloud';
+import { restoreFromCloud, saveToCloud, stopSync, type RestoreOutcome } from './cloud';
 import { forgetAccount, maskEmail, rememberAccount, type Provider } from './last-account';
 import { reportError } from './errors';
 import { posthog, track } from './analytics';
@@ -57,9 +57,9 @@ async function signedIn(): Promise<SignInResult> {
     reportError('cloud.restore_after_sign_in', error);
     const { settings, setSettings } = useStore.getState();
     setSettings({ cloud: { ...settings.cloud, error: 'You’re signed in, but we couldn’t restore your backup. Check your connection and try again. Your plan on this phone is still here.' } });
-    return { restored: false };
+    return { restored: false, outcome: 'unreached' as const };
   });
-  const restored = result.restored;
+  const { restored, outcome } = result;
   if (user && !user.is_anonymous) {
     const fullName = user.user_metadata?.full_name;
     welcome = {
@@ -68,7 +68,7 @@ async function signedIn(): Promise<SignInResult> {
       apple: user.app_metadata?.provider === 'apple',
       // Made in the last few minutes: this sign-in is the account's first.
       isNew: Date.now() - Date.parse(user.created_at) < NEW_ACCOUNT_MS,
-      restored,
+      outcome,
     };
   }
   return { signedIn: true, restored };
@@ -78,7 +78,16 @@ async function signedIn(): Promise<SignInResult> {
 const NEW_ACCOUNT_MS = 10 * 60 * 1000;
 
 /** Who just signed in, said once the sign-in screens have closed (see `leaveAuth`). */
-let welcome: { first: string | null; email: string | null; apple: boolean; isNew: boolean; restored: boolean } | null = null;
+let welcome: { first: string | null; email: string | null; apple: boolean; isNew: boolean; outcome: RestoreOutcome } | null = null;
+
+/** Where the plan is after signing in, said only when it's true (Oct 27, 2026). */
+const WHERE: Record<RestoreOutcome, string> = {
+  restored: 'Your backed-up plan is on this iPhone.',
+  'backed-up': 'Your plan is backed up.',
+  choose: 'Choose which plan to keep.',
+  unsent: 'Your plan isn’t backed up yet. We’ll try again after your next change.',
+  unreached: 'We couldn’t reach your backup, so your plan on this iPhone is unchanged.',
+};
 
 /**
  * The line that tells someone their sign-in worked: who they are now, and where their plan is.
@@ -87,9 +96,12 @@ let welcome: { first: string | null; email: string | null; apple: boolean; isNew
 export function welcomeLine(w: NonNullable<typeof welcome>): string {
   const name = w.first ? `, ${w.first}` : '';
   const who = w.apple || !w.email ? 'with Apple' : `as ${w.email}`;
-  if (w.isNew) return `Welcome to Semli${name}. You’re signed up ${w.apple || !w.email ? 'with Apple' : `with ${w.email}`}, and your plan is backed up.`;
-  if (w.restored) return `Welcome back${name}. Your backed-up plan is on this iPhone.`;
-  return `Signed in ${who}. Your plan is backed up.`;
+  if (w.isNew) {
+    const signedUp = `Welcome to Semli${name}. You’re signed up ${w.apple || !w.email ? 'with Apple' : `with ${w.email}`}`;
+    return w.outcome === 'backed-up' ? `${signedUp}, and your plan is backed up.` : `${signedUp}. ${WHERE[w.outcome]}`;
+  }
+  if (w.outcome === 'restored') return `Welcome back${name}. ${WHERE.restored}`;
+  return `Signed in ${who}. ${WHERE[w.outcome]}`;
 }
 
 /** The redirect back from Google: `?code=` (PKCE) or `?error_code=`. */
@@ -209,8 +221,9 @@ const supabaseClient: AuthClient = {
   },
 
   /**
-   * The plan is backed up, then leaves this phone; signing in again brings it back. If the last
-   * changes can't be saved (offline), nothing happens, so signing out never loses work.
+   * The plan is backed up, then leaves this phone; signing in again brings it back. Offline it
+   * refuses before anything changes (the Oct 21, 2026 account model): the last changes can't be
+   * confirmed, so signing out never loses work.
    */
   async signOut() {
     try {
@@ -246,7 +259,13 @@ async function endSession() {
   // Sync stops first: the screen clears the plan next, and those removals must never reach the account.
   stopSync(true);
   const { error } = await supabase!.auth.signOut({ scope: 'local' });
-  if (error) throw error;
+  if (error) {
+    // Supabase ends the session on this phone even when it can't tell the server (a dropped
+    // connection), then reports that. Signed out here is signed out: finish the rest (Oct 27, 2026).
+    const { data } = await supabase!.auth.getSession();
+    if (data.session) throw error;
+    reportError('auth.sign_out', error);
+  }
   track('account_signed_out');
   posthog?.reset();
   await Purchases.logOut().catch((error: unknown) => reportError('purchases.log_out', error));

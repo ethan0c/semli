@@ -124,7 +124,7 @@ export default function DataScreen() {
       </View>
 
       <Group title="Export" footer={exportError ?? undefined}>
-        <ListRow title="Export my plan" sub="Save or share a backup file" onPress={() => void exportPlan()} />
+        <ListRow title="Export my plan" sub="A copy of your plan as a file" onPress={() => void exportPlan()} />
         <ListRow title="Add to Calendar" sub="Export events to Apple or Google Calendar" onPress={() => void exportCalendar()} last />
       </Group>
 
@@ -152,7 +152,7 @@ export default function DataScreen() {
         </Group>
       ) : null}
 
-      <Group title="Reset" footer={signedIn ? `To remove your plan from ${THIS_DEVICE} while keeping your account backup, sign out in Account settings.` : eraseError ?? 'Export a backup before erasing your plan.'}>
+      <Group title="Reset" footer={signedIn ? `To remove your plan from ${THIS_DEVICE} while keeping your account backup, sign out in Account settings.` : eraseError ?? 'Semli can’t read an exported file back in yet. To move your plan to another device, sign in instead.'}>
         <Row label="Replay the intro" value="Keeps everything" onPress={() => { feedback('tap'); setSettings({ onboarded: false, onboardingImportDone: false }); router.dismissTo('/'); }} last={signedIn} />
         {signedIn ? null : confirm ? (
           <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.confirm} accessibilityRole="alert">

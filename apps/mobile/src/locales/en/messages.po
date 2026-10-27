@@ -8,20 +8,20 @@ msgstr ""
 "Language: en\n"
 
 #. js-lingui-explicit-id
-#: src/components/SettingsHome.tsx:70
+#: src/components/SettingsHome.tsx:80
 #: src/lib/localization.test.ts:65
 #: src/lib/localization.test.ts:79
 msgid "settings.imports_left_month"
 msgstr "{left, plural, =0 {No free imports left this month} one {# free import left this month} other {# free imports left this month}}"
 
 #. js-lingui-explicit-id
-#: src/components/SettingsHome.tsx:69
+#: src/components/SettingsHome.tsx:79
 #: src/lib/localization.test.ts:64
 msgid "settings.imports_left"
 msgstr "{left, plural, =0 {No free imports left} one {# free import left} other {# free imports left}}"
 
 #. js-lingui-explicit-id
-#: src/components/SettingsHome.tsx:66
+#: src/components/SettingsHome.tsx:76
 #: src/lib/localization.test.ts:52
 #: src/lib/localization.test.ts:70
 #: src/lib/localization.test.ts:72
@@ -29,19 +29,19 @@ msgstr "{left, plural, =0 {No free imports left} one {# free import left} other 
 msgid "settings.trial_remaining"
 msgstr "{trialEnds, plural, one {Semli Plus · trial, # day left} other {Semli Plus · trial, # days left}}"
 
-#: src/components/SettingsHome.tsx:118
+#: src/components/SettingsHome.tsx:128
 msgid "{tried} of {total} tried"
 msgstr "{tried} of {total} tried"
 
-#: src/components/SettingsHome.tsx:106
+#: src/components/SettingsHome.tsx:116
 msgid "Account"
 msgstr "Account"
 
-#: src/components/SettingsHome.tsx:108
+#: src/components/SettingsHome.tsx:118
 msgid "Account settings · {backupStatus}"
 msgstr "Account settings · {backupStatus}"
 
-#: src/components/SettingsHome.tsx:114
+#: src/components/SettingsHome.tsx:124
 msgid "Active"
 msgstr "Active"
 
@@ -57,14 +57,14 @@ msgstr "Add"
 msgid "Add “{words}”"
 msgstr "Add “{words}”"
 
-#: src/components/SettingsHome.tsx:90
+#: src/components/SettingsHome.tsx:100
 msgid "Add your name"
 msgstr "Add your name"
 
 #: src/app/(tabs)/you.tsx:53
 #: src/app/settings/_layout.tsx:37
 #: src/components/QuickAdd.tsx:48
-#: src/components/SettingsHome.tsx:99
+#: src/components/SettingsHome.tsx:109
 msgid "Appearance"
 msgstr "Appearance"
 
@@ -78,19 +78,19 @@ msgstr "Arts & design"
 msgid "Back"
 msgstr "Back"
 
-#: src/components/SettingsHome.tsx:109
+#: src/components/SettingsHome.tsx:119
 msgid "Back up your plan"
 msgstr "Back up your plan"
 
-#: src/components/SettingsHome.tsx:42
+#: src/components/SettingsHome.tsx:43
 msgid "Backed up"
 msgstr "Backed up"
 
-#: src/components/SettingsHome.tsx:42
+#: src/components/SettingsHome.tsx:43
 msgid "Backup needs attention"
 msgstr "Backup needs attention"
 
-#: src/components/SettingsHome.tsx:42
+#: src/components/SettingsHome.tsx:43
 msgid "Backup pending"
 msgstr "Backup pending"
 
@@ -122,16 +122,16 @@ msgstr "Computer science"
 msgid "Course"
 msgstr "Course"
 
-#: src/components/SettingsHome.tsx:109
+#: src/components/SettingsHome.tsx:119
 msgid "Create a free account to back up your plan"
 msgstr "Create a free account to back up your plan"
 
 #: src/app/settings/appearance.tsx:15
-#: src/components/SettingsHome.tsx:38
+#: src/components/SettingsHome.tsx:39
 msgid "Dark"
 msgstr "Dark"
 
-#: src/components/SettingsHome.tsx:124
+#: src/components/SettingsHome.tsx:134
 msgid "Development"
 msgstr "Development"
 
@@ -139,7 +139,7 @@ msgstr "Development"
 msgid "Education"
 msgstr "Education"
 
-#: src/components/SettingsHome.tsx:120
+#: src/components/SettingsHome.tsx:130
 msgid "Email us at {SUPPORT_EMAIL}."
 msgstr "Email us at {SUPPORT_EMAIL}."
 
@@ -152,11 +152,11 @@ msgstr "Engineering"
 msgid "Field of study"
 msgstr "Field of study"
 
-#: src/components/SettingsHome.tsx:100
+#: src/components/SettingsHome.tsx:110
 msgid "Follow your ring and silent switch"
 msgstr "Follow your ring and silent switch"
 
-#: src/components/SettingsHome.tsx:114
+#: src/components/SettingsHome.tsx:124
 msgid "Free"
 msgstr "Free"
 
@@ -181,11 +181,11 @@ msgstr "Go to Today"
 msgid "Go to You"
 msgstr "Go to You"
 
-#: src/components/SettingsHome.tsx:102
+#: src/components/SettingsHome.tsx:112
 msgid "Haptics"
 msgstr "Haptics"
 
-#: src/components/SettingsHome.tsx:120
+#: src/components/SettingsHome.tsx:130
 msgid "Help and feedback"
 msgstr "Help and feedback"
 
@@ -197,14 +197,18 @@ msgstr "Humanities & social sciences"
 msgid "Import a screenshot or PDF"
 msgstr "Import a screenshot or PDF"
 
+#: src/components/SettingsHome.tsx:72
+msgid "Imported"
+msgstr "Imported"
+
 #: src/app/(tabs)/you.tsx:52
 #: src/app/settings/_layout.tsx:39
-#: src/components/SettingsHome.tsx:97
+#: src/components/SettingsHome.tsx:107
 msgid "Language"
 msgstr "Language"
 
 #: src/app/settings/appearance.tsx:14
-#: src/components/SettingsHome.tsx:38
+#: src/components/SettingsHome.tsx:39
 msgid "Light"
 msgstr "Light"
 
@@ -214,8 +218,8 @@ msgstr "Light is paper and ink. Dark adds soft purple."
 
 #: src/app/settings/appearance.tsx:13
 #: src/app/settings/language.tsx:22
-#: src/components/SettingsHome.tsx:38
-#: src/components/SettingsHome.tsx:97
+#: src/components/SettingsHome.tsx:39
+#: src/components/SettingsHome.tsx:107
 msgid "Match iPhone"
 msgstr "Match iPhone"
 
@@ -225,8 +229,8 @@ msgstr "Match iPhone, {phoneName}"
 
 #: src/app/settings/appearance.tsx:13
 #: src/app/settings/language.tsx:22
-#: src/components/SettingsHome.tsx:38
-#: src/components/SettingsHome.tsx:97
+#: src/components/SettingsHome.tsx:39
+#: src/components/SettingsHome.tsx:107
 msgid "Match system"
 msgstr "Match system"
 
@@ -236,13 +240,17 @@ msgstr "Match system, {phoneName}"
 
 #: src/app/(tabs)/you.tsx:52
 #: src/app/settings/_layout.tsx:35
-#: src/components/SettingsHome.tsx:90
+#: src/components/SettingsHome.tsx:100
 msgid "Name"
 msgstr "Name"
 
-#: src/components/SettingsHome.tsx:96
+#: src/components/SettingsHome.tsx:71
 msgid "Needs a look"
 msgstr "Needs a look"
+
+#: src/components/SettingsHome.tsx:68
+msgid "Needs permission"
+msgstr "Needs permission"
 
 #: src/components/QuickAdd.tsx:46
 msgid "New to-do or event"
@@ -252,28 +260,28 @@ msgstr "New to-do or event"
 msgid "Nursing & health"
 msgstr "Nursing & health"
 
-#: src/components/SettingsHome.tsx:95
-#: src/components/SettingsHome.tsx:96
+#: src/components/SettingsHome.tsx:67
+#: src/components/SettingsHome.tsx:70
 msgid "Off"
 msgstr "Off"
 
-#: src/components/SettingsHome.tsx:95
+#: src/components/SettingsHome.tsx:69
 msgid "On"
 msgstr "On"
 
-#: src/components/SettingsHome.tsx:119
+#: src/components/SettingsHome.tsx:129
 msgid "On this phone"
 msgstr "On this phone"
 
-#: src/components/SettingsHome.tsx:95
+#: src/components/SettingsHome.tsx:69
 msgid "On, with daily summary"
 msgstr "On, with daily summary"
 
-#: src/components/SettingsHome.tsx:121
+#: src/components/SettingsHome.tsx:131
 msgid "Open the App Store to leave a rating."
 msgstr "Open the App Store to leave a rating."
 
-#: src/components/SettingsHome.tsx:77
+#: src/components/SettingsHome.tsx:87
 msgid "Opens your plan"
 msgstr "Opens your plan"
 
@@ -291,23 +299,23 @@ msgstr "Plan"
 
 #: src/app/(tabs)/you.tsx:53
 #: src/app/settings/_layout.tsx:45
-#: src/components/SettingsHome.tsx:125
+#: src/components/SettingsHome.tsx:135
 msgid "Plan diagnostics"
 msgstr "Plan diagnostics"
 
-#: src/components/SettingsHome.tsx:94
+#: src/components/SettingsHome.tsx:104
 msgid "Preferences"
 msgstr "Preferences"
 
-#: src/components/SettingsHome.tsx:110
+#: src/components/SettingsHome.tsx:120
 msgid "Preview"
 msgstr "Preview"
 
-#: src/components/SettingsHome.tsx:135
+#: src/components/SettingsHome.tsx:145
 msgid "Privacy"
 msgstr "Privacy"
 
-#: src/components/SettingsHome.tsx:89
+#: src/components/SettingsHome.tsx:99
 msgid "Profile"
 msgstr "Profile"
 
@@ -319,32 +327,32 @@ msgstr "Quarters"
 msgid "Quick add"
 msgstr "Quick add"
 
-#: src/components/SettingsHome.tsx:121
+#: src/components/SettingsHome.tsx:131
 msgid "Rate Semli"
 msgstr "Rate Semli"
 
-#: src/components/SettingsHome.tsx:135
+#: src/components/SettingsHome.tsx:145
 msgid "Read it at semli.app/privacy."
 msgstr "Read it at semli.app/privacy."
 
-#: src/components/SettingsHome.tsx:136
+#: src/components/SettingsHome.tsx:146
 msgid "Read it at semli.app/terms."
 msgstr "Read it at semli.app/terms."
 
 #: src/app/(tabs)/you.tsx:52
 #: src/app/settings/_layout.tsx:40
-#: src/components/SettingsHome.tsx:98
+#: src/components/SettingsHome.tsx:108
 msgid "Region"
 msgstr "Region"
 
 #: src/app/(tabs)/you.tsx:52
 #: src/app/settings/_layout.tsx:36
 #: src/components/QuickAdd.tsx:48
-#: src/components/SettingsHome.tsx:95
+#: src/components/SettingsHome.tsx:105
 msgid "Reminders"
 msgstr "Reminders"
 
-#: src/components/SettingsHome.tsx:114
+#: src/components/SettingsHome.tsx:124
 msgid "Renews {renewalDate}"
 msgstr "Renews {renewalDate}"
 
@@ -364,17 +372,17 @@ msgstr "Sciences"
 msgid "Semesters"
 msgstr "Semesters"
 
-#: src/components/SettingsHome.tsx:67
+#: src/components/SettingsHome.tsx:77
 msgid "Semli Plus · renews {renewalDate}"
 msgstr "Semli Plus · renews {renewalDate}"
 
-#: src/components/SettingsHome.tsx:67
+#: src/components/SettingsHome.tsx:77
 msgid "Semli Plus · until {renewalDate}"
 msgstr "Semli Plus · until {renewalDate}"
 
 #: src/app/(tabs)/you.tsx:53
 #: src/app/settings/_layout.tsx:46
-#: src/components/SettingsHome.tsx:126
+#: src/components/SettingsHome.tsx:136
 msgid "Semli server"
 msgstr "Semli server"
 
@@ -382,7 +390,7 @@ msgstr "Semli server"
 msgid "Setting"
 msgstr "Setting"
 
-#: src/components/SettingsHome.tsx:110
+#: src/components/SettingsHome.tsx:120
 msgid "Share your schedule"
 msgstr "Share your schedule"
 
@@ -390,19 +398,19 @@ msgstr "Share your schedule"
 msgid "Something else"
 msgstr "Something else"
 
-#: src/components/SettingsHome.tsx:100
+#: src/components/SettingsHome.tsx:110
 msgid "Sounds"
 msgstr "Sounds"
 
-#: src/components/SettingsHome.tsx:91
+#: src/components/SettingsHome.tsx:101
 msgid "Studying"
 msgstr "Studying"
 
-#: src/components/SettingsHome.tsx:96
+#: src/components/SettingsHome.tsx:72
 msgid "Syncing"
 msgstr "Syncing"
 
-#: src/components/SettingsHome.tsx:136
+#: src/components/SettingsHome.tsx:146
 msgid "Terms"
 msgstr "Terms"
 
@@ -418,7 +426,7 @@ msgstr "Today"
 msgid "Type a plan, like “exam Friday 9am bio”, or go somewhere"
 msgstr "Type a plan, like “exam Friday 9am bio”, or go somewhere"
 
-#: src/components/SettingsHome.tsx:114
+#: src/components/SettingsHome.tsx:124
 msgid "Until {renewalDate}"
 msgstr "Until {renewalDate}"
 
@@ -426,13 +434,13 @@ msgstr "Until {renewalDate}"
 msgid "Used for the sample week and the examples Semli shows you. Change it any time."
 msgstr "Used for the sample week and the examples Semli shows you. Change it any time."
 
-#: src/components/SettingsHome.tsx:54
+#: src/components/SettingsHome.tsx:56
 msgid "We couldn't open that. {fallback}"
 msgstr "We couldn't open that. {fallback}"
 
 #: src/app/(tabs)/you.tsx:53
 #: src/app/settings/_layout.tsx:44
-#: src/components/SettingsHome.tsx:118
+#: src/components/SettingsHome.tsx:128
 msgid "What Semli can do"
 msgstr "What Semli can do"
 
@@ -450,18 +458,18 @@ msgstr "Working"
 #: src/components/DesktopTabs.tsx:94
 #: src/components/PlannerTabs.tsx:37
 #: src/components/PlannerTabs.tsx:47
-#: src/components/SettingsHome.tsx:74
+#: src/components/SettingsHome.tsx:84
 msgid "You"
 msgstr "You"
 
-#: src/components/SettingsHome.tsx:108
+#: src/components/SettingsHome.tsx:118
 msgid "Your account"
 msgstr "Your account"
 
 #: src/app/(tabs)/you.tsx:53
 #: src/app/settings/_layout.tsx:43
 #: src/components/QuickAdd.tsx:48
-#: src/components/SettingsHome.tsx:119
+#: src/components/SettingsHome.tsx:129
 msgid "Your data"
 msgstr "Your data"
 
@@ -470,7 +478,7 @@ msgstr "Your data"
 msgid "Your first name"
 msgstr "Your first name"
 
-#: src/components/SettingsHome.tsx:114
+#: src/components/SettingsHome.tsx:124
 msgid "Your plan"
 msgstr "Your plan"
 
@@ -478,6 +486,6 @@ msgstr "Your plan"
 msgid "Your school runs on"
 msgstr "Your school runs on"
 
-#: src/components/SettingsHome.tsx:117
+#: src/components/SettingsHome.tsx:127
 msgid "Your stuff"
 msgstr "Your stuff"

@@ -68,7 +68,7 @@ export function useVoiceCapture({ prefix, onText }: { prefix: string; onText: (t
   clearError: () => void;
   /**
    * Set while the error is a denied permission: iOS won't ask twice, so Settings is the only way
-   * back to voice (Oct 27, 2026). The composer shows it as an "Open Settings" action by the error.
+   * back to voice (Oct 27, 2026). For the composer to show as an "Open Settings" action by the error.
    */
   openSettings: (() => Promise<void>) | null;
   /** The last few seconds of input volume, 0 to 1, oldest first: the composer's live bars. */

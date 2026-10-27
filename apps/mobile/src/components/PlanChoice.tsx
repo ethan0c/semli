@@ -7,12 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Sheet';
 import { T } from '@/components/Text';
 import { keepAccountPlan, keepPhonePlan } from '@/lib/cloud';
-import { planDate } from '@/lib/cloud-snapshot';
+import { ownItems, planDate } from '@/lib/cloud-snapshot';
 import { friendlyError } from '@/lib/errors';
 import { useWebLayout } from '@/lib/layout';
 import { feedback } from '@/lib/feedback';
 import { enter, exit } from '@/lib/motion';
-import { realRecords } from '@/lib/planner-preview';
 import { THIS_DEVICE, THIS_DEVICE_TITLE } from '@/lib/web';
 import { useStore } from '@/store';
 import { SCREEN_GUTTER, corner, radius, useTheme, shadow, space } from '@/theme';
@@ -28,11 +27,14 @@ export function PlanChoice() {
   const insets = useSafeAreaInsets();
   const choice = useStore((s) => s.planChoice);
   const items = useStore((s) => s.items);
+  const sampleBatchId = useStore((s) => s.settings.sampleBatchId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // A wide web window asks in a dialog over the planner; the phone covers the screen.
   const { sidebar } = useWebLayout();
   if (!choice) return null;
+  // The phone's plan is dated by what the person made; the onboarding sample was made today.
+  const mine = dated(planDate(ownItems(items, sampleBatchId)));
 
   const keep = async (action: () => Promise<void>, operation: string) => {
     setBusy(true);
@@ -52,7 +54,7 @@ export function PlanChoice() {
       <View accessibilityViewIsModal style={[styles.dialog, { backgroundColor: c.surface, borderColor: c.line }]}>
         <T token="titleSm" accessibilityRole="header">You have two plans</T>
         <T token="callout" color={c.inkSecondary}>
-          {`Your account has a plan${dated(choice.remoteAt ?? planDate(choice.remote.items))}. ${THIS_DEVICE_TITLE} has a plan${dated(planDate(realRecords(Object.values(items))))}. Which one do you want to keep? The other one is replaced.`}
+          {`Your account has a plan${dated(choice.remoteAt ?? planDate(choice.remote.items))}. ${THIS_DEVICE_TITLE} has a plan${mine}. Which one do you want to keep? The other one is replaced.`}
         </T>
         {error ? <T token="callout" color={c.conflict} accessibilityRole="alert">{error}</T> : null}
         <View style={styles.dialogActions}>
@@ -69,7 +71,7 @@ export function PlanChoice() {
       <View style={styles.copy}>
         <T token="display" accessibilityRole="header">You have two plans.</T>
         <T token="body" color={c.inkSecondary}>
-          {`Your account has a plan${dated(choice.remoteAt ?? planDate(choice.remote.items))}. ${THIS_DEVICE_TITLE} has a plan${dated(planDate(realRecords(Object.values(items))))}. Which one do you want to keep? The other one is replaced.`}
+          {`Your account has a plan${dated(choice.remoteAt ?? planDate(choice.remote.items))}. ${THIS_DEVICE_TITLE} has a plan${mine}. Which one do you want to keep? The other one is replaced.`}
         </T>
         {error ? <T token="callout" color={c.conflict} accessibilityRole="alert">{error}</T> : null}
       </View>
