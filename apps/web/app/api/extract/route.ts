@@ -44,7 +44,10 @@ export async function POST(request: Request) {
     const result = await extract(parsed.data, undefined, {
       fast: !!access.plus && process.env.EXTRACT_FAST !== '0',
       readers: { quick: process.env.EXTRACT_QUICK_MODEL, document: process.env.EXTRACT_DOCUMENT_MODEL },
+      pdfText: process.env.EXTRACT_PDF_TEXT !== '0',
     });
+    // How often PDFs read as text, for the cost dashboard; no content, only the path taken.
+    if (result.ok && result.via) console.info('[extract.pdf]', { via: result.via });
     if (!result.ok) {
       // A failed read never costs an import.
       await access.refund();

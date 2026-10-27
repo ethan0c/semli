@@ -33,6 +33,7 @@ Sentry token is.
 | `ANTHROPIC_API_KEY` | `/api/extract` reads schedules and syllabi. Secret. |
 | `EXTRACT_QUICK_MODEL` | Optional. The model that reads typed and spoken messages and screenshots. Unset means `claude-haiku-5-5`. Change it here, redeploy, and every app uses it; no release. Run the benchmark first (`npm run eval:extract -- --model <id>`). |
 | `EXTRACT_DOCUMENT_MODEL` | Optional. The model that reads syllabi and other PDFs, and re-reads anything the quick model can't finish. Unset means `claude-opus-5-5`. |
+| `EXTRACT_PDF_TEXT` | Optional. `0` reads every PDF whole, as page images. Unset means a PDF with real text on every page is read as its text (more accurate, a third cheaper; `docs/import-speed.md`). |
 | `EXTRACT_FAST` | Optional. `0` turns fast mode off for Plus subscribers' documents (standard speed, half the price). Unset means fast for Plus. Free users always read at standard speed. See `docs/import-speed.md`. |
 | `SUPABASE_URL`, `SUPABASE_KEY` | Import limits and the beta waitlist. Same project as the app. |
 | `REVENUECAT_SECRET_KEY` | Confirms a Plus subscriber before a paid import. Secret. Production only. |

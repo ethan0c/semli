@@ -39,16 +39,16 @@ if (!process.env.ANTHROPIC_API_KEY) {
 if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is missing. Configure it in the environment or apps/web/.env; no model calls were made.');
 const client = new Anthropic({ maxRetries: 1, timeout: 180_000 });
 // `--model claude-sonnet-5-5` or `--fast` compares another reader against the same cases.
-const options = { model: arg('--model'), fast: process.argv.includes('--fast'), effort: arg('--effort') as 'low' | 'medium' | 'high' | undefined };
+const options = { model: arg('--model'), fast: process.argv.includes('--fast'), effort: arg('--effort') as 'low' | 'medium' | 'high' | undefined, pdfText: !process.argv.includes('--whole-pdf') };
 const startedAt = new Date().toISOString();
 const reportPath = resolve(root, arg('--out') ?? `evals/reports/${startedAt.replace(/[:.]/g, '-')}.json`);
 mkdirSync(resolve(reportPath, '..'), { recursive: true });
-type Result = { id: string; kind: string; provenance: string; source: string; inputHash: string; elapsedMs: number; score: ReturnType<typeof score>; extraction: Extraction | null; usage?: Anthropic.Usage; error?: string };
+type Result = { id: string; kind: string; provenance: string; source: string; inputHash: string; elapsedMs: number; score: ReturnType<typeof score>; extraction: Extraction | null; usage?: Anthropic.Usage; via?: 'text' | 'document'; error?: string };
 const results: Result[] = [];
 const groups = () => Object.fromEntries(['text', 'image', 'pdf'].map((kind) => [kind, aggregate(results.filter((r) => r.kind === kind).map((r) => r.score))]));
 function save() {
   const byKind = groups();
-  const report = { startedAt, model: options.model ?? 'routed', fast: options.fast, effort: options.effort ?? 'default', promptVersion: PROMPT_VERSION, fixtureHash, coverage, counts, byKind, overall: aggregate(results.map((r) => r.score)),
+  const report = { startedAt, model: options.model ?? 'routed', fast: options.fast, effort: options.effort ?? 'default', pdfText: options.pdfText, promptVersion: PROMPT_VERSION, fixtureHash, coverage, counts, byKind, overall: aggregate(results.map((r) => r.score)),
     releasePass: coverage && results.length === selected.length && results.every((r) => !r.error) && Object.values(byKind).every((g) => g.pass), results };
   writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
   return report;
@@ -61,17 +61,18 @@ await Promise.all(Array.from({ length: Math.min(3, requests.length) }, async () 
     const start = Date.now();
     let extraction: Extraction | null = null;
     let usage: Anthropic.Usage | undefined;
+    let via: 'text' | 'document' | undefined;
     let error: string | undefined;
     try {
       const response = await extract(request, client, options);
       if (!response.ok) error = response.error;
-      else { extraction = Extraction.parse(response.extraction); usage = response.usage; }
+      else { extraction = Extraction.parse(response.extraction); usage = response.usage; via = response.via; }
     } catch (err) {
       // Avoid logging provider payloads or credentials.
       error = err instanceof Anthropic.APIError ? `Provider HTTP ${err.status ?? 'connection failure'}` : err instanceof Error ? err.name : 'Unknown error';
     }
     const graded = score(test, extraction);
-    results.push({ id: test.id, kind: test.input.kind, provenance: test.provenance, source: test.source, inputHash, elapsedMs: Date.now() - start, score: graded, extraction, usage, error });
+    results.push({ id: test.id, kind: test.input.kind, provenance: test.provenance, source: test.source, inputHash, elapsedMs: Date.now() - start, score: graded, extraction, usage, via, error });
     save();
     console.log(`${results.length}/${requests.length} ${test.id}: ${graded.timeCorrect}/${graded.timeTotal} date/time fields; ${graded.matched}/${graded.expected} items; extra=${graded.extra ?? 'ungraded'}${error ? `; ${error}` : ''}`);
     // Authentication/model access errors won't improve by billing the remaining cases.

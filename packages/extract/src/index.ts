@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { Extraction, IMPORT_MESSAGES, type ExtractContext, type ExtractRequest } from '@dayli/schema';
 import { prepareImage } from './image';
+import { pdfAsText } from './pdf-text';
 
 /** Reads documents (syllabi, course PDFs), and anything the quick reader can't finish. */
 export const MODEL = 'claude-opus-5-5';
@@ -66,27 +67,38 @@ export function contextBlock(ctx: ExtractContext): string {
 }
 
 export type ExtractResult =
-  | { ok: true; extraction: Extraction; usage: Anthropic.Usage }
+  | { ok: true; extraction: Extraction; usage: Anthropic.Usage; /** How a PDF was read: its extracted text, or the whole document. */ via?: 'text' | 'document' }
   | { ok: false; error: string };
 
 /** Which model reads (default: `modelFor` the input), and whether Opus runs in fast mode (Plus syllabi). */
-export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high' };
+export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers; /** false reads every PDF whole (EXTRACT_PDF_TEXT=0). */ pdfText?: boolean; /** Overrides the reasoning effort (benchmarks only). */ effort?: 'low' | 'medium' | 'high' };
 
 export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
   const content: Anthropic.ContentBlockParam[] = [];
   if (req.input.kind === 'image') {
     const prepared = await prepareImage(req.input);
     content.push({ type: 'image', source: { type: 'base64', media_type: prepared.mediaType, data: prepared.data } });
-  } else if (req.input.kind === 'pdf') {
-    content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: req.input.data } });
   }
-  content.push({
-    type: 'text',
-    text:
-      req.input.kind === 'text'
+  // A PDF with real text on every page is read as that text: more accurate and a third cheaper than
+  // page images. A scan, or any page that may be a picture, is read whole as before (pdf-text.ts).
+  let via: 'text' | 'document' | undefined;
+  if (req.input.kind === 'pdf') {
+    const text = opts.pdfText === false ? null : await pdfAsText(req.input.data).catch(() => null);
+    via = text ? 'text' : 'document';
+    if (text) {
+      content.push({ type: 'text', text: `${contextBlock(req.context)}\n\nThe attached document's text, extracted from the PDF with its layout kept. Extract everything schedulable from it.\n\n${text}` });
+    } else {
+      content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: req.input.data } });
+      content.push({ type: 'text', text: `${contextBlock(req.context)}\n\nExtract everything schedulable from the attached document.` });
+    }
+  } else {
+    content.push({
+      type: 'text',
+      text: req.input.kind === 'text'
         ? `${contextBlock(req.context)}\n\nMessage:\n${req.input.text}`
-        : `${contextBlock(req.context)}\n\nExtract everything schedulable from the attached ${req.input.kind === 'pdf' ? 'document' : 'image'}.`,
-  });
+        : `${contextBlock(req.context)}\n\nExtract everything schedulable from the attached image.`,
+    });
+  }
 
   const params = {
     model: opts.model ?? modelFor(req.input.kind, opts.readers),
@@ -124,5 +136,5 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   if (!response.parsed_output) {
     return { ok: false, error: IMPORT_MESSAGES.incomplete };
   }
-  return { ok: true, extraction: response.parsed_output, usage: response.usage };
+  return { ok: true, extraction: response.parsed_output, usage: response.usage, ...(via ? { via } : {}) };
 }

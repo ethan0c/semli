@@ -9,7 +9,7 @@ const parsed = { stop_reason: 'end_turn', parsed_output: { detected_type: 'gener
 
 function fakeClient(fast: () => Promise<unknown>, standard: (p: { model: string }) => Promise<unknown> = () => Promise.resolve(parsed)) {
   const std = vi.fn(standard);
-  const beta = vi.fn(fast);
+  const beta = vi.fn(fast as (params: Record<string, unknown>) => Promise<unknown>);
   return { client: { messages: { parse: std }, beta: { messages: { parse: beta } } } as unknown as Anthropic, standard: std, beta };
 }
 
