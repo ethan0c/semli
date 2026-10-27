@@ -38,3 +38,36 @@ describe('the broadcasts', () => {
     }
   });
 });
+
+describe('emails.md', () => {
+  it('fills {name} everywhere, so no placeholder reaches an inbox', () => {
+    const all = [...Object.values(emails), ...Object.values(transactional)];
+    for (const e of all) expect(JSON.stringify(e)).not.toContain('{name}');
+    expect(emails['semester-reminder'].greeting).toBe('Hi {{{FIRST_NAME|there}}},');
+    expect(transactional.welcome.greeting).toBe('Hi {{{NAME}}},');
+  });
+
+  it('turns **bold** into the layout medium weight and keeps links purple and underlined', () => {
+    const html = renderHtml(transactional['account-deleted'], POSTAL);
+    expect(html).toContain('<span style="font-weight:500;">Deleting your account does not cancel Semli Plus.</span>');
+    expect(html).toMatch(/<a href="mailto:hello@semli.app" style="color:#7057BD;text-decoration:underline;">hello@semli.app<\/a>/);
+  });
+
+  it('reads the button, its note and who each broadcast goes to', () => {
+    expect(emails['spring-schedule'].segment).toEqual(['survey', 'waitlist', 'users']);
+    expect(emails['spring-schedule'].action).toEqual({ label: 'Get Semli on iPhone', url: expect.stringContaining('apps.apple.com'), note: 'Already have Semli? Open the app and tap Add.' });
+  });
+
+  it('fills the feedback reply', async () => {
+    const { feedbackThankYou } = await import('./templates.mjs');
+    const e = feedbackThankYou({ name: 'Ana', about: 'the overlap warning', reply: 'Fixed in the next build.' });
+    expect(e.greeting).toBe('Hi Ana,');
+    expect(e.before).toContain('Thanks for telling me about the overlap warning.');
+    expect(feedbackThankYou({ about: 'x', reply: 'y' }).greeting).toBe('Hi there,');
+  });
+
+  it('uses the wordmark image only when given one', () => {
+    expect(renderHtml(transactional.welcome, POSTAL)).not.toContain('<img');
+    expect(renderHtml(transactional.welcome, POSTAL, { wordmark: 'https://x.test/w.png' })).toContain('<img src="https://x.test/w.png" width="84"');
+  });
+});

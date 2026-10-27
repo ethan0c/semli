@@ -1,6 +1,6 @@
 /**
- * Emails that follow something the person did, as opposed to the broadcasts. The words and the
- * branded layout live in emails/templates.mjs (`transactional`) and are published to Resend as
+ * Emails that follow something the person did, as opposed to the broadcasts. The words live in
+ * emails/emails.md (`Kind: account`), render through emails/layout.mjs, and are published to Resend as
  * templates of these names with `npm run email publish`; the site only says which one and whose
  * name goes in it. Publish before deploying a change that adds a kind.
  */

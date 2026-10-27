@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Semli email. One place to see every marketing email, who it goes to, and where it stands.
+ * Semli email. One place to see every email, who it goes to, and where it stands. The words
+ * live in emails/emails.md; this file builds, publishes and sends them.
  *
  *   npm run email                 this help
- *   npm run email build           render docs/emails/*.html and *.txt from templates.mjs
+ *   npm run email build           render docs/emails/*.html and *.txt from emails.md
  *   npm run email preview         build, then open a gallery of every email in the browser
  *   npm run email status          segments with counts, every broadcast, and the plan at a glance
  *   npm run email publish         every email as a published Resend template of the same name
@@ -29,8 +30,8 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderHtml, renderText, wordCount } from './layout.mjs';
-import { emails, transactional, templateVariables, segments, feedbackThankYou, SURVEY_TESTFLIGHT, BETA_LINK, USERS_REASON } from './templates.mjs';
+import { renderHtml as renderLayout, renderText, wordCount, WORDMARK_URL } from './layout.mjs';
+import { emails, transactional, templateVariables, segments, feedbackThankYou, USERS_REASON } from './templates.mjs';
 
 const targets = (e) => (Array.isArray(e.segment) ? e.segment : [e.segment]);
 const groupNames = (e) => targets(e).map((k) => segments[k] ?? k).join(' + ');
@@ -65,6 +66,21 @@ function table(rows) {
   const widths = rows[0].map((_, i) => Math.max(...rows.map((r) => String(r[i] ?? '').length)));
   for (const r of rows) console.log('  ' + r.map((c, i) => pad(c, widths[i])).join('  '));
 }
+
+// ---------- the wordmark image ----------
+
+/** The PNG wordmark once the site serves it; the typeset one until then, so no email shows a broken image. */
+let wordmark = null;
+async function checkWordmark() {
+  try {
+    const res = await fetch(WORDMARK_URL, { method: 'HEAD' });
+    wordmark = res.ok && (res.headers.get('content-type') ?? '').startsWith('image/') ? WORDMARK_URL : null;
+  } catch {
+    wordmark = null;
+  }
+  if (!wordmark) warn(`${WORDMARK_URL} isn't live yet (deploy the site), so the header uses the typeset wordmark. Publish again after the deploy.`);
+}
+const renderHtml = (e, postal) => renderLayout(e, postal, { wordmark });
 
 // ---------- build / preview ----------
 
@@ -107,7 +123,7 @@ function preview() {
   iframe{border:0;width:100%;height:640px;background:#FAF9F6}
   section p{margin:0;padding:10px 16px 14px;color:#686963;border-top:1px solid #E5E4DE}
 </style></head><body>
-<h1>Semli emails</h1><p class="lead">Rendered from emails/templates.mjs through the one layout. Postal address: ${POSTAL}.</p>
+<h1>Semli emails</h1><p class="lead">Rendered from emails/emails.md through the one layout. Postal address: ${POSTAL}.</p>
 <main>${cards}</main></body></html>`;
   const file = join(out, 'preview.html');
   writeFileSync(file, html);
@@ -310,8 +326,8 @@ async function status() {
   })]);
   console.log('');
   if (POSTAL.startsWith('[')) warn('EMAIL_POSTAL_ADDRESS is not set in .env; broadcasts will carry a placeholder footer.');
-  warn(`Survey invite link: ${SURVEY_TESTFLIGHT}. Confirm it accepts testers before sending.`);
-  warn(`Beta invite link: ${BETA_LINK}. Needs TESTFLIGHT_URL set on Vercel.`);
+  if (emails['survey-invite']?.action) warn(`Survey invite link: ${emails['survey-invite'].action.url}. Confirm it accepts testers before sending.`);
+  if (emails['public-beta-invite']?.action) warn(`Beta invite link: ${emails['public-beta-invite'].action.url}. Needs TESTFLIGHT_URL set on Vercel.`);
 }
 
 async function send(name) {
@@ -384,12 +400,13 @@ async function publish() {
     await api.publishTemplate(id);
     console.log(`  ${pad(name, 20)} ${existing ? 'updated' : 'created'}, published   https://resend.com/templates/${id}`);
   }
-  console.log('  Edit emails/templates.mjs and publish again; an edit made in Resend is overwritten by the next publish.');
+  console.log('  Edit emails/emails.md and publish again; an edit made in Resend is overwritten by the next publish.');
 }
 
 // ---------- main ----------
 
 const [cmd, ...rest] = args;
+const NEEDS_WORDMARK = new Set(['build', 'preview', 'publish', 'send']);
 const run = {
   build: () => build(),
   preview: () => preview(),
@@ -403,5 +420,5 @@ const run = {
 if (!run) {
   console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('*/')[0].split('\n').slice(2).map((l) => l.replace(/^ \* ?/, '')).join('\n'));
 } else {
-  Promise.resolve().then(run).catch((err) => { console.error(`\n  ${err.message}\n`); process.exit(1); });
+  Promise.resolve().then(() => (NEEDS_WORDMARK.has(cmd) ? checkWordmark() : null)).then(run).catch((err) => { console.error(`\n  ${err.message}\n`); process.exit(1); });
 }

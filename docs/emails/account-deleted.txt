@@ -8,7 +8,7 @@ The plan on your phone stays until you delete the app or clear it in You → You
 
 Deleting your account does not cancel Semli Plus. Subscriptions belong to your Apple ID: open Settings, tap your name, then Subscriptions, and choose Semli.
 
-If you didn't delete your account, reply to this email or write to hello@semli.app today.
+If you didn't delete your account, reply to this email or write to hello@semli.app (mailto:hello@semli.app) today.
 
 Thanks for using Semli,
 Semli

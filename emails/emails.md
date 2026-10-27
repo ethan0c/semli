@@ -1,77 +1,77 @@
 # Semli emails
 
-Every word in Semli's emails lives here. Edit the text, then:
+Edit Semli's email copy here, then use one of these commands:
 
-- `npm run email preview` opens every email side by side in the browser.
-- `npm run email publish` updates the Resend template of the same name. The site sends `welcome` and `account-deleted` from those templates, so publish and the change is live.
-- `npm run email send <name>` builds a broadcast from this file at the moment you send it.
+- `npm run email preview` opens all the emails side by side in your browser.
+- `npm run email publish` updates the matching templates in Resend. Publishing changes to `welcome` and `account-deleted` makes them live for the next account email.
+- `npm run email send <name>` uses the latest copy in this file to build a broadcast.
 
-How to write here:
+How this file works:
 
-- `## name` starts an email. The name is its Resend template, so don't rename one that already exists.
-- `To:` is who gets it: `Survey`, `Waitlist`, `App users`, several joined with `+`, or `one person`. `Kind: account` marks an email the site sends about someone's account: no unsubscribe link, and it may run past 80 words.
-- `When:` is the plan for sending it. `Subject:`, `Preview:` (the grey line inboxes show after the subject), `Sign-off:` and `Footer:` (one sentence on why they got it) set those parts.
-- `### Heading` is the big heading. Put one word or phrase in `~tildes~` to make it the one purple accent.
-- The first paragraph is the greeting. `{name}` is the person's first name, or "there" when we don't have it.
-- `[words](https://…)` is a purple underlined link. `**words**` is medium weight.
-- `Button: [label](https://…)` is the one black pill button. Paragraphs above it sit above it, the rest below.
-- `> text` right after the button is the small grey note under it.
-- In `feedback-thank-you`, `{about}` and `{reply}` are filled by the send command.
+- `## name` starts an email. It also names the Resend template, so keep existing names as they are.
+- `To:` names the recipients: `Survey`, `Waitlist`, `App users`, or `one person`. Join groups with `+` to include more than one. Use `Kind: account` for account emails. These have no unsubscribe link and can be longer than 80 words.
+- `When:` says when to send it. `Subject:` sets the subject line. `Preview:` is the grey text shown beside it in the inbox. `Sign-off:` is the closing line, and `Footer:` explains why the person got the email.
+- `### Heading` sets the main heading. Wrap one word or phrase in `~tildes~` to turn it purple.
+- Start with a greeting. `{name}` becomes the person's first name, or "there" if we don't have it.
+- Use `[words](https://…)` for a purple underlined link and `**words**` for medium weight text.
+- `Button: [label](https://…)` adds a black pill button. Paragraphs appear above or below it in the same order as this file. Use only one button per email.
+- Put `> text` immediately after the button to add a small grey note beneath it.
+- The send command fills in `{about}` and `{reply}` in `feedback-thank-you`.
 
-Our voice: plain words, short sentences, sentence case and never all caps, no em or en dashes. Under 80 words from the greeting to the sign-off for anything sent to a group, one action at most, the founder's voice signed Semli.
+Write like the founder talking to one person, and sign off as Semli. Use everyday words, short sentences, and sentence case. Skip all caps and em or en dashes. Keep group emails under 80 words from greeting to sign-off, with one main thing to do.
 
 ## survey-invite
 
 To: Survey
 When: Nov 3, 2026, once the Survey TestFlight link accepts testers
 Subject: An update on that student planner survey
-Preview: The app you helped shape is ready to try on iPhone.
+Preview: I built Semli with your feedback. It's ready to try.
 Sign-off: Thanks again,
 Footer: You shared your email in the student planning survey.
 
-### Your Semli ~invite~.
+### Come try ~Semli~.
 
 Hi {name},
 
-Earlier this year, you answered my survey about classes and work. I built Semli with your feedback, and it's ready to try.
+You answered my survey about juggling classes and work. Your feedback helped me build Semli, and I'd love for you to try it.
 
-Add a syllabus or screenshot of your shifts, check the dates Semli finds, and save them to one calendar.
+Add a syllabus or screenshot of your shifts, check the dates, and save them to your calendar.
 
 Button: [Try Semli on iPhone](https://testflight.apple.com/join/vG3RD6EJ)
 
-> Install Apple's free TestFlight app if prompted, then reopen this invite.
+> If asked, install Apple's free TestFlight app, then reopen this invite.
 
-If a date's wrong or something's confusing, just reply here. I'd like to hear about it.
+Something wrong or confusing? Reply and let me know.
 
 ## public-beta-invite
 
 To: Waitlist
 When: When the public Beta group has room and TESTFLIGHT_URL is set on Vercel
-Subject: Your Semli beta invite is here
-Preview: Try it with your own classes and work schedule.
-Sign-off: Thanks for giving it a try,
+Subject: You're invited to try Semli
+Preview: The iPhone beta is ready for your classes and shifts.
+Sign-off: Thanks for trying it,
 Footer: You joined the Semli beta waitlist.
 
-### Your ~invite~ is here.
+### You're ~invited~.
 
 Hi {name},
 
-You joined the waitlist, and the iPhone beta is ready. Thanks for waiting.
+Thanks for waiting. You can now try Semli on your iPhone.
 
-Add a syllabus, screenshot of your shifts, or class message. Check the dates Semli finds before saving them to your calendar.
+Start with a syllabus, a screenshot of your shifts, or a class message. Check the dates Semli finds, then save them to your calendar.
 
 Button: [Try Semli on iPhone](https://semli.app/beta?r=email-waitlist)
 
-> Install Apple's free TestFlight app if prompted, then reopen this invite. Beta capped at 200 testers.
+> If asked, install Apple's free TestFlight app, then reopen this invite. There's room for 200 testers.
 
-If something's wrong or confusing, just reply here. I read every reply.
+Let me know how it goes. I read every reply.
 
 ## app-store-launch
 
 To: Survey + Waitlist
 When: Tue Nov 3, 2026, 10 am Eastern, once the listing is public (released early, Oct 26 plan)
 Subject: Semli is on the App Store
-Preview: Your classes, shifts, and deadlines in one plan.
+Preview: You can now get Semli on your iPhone.
 Sign-off: Thanks,
 Footer: You asked to hear when Semli launched.
 
@@ -79,108 +79,108 @@ Footer: You asked to hear when Semli launched.
 
 Hi {name},
 
-Thanks for following along. Semli is now available for iPhone.
+Semli is on the App Store. Thanks for being here while I built it.
 
-Bring your syllabi, work schedule and class messages into one plan. Calendar, to-dos and reminders are free, with five imports to start.
+Add your syllabi, work schedule, or class messages to start your plan. The calendar, to-dos, and reminders are free. You get five imports to start.
 
 Button: [Get Semli on iPhone](https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264)
 
-If you tried the beta, thank you for helping me get here. I'd love to hear how Semli fits into your week. Just reply here.
+Tried the beta? Thank you for helping me get here. Let me know how it fits into your week.
 
 ## spring-schedule
 
 To: Survey + Waitlist + App users
 When: Tue Nov 17, 2026, 10 am Eastern: spring registration is open at most schools (Nov 2 to 23)
 Subject: Registered for spring? Add your classes now
-Preview: One screenshot of your schedule fills the whole term.
+Preview: Add a screenshot of your class schedule to Semli.
 Sign-off: Good luck with registration,
 Footer: You signed up for Semli updates.
 
-### Spring, ~already planned~.
+### Got your ~spring schedule~?
 
 Hi {name},
 
-If you've registered for spring, your new class times are already in your school's portal.
+If you've picked your spring classes, you can add them to Semli now.
 
-Take a screenshot of that schedule and add it in Semli. Your classes repeat through the term, and you check each one before it saves.
+Take a screenshot of the schedule in your school's portal. Add it in Semli, check the class times, and save them. They'll repeat through the term.
 
 Button: [Get Semli on iPhone](https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264)
 
 > Already have Semli? Open the app and tap Add.
 
-When your syllabi arrive in January, add them too, and the exams land on the same plan.
+When you get your syllabi in January, add those too to bring in your exam dates.
 
 ## semester-reminder
 
 To: Survey + Waitlist + App users
 When: Tue Jan 5, 2027, 10 am Eastern: the week before most spring terms start (Jan 11 to 20)
-Subject: Got your new syllabus yet?
+Subject: Got a syllabus for the new semester?
 Preview: Start with one syllabus or a week of shifts.
-Sign-off: Hope the semester starts well,
+Sign-off: Hope your semester gets off to a good start,
 Footer: You signed up for Semli updates.
 
-### New semester, ~one plan~.
+### Start with ~one syllabus~.
 
 Hi {name},
 
-If you're getting ready for a new semester, put your class dates and work shifts in one place.
+Getting ready for the semester? You don't need your whole schedule to get started.
 
-Add one syllabus or a week of shifts. Check the dates, save them, and add the rest as you get them.
+Add a syllabus or a week of shifts to Semli. Check the dates before saving, then add the rest as you get them.
 
 Button: [Get Semli on iPhone](https://apps.apple.com/us/app/semli-ai-student-planner/id6824600264)
 
 > Already have Semli? Open the app and tap Add.
 
-If an import doesn't look right, reply and tell me what happened.
+If the dates don't look right, reply and tell me what happened.
 
 ## welcome
 
 Kind: account
 When: The day an account first has a confirmed address (database trigger, daily cron at 15:00 UTC)
 Subject: Welcome to Semli
-Preview: Your plan now backs up to your account.
+Preview: Your plan is now backed up to your account.
 Sign-off: Thanks,
-Footer: You're getting this because you made a Semli account.
+Footer: You got this email because you created a Semli account.
 
 ### Welcome to ~Semli~.
 
 Hi {name},
 
-Thanks for making a Semli account. Your plan now backs up to it, so a new phone picks up where this one left off.
+Thanks for signing up. Your plan now backs up to your account, so you can get it back when you switch phones.
 
-If you haven't yet, add one syllabus or a screenshot of your shifts. Check the dates Semli finds, then save them.
+To get started, add a syllabus or screenshot of your shifts. Check the dates Semli finds, then save them.
 
-I read every reply. If a date came out wrong or something was confusing, reply and tell me. A sentence is plenty.
+If a date looks wrong or something's confusing, reply and tell me. I read every reply.
 
 ## account-deleted
 
 Kind: account
 When: Right after an account is deleted (database trigger; the app asks the site to send at once)
-Subject: Your Semli account is deleted
-Preview: What was removed, what stays on your phone, and what happens to Plus.
+Subject: Your Semli account has been deleted
+Preview: Your saved plan stays on your phone. Plus needs to be cancelled separately.
 Sign-off: Thanks for using Semli,
-Footer: This is an email about your Semli account.
+Footer: You got this email because your Semli account was deleted.
 
-### Your account is deleted.
+### Your account has been deleted.
 
 Hi {name},
 
-Your sign-in, your email address and the plan backup are gone from our servers, and this is the last email we send to this address about it.
+We've removed your sign-in details, email address, and plan backup from our servers. This is the last email we'll send to this address about your account.
 
-The plan on your phone stays until you delete the app or clear it in You → Your data, and Semli keeps working there as a guest.
+The plan saved on your phone is still there, and you can keep using Semli as a guest. To remove that plan too, delete the app or clear it in You → Your data.
 
-**Deleting your account does not cancel Semli Plus.** Subscriptions belong to your Apple ID: open Settings, tap your name, then Subscriptions, and choose Semli.
+**Deleting your account does not cancel Semli Plus.** Apple manages your subscription. To cancel it, open your iPhone's Settings, tap your name, then Subscriptions, and choose Semli.
 
-If you didn't delete your account, reply to this email or write to [hello@semli.app](mailto:hello@semli.app) today.
+If you didn't ask to delete your account, please reply or email [hello@semli.app](mailto:hello@semli.app) today.
 
 ## feedback-thank-you
 
 To: one person
 When: Reply after reading their message: npm run email send feedback --to a@b.edu --name Ana --about "…" --reply "…"
-Subject: Thanks for the Semli feedback
-Preview: Thanks for taking the time to write.
+Subject: Thanks for your feedback on Semli
+Preview: I appreciate you taking the time to write.
 Sign-off: Thanks again,
-Footer: You're receiving this reply because you sent feedback about Semli.
+Footer: You got this reply because you sent feedback about Semli.
 
 ### Thanks for ~letting me know~.
 
@@ -190,5 +190,5 @@ Thanks for telling me about {about}.
 
 {reply}
 
-If there's anything else you'd like me to know, just reply here.
+If anything else comes up, just reply here.
 
