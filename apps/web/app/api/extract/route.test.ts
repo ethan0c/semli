@@ -116,3 +116,32 @@ describe('import limits', () => {
     expect(await res.json()).toEqual({ ok: false, error: IMPORT_MESSAGES.demoLimit });
   });
 });
+
+describe('streamed imports', () => {
+  const item = (title: string) => ({ kind: 'task' as const, title, category: 'school' as const, date: '2026-10-30', start: null, end: null, is_deadline: true, repeat_weekdays: [], repeat_until: null, course_code: null, evidence: title, confidence: 0.9, question: null });
+  const streamed = () => new Request('https://semli.test/api/extract', {
+    method: 'POST',
+    headers: { accept: 'application/x-ndjson' },
+    body: JSON.stringify({ input: { kind: 'text', text: 'Quiz Friday, essay Monday' }, context: { today: '2026-10-27', timezone: 'America/New_York', courses: [], employers: [] } }),
+  });
+  it('sends each item as it is written, then the full response', async () => {
+    vi.mocked(extract).mockImplementation(async (_req, _client, opts) => {
+      opts?.onItem?.(item('Quiz'));
+      opts?.onItem?.(item('Essay'));
+      return { ok: true, extraction: { detected_type: 'general', employer: null, course: null, covers_from: null, covers_to: null, items: [item('Quiz'), item('Essay')] }, usage: {} as never };
+    });
+    const res = await POST(streamed());
+    expect(res.headers.get('content-type')).toBe('application/x-ndjson');
+    const lines = (await res.text()).trim().split('\n').map((l) => JSON.parse(l));
+    expect(lines.map((l) => l.type)).toEqual(['item', 'item', 'done']);
+    expect(lines[2]).toMatchObject({ status: 200, response: { ok: true } });
+  });
+  it('ends with the error when the read fails, and names the spend limit in the logs', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(extract).mockRejectedValue(Object.setPrototypeOf(new Error('You have reached your specified API usage limits.'), Anthropic.BadRequestError.prototype));
+    const lines = (await (await POST(streamed())).text()).trim().split('\n').map((l) => JSON.parse(l));
+    expect(lines).toEqual([{ type: 'done', status: 503, response: { ok: false, error: IMPORT_MESSAGES.unavailable } }]);
+    expect(error).toHaveBeenCalledWith('[extract.spend_limit]', { code: 'anthropic_spend_limit' });
+    error.mockRestore();
+  });
+});
