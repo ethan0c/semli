@@ -12,7 +12,7 @@ import { T } from '@/components/Text';
 import { useWebLayout } from '@/lib/layout';
 import { durations, ease, springs } from '@/lib/motion';
 import { courseTint, useStore } from '@/store';
-import { textStyle, useTheme, space, size } from '@/theme';
+import { iconSize, textStyle, useTheme, space, size } from '@/theme';
 
 type RowItem = Pick<Item, 'kind' | 'title' | 'category' | 'icon' | 'start' | 'end' | 'done' | 'isDeadline' | 'date' | 'urgent'> & { id?: string; courseId?: string | null; employer?: string | null };
 type Props = { item: RowItem; conflict?: boolean; planned?: boolean; today?: string; onPress?: () => void; onToggle?: () => void; onDelete?: () => void; last?: boolean };
@@ -66,6 +66,8 @@ export function ItemRow({ item, conflict, planned, today, onPress, onToggle, onD
           </View>
         </View>
         {hover && onDelete ? null : <StatusPill label={status.label} tone={status.tone} />}
+        {/* The row opens the item; the chevron says so, as it does on course and settings rows. */}
+        {onPress && !(hover && onDelete) ? <Icon name="chevronRight" size={iconSize.disclosure} color={c.disclosureInk} /> : null}
       </PressRow>
       {hover && onDelete ? <IconButton icon="trash" label={`Delete ${item.title}`} size={36} haptic="remove" onPress={onDelete} /> : null}
     </View>
