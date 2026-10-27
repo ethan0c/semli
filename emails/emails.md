@@ -16,7 +16,7 @@ How this file works:
 - Use `[words](https://…)` for a purple underlined link and `**words**` for medium weight text.
 - `Button: [label](https://…)` adds a black pill button. Paragraphs appear above or below it in the same order as this file. Use only one button per email.
 - Put `> text` immediately after the button to add a small grey note beneath it.
-- Link to the app with `https://www.semli.app/beta?r=email-<name>`, never the App Store directly. The site counts the click under that tag and passes it on to the App Store as a campaign, so App Store Connect counts installs per email too.
+- Link to the app with `https://www.semli.app/get?r=email-<name>`, never the App Store directly. The site counts the click under that tag and passes it on to the App Store as a campaign, so App Store Connect counts installs per email too.
 - The send command fills in `{about}` and `{reply}` in `feedback-thank-you`.
 
 Write like the founder talking to one person, and sign off as Semli. Use everyday words, short sentences, and sentence case. Skip all caps and em or en dashes. Keep group emails under 80 words from greeting to sign-off, with one main thing to do.
@@ -24,7 +24,7 @@ Write like the founder talking to one person, and sign off as Semli. Use everyda
 ## survey-invite
 
 To: Survey
-When: Nov 3, 2026, once the Survey TestFlight link accepts testers
+When: Retired Oct 27, 2026: there is no beta; app-store-launch went to the Survey group instead
 Subject: An update on that student planner survey
 Preview: I built Semli with your feedback. It's ready to try.
 Sign-off: Thanks again,
@@ -38,20 +38,18 @@ You answered my survey about juggling classes and work. Your feedback helped me 
 
 Add a syllabus or screenshot of your shifts, check the dates, and save them to your calendar.
 
-Button: [Try Semli on iPhone](https://testflight.apple.com/join/vG3RD6EJ)
-
-> If asked, install Apple's free TestFlight app, then reopen this invite.
+Button: [Get Semli on iPhone](https://www.semli.app/get?r=email-survey)
 
 Something wrong or confusing? Reply and let me know.
 
 ## public-beta-invite
 
 To: Waitlist
-When: When the public Beta group has room and TESTFLIGHT_URL is set on Vercel
+When: Retired Oct 27, 2026: there is no beta; app-store-launch went to the Waitlist group instead
 Subject: You're invited to try Semli
-Preview: The iPhone beta is ready for your classes and shifts.
+Preview: Semli is ready for your classes and shifts.
 Sign-off: Thanks for trying it,
-Footer: You joined the Semli beta waitlist.
+Footer: You joined the Semli waitlist.
 
 ### You're ~invited~.
 
@@ -61,9 +59,7 @@ Thanks for waiting. You can now try Semli on your iPhone.
 
 Start with a syllabus, a screenshot of your shifts, or a class message. Check the dates Semli finds, then save them to your calendar.
 
-Button: [Try Semli on iPhone](https://semli.app/beta?r=email-waitlist)
-
-> If asked, install Apple's free TestFlight app, then reopen this invite. There's room for 200 testers.
+Button: [Get Semli on iPhone](https://www.semli.app/get?r=email-waitlist)
 
 Let me know how it goes. I read every reply.
 
@@ -105,7 +101,7 @@ If you've picked your spring classes, you can add them to Semli now.
 
 Take a screenshot of the schedule in your school's portal. Add it in Semli, check the class times, and save them. They'll repeat through the term.
 
-Button: [Get Semli on iPhone](https://www.semli.app/beta?r=email-spring)
+Button: [Get Semli on iPhone](https://www.semli.app/get?r=email-spring)
 
 > Already have Semli? Open the app and tap Add.
 
@@ -128,7 +124,7 @@ Getting ready for the semester? You don't need your whole schedule to get starte
 
 Add a syllabus or a week of shifts to Semli. Check the dates before saving, then add the rest as you get them.
 
-Button: [Get Semli on iPhone](https://www.semli.app/beta?r=email-semester)
+Button: [Get Semli on iPhone](https://www.semli.app/get?r=email-semester)
 
 > Already have Semli? Open the app and tap Add.
 

@@ -326,8 +326,6 @@ async function status() {
   })]);
   console.log('');
   if (POSTAL.startsWith('[')) warn('EMAIL_POSTAL_ADDRESS is not set in .env; broadcasts will carry a placeholder footer.');
-  if (emails['survey-invite']?.action) warn(`Survey invite link: ${emails['survey-invite'].action.url}. Confirm it accepts testers before sending.`);
-  if (emails['public-beta-invite']?.action) warn(`Beta invite link: ${emails['public-beta-invite'].action.url}. Needs TESTFLIGHT_URL set on Vercel.`);
 }
 
 async function send(name) {
