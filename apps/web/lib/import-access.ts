@@ -13,14 +13,21 @@ import { rpc, serviceEnv, supabaseEnv } from './supabase';
 export const FREE_IMPORTS_PER_MONTH = 3;
 export const FREE_IMPORTS_TO_START = 5;
 export const START_WINDOW_DAYS = 30;
-export const DEMO_PREVIEWS_PER_DAY = 5;
 /**
- * Free imports from guests (not signed in) per network per day (Oct 27, 2026). A guest is free to
- * make, so this is what stops a script minting guests to spend the AI budget. A dorm or campus
- * network shares it; past it, a guest sees "sign in to keep going", and signing in lifts it.
- * Signed-in and Plus users never count against it.
+ * Per-network daily limits, counted only where the money is (Oct 27, 2026). A PDF is read by the
+ * document model (about $0.11); a screenshot or message by the quick one (a fraction of a cent).
+ * A campus shares a handful of public addresses among thousands of students, so the cheap kinds
+ * get a limit no class could reach and only PDFs are held back.
+ *
+ * - Website preview, no account: PDFs and everything else counted apart. Past either, the page
+ *   says "Get the iPhone app".
+ * - App guests (not signed in): syllabus PDFs only. Past it, "Sign in (it's free) to keep going",
+ *   and signing in lifts it. Screenshots and messages aren't counted by network at all; each guest
+ *   still has their own free allowance. Signed-in and Plus users never count against any of these.
  */
-export const GUEST_IMPORTS_PER_IP_PER_DAY = 20;
+export const DEMO_PDFS_PER_DAY = 20;
+export const DEMO_QUICK_PER_DAY = 100;
+export const GUEST_PDFS_PER_IP_PER_DAY = 40;
 const PLUS_ENTITLEMENT = 'semli_plus';
 
 export type Access =
@@ -73,7 +80,7 @@ export function networkOf(ip: string): string {
   return `${full.slice(0, 4).map((h) => h.replace(/^0+(?=.)/, '')).join(':')}::/64`;
 }
 
-export async function checkImportAccess(request: Request): Promise<Access> {
+export async function checkImportAccess(request: Request, kind: 'text' | 'image' | 'pdf' = 'pdf'): Promise<Access> {
   const base = supabaseEnv();
   if (!base) return { ok: true, refund: free };
 
@@ -83,11 +90,13 @@ export async function checkImportAccess(request: Request): Promise<Access> {
   // against the website's preview limit, whose message tells an app user to get the app.
   if (!token && request.headers.get('x-revenuecat-app-user-id')) return { ok: false, status: 401, error: IMPORT_MESSAGES.session };
   if (!token) {
-    const ipHash = createHash('sha256').update(`semli-demo:${clientIp(request)}`).digest('hex');
+    // PDFs and the cheap kinds keep separate counts (the prefix), so screenshots never use up PDFs.
+    const pdf = kind === 'pdf';
+    const ipHash = createHash('sha256').update(`${pdf ? 'semli-demo' : 'semli-demo-quick'}:${clientIp(request)}`).digest('hex');
     // Server-only (Oct 27, 2026). Without the service key the preview is off, never unlimited.
     const service = serviceEnv();
     if (!service) return { ok: false, status: 429, error: IMPORT_MESSAGES.demoLimit };
-    const allowed = await rpc(service, 'claim_demo', { p_ip_hash: ipHash, p_limit: DEMO_PREVIEWS_PER_DAY });
+    const allowed = await rpc(service, 'claim_demo', { p_ip_hash: ipHash, p_limit: pdf ? DEMO_PDFS_PER_DAY : DEMO_QUICK_PER_DAY });
     return allowed === true ? { ok: true, refund: free } : { ok: false, status: 429, error: IMPORT_MESSAGES.demoLimit };
   }
 
@@ -98,8 +107,8 @@ export async function checkImportAccess(request: Request): Promise<Access> {
 
   if (await hasPlus(purchaserFor(userId, request.headers.get('x-revenuecat-app-user-id')))) return { ok: true, refund: free, plus: true };
 
-  // A guest's import also counts against its network's daily allowance, before its own.
-  const guest = who?.is_anonymous ? await claimGuest(request) : null;
+  // A guest's syllabus PDF also counts against its network's daily allowance, before its own.
+  const guest = who?.is_anonymous && kind === 'pdf' ? await claimGuest(request) : null;
   if (guest && !guest.ok) return { ok: false, status: 429, error: IMPORT_MESSAGES.guestLimit };
 
   const allowed = await rpc(base, 'claim_import', { p_limit: FREE_IMPORTS_PER_MONTH, p_start_limit: FREE_IMPORTS_TO_START, p_start_days: START_WINDOW_DAYS }, token);
@@ -145,7 +154,7 @@ async function claimGuest(request: Request): Promise<{ ok: boolean; refund: () =
   }
   const ipHash = createHash('sha256').update(`semli-guest:${clientIp(request)}`).digest('hex');
   try {
-    const allowed = await rpc(service, 'claim_guest_import', { p_ip_hash: ipHash, p_limit: GUEST_IMPORTS_PER_IP_PER_DAY });
+    const allowed = await rpc(service, 'claim_guest_import', { p_ip_hash: ipHash, p_limit: GUEST_PDFS_PER_IP_PER_DAY });
     if (allowed !== true) {
       console.info('[import.guest_limit]', { code: 'guest_network_limit' });
       return { ok: false, refund: free };

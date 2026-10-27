@@ -47,6 +47,26 @@ describe('guest network limit', () => {
     expect(called('rpc/claim_import')).toBe(false);
   });
 
+  it('never counts a guest\'s screenshots or messages by network, only syllabus PDFs', async () => {
+    const called = setup({ anonymous: true, guestAllowed: false });
+    expect((await checkImportAccess(req(), 'image')).ok).toBe(true);
+    expect((await checkImportAccess(req(), 'text')).ok).toBe(true);
+    expect(called('claim_guest_import')).toBe(false);
+  });
+
+  it('gives the website preview separate, larger counts for screenshots than for PDFs', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://db.test'); vi.stubEnv('SUPABASE_KEY', 'anon'); vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service');
+    const bodies: string[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => { bodies.push(String(init?.body)); return new Response('true', { status: 200 }); }));
+    const site = () => new Request('https://www.semli.app/api/extract', { method: 'POST', headers: { 'x-real-ip': '10.0.0.1' } });
+    await checkImportAccess(site(), 'image');
+    await checkImportAccess(site(), 'pdf');
+    const [quick, pdf] = bodies.map((b) => JSON.parse(b) as { p_ip_hash: string; p_limit: number });
+    expect(quick!.p_limit).toBe(100);
+    expect(pdf!.p_limit).toBe(20);
+    expect(quick!.p_ip_hash).not.toBe(pdf!.p_ip_hash);
+  });
+
   it('gives the network claim back when the guest has no imports of their own left', async () => {
     const called = setup({ anonymous: true, guestAllowed: true, claim: false });
     expect((await checkImportAccess(req())).ok).toBe(false);

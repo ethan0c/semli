@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   let access: Access;
   try {
-    access = await checkImportAccess(request);
+    access = await checkImportAccess(request, parsed.data.input.kind);
   } catch (err) {
     console.error('[extract.access]', errorDiagnostic(err));
     return reply({ ok: false, error: IMPORT_MESSAGES.unavailable }, 503);
