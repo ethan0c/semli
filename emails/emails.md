@@ -70,7 +70,7 @@ Let me know how it goes. I read every reply.
 ## app-store-launch
 
 To: Survey + Waitlist
-When: Tue Nov 3, 2026, 10 am Eastern, once the listing is public (released early, Oct 26 plan)
+When: Tue Oct 27, 2026, the evening the listing went public (was Nov 3; the app released Oct 27)
 Subject: Semli is on the App Store
 Preview: You can now get Semli on your iPhone.
 Sign-off: Thanks,
