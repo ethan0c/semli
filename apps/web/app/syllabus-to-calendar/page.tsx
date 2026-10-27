@@ -19,8 +19,8 @@ export default function SyllabusPage() {
       title="Turn your syllabus into a semester plan."
       lede="Start with the PDF your professor posted. Semli finds class times, exams, and assignment dates for you to review. Confirm what to add, one course at a time."
       steps={[
-        { title: 'Upload the PDF', body: 'From Canvas, email, or your downloads. Course schedules and registration screenshots work too.' },
-        { title: 'Review the details', body: 'Check the dates and times, correct anything that needs attention, and fill in missing details.' },
+        { title: 'Upload the PDF', body: 'From Canvas, Brightspace, email, or your downloads. Course schedules and registration screenshots work too.' },
+        { title: 'Review the details', body: 'Check the dates and times, answer anything Semli wasn’t sure about, and leave out anything you don’t want.' },
         { title: 'Add it to your plan', body: 'Save the course, repeating class times, and deadlines together. You can edit them later or undo the import.' },
       ]}
       detail={
@@ -45,8 +45,8 @@ export default function SyllabusPage() {
       faqs={[
         { q: 'Which file types work?', a: 'PDF syllabi, and screenshots or photos (PNG, JPEG) of a course schedule or a registration page. Word documents can be exported to PDF first.' },
         { q: 'What if my syllabus only lists week numbers?', a: 'Week numbers need a term start date to make sense. Check the proposed dates carefully and correct any missing or unclear details before adding them.' },
-        { q: 'Does it work with Canvas?', a: 'Yes, two ways. Upload the syllabus PDF from Canvas, or import assignments from your Canvas calendar feed. With Plus, Semli checks for updates when you open the app, so a changed due date is picked up.' },
-        { q: 'Can I undo an import?', a: 'Yes. Open You, then Your data, and find the import under Recent changes. Tap Undo next to it.' },
+        { q: 'Does it work with Canvas or Brightspace?', a: 'Yes, two ways. Upload the syllabus PDF, or import assignments from your Canvas calendar feed or your Brightspace calendar’s Subscribe link (eLC at UGA). With Plus, Semli checks for updates when you open the app, so a changed due date is picked up.' },
+        { q: 'Can I undo an import?', a: 'Yes, for 180 days. Open You, then Your data, and find the import under Recent changes. Tap Undo next to it. Anything you’ve changed since, like a task you checked off, stays as it is.' },
         { q: 'Is my syllabus stored?', a: 'Semli’s servers don’t save the uploaded file. The dates and course details you confirm live on your phone, with cloud backup if you create an account. See our privacy policy for how the AI provider handles requests.' },
       ]}
       related={[

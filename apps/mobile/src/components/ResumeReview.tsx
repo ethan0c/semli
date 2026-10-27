@@ -26,11 +26,11 @@ export function ResumeReview({ style }: { style?: object }) {
   const count = pending.extraction.items.length;
   return (
     <Animated.View layout={layout} entering={enter.fade} exiting={exit.fade} style={style}>
-      <ListRow leading={<Icon name="file" size={20} color={c.inkPrimary} />} title="Finish reviewing"
-        sub={`${count} ${count === 1 ? 'item' : 'items'} from ${what}${when ? `, read ${when}` : ''}. Nothing is saved until you confirm.`}
+      <ListRow leading={<Icon name="file" size={20} color={c.inkPrimary} />} title="Continue your review"
+        sub={`${count} ${count === 1 ? 'item' : 'items'} from ${what}${when ? ` · ${when}` : ''}. Not added to your plan yet.`}
         last onPress={() => router.push('/review')} />
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingTop: space.xxs }}>
-        <TextButton label="Discard" tone="muted" onPress={() => setPending(null)} />
+        <TextButton label="Discard import" tone="muted" onPress={() => setPending(null)} />
       </View>
     </Animated.View>
   );

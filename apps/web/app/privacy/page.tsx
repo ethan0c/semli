@@ -49,9 +49,10 @@ export default function PrivacyPage() {
           <p>
             The events, tasks, courses, and work schedules Semli creates, plus your name if you enter one. This is stored on your device.
             If you create an account, a copy of your plan is saved to your account so a new phone can restore it; it is deleted when you
-            delete the account. If you connect Canvas, the feed link you paste stays on your phone, and your phone reads the feed from
-            your school&apos;s Canvas directly. Canvas doesn&apos;t let web pages read its feed, so in Semli on the web our server fetches
-            the feed for you and passes it straight back without saving it.
+            delete the account. If you connect Canvas or Brightspace, the feed link you paste stays on your phone and isn&apos;t part of your account&apos;s
+            copy, and your phone reads the feed from your school directly. These systems don&apos;t let web pages read their feeds, so in
+            Semli on the web our server fetches the feed for you and passes it straight back without saving it. An import you haven&apos;t
+            finished reviewing is kept on your device until you add it or discard it.
           </p>
           <h3>2.3 Your account, if you make one</h3>
           <p>
@@ -189,10 +190,10 @@ export default function PrivacyPage() {
           <h2>7. Your choices</h2>
           <ul>
             <li>
-              <strong>Review before it&apos;s added.</strong> You review AI imports before they become part of your plan. Connecting Canvas adds the assignments in your calendar feed, and with Plus, later feed updates are applied automatically.
+              <strong>Review before it&apos;s added.</strong> You review AI imports before they become part of your plan. Connecting Canvas or Brightspace adds the assignments in your calendar feed, and with Plus, later feed updates are applied automatically.
             </li>
             <li>
-              <strong>Undo.</strong> Open You → Your data → Recent changes to undo an import.
+              <strong>Undo.</strong> Open You → Your data → Recent changes to undo an import (for 180 days) or an edit (for 30 days). This history stays on your device.
             </li>
             <li>
               <strong>Delete.</strong> See <Link href="/delete-account">Delete your data</Link>.

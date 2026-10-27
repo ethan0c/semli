@@ -16,7 +16,7 @@ export default function AssignmentTrackerPage() {
       path="/assignment-tracker"
       name="Assignment tracker"
       title="Keep assignment dates in one place."
-      lede="Due dates arrive in syllabi, Canvas, emails, and group chats. Bring them into Semli, check the details, and see what’s due alongside the rest of your week."
+      lede="Due dates arrive in syllabi, Canvas, Brightspace, emails, and group chats. Bring them into Semli, check the details, and see what’s due alongside the rest of your week."
       steps={[
         { title: 'Send what you have', body: 'Upload a syllabus or screenshot, or paste a message such as “paper due Friday.” Review the dates before adding them.' },
         { title: 'See what’s coming up', body: 'Check today’s priorities and upcoming deadlines. Completed tasks stay out of the way.' },
@@ -43,9 +43,9 @@ export default function AssignmentTrackerPage() {
       }
       faqs={[
         { q: 'Is the assignment tracker free?', a: 'Yes. The calendar, to-dos, reminders, and repeating classes are free with no time limit. Reading syllabi and screenshots uses AI imports; the free plan starts with five, then three a month.' },
-        { q: 'Does it sync with Canvas?', a: 'Yes. Paste your Canvas calendar feed link once to import your assignments. With Plus, Semli checks for updates when you open the app, so a moved due date moves in Semli too. Screenshots of the Canvas to-do list and syllabus PDFs work as well.' },
+        { q: 'Does it sync with Canvas or Brightspace?', a: 'Yes. Paste your Canvas calendar feed link, or your Brightspace calendar’s Subscribe link (eLC at UGA), once to import your assignments. With Plus, Semli checks for updates when you open the app, so a moved due date moves in Semli too. Screenshots of the Canvas to-do list and syllabus PDFs work as well.' },
         { q: 'Can I add an assignment by hand?', a: 'Yes, and it never counts as an import. Tap the plus button and type it.' },
-        { q: 'What happens when a due date changes?', a: 'You can edit the assignment directly. If it came from a connected Canvas feed, Plus checks Canvas for updates when you open the app and moves the due date to match.' },
+        { q: 'What happens when a due date changes?', a: 'You can edit the assignment directly. If it came from a connected Canvas or Brightspace feed, Plus checks for updates when you open the app and moves the due date to match.' },
       ]}
       related={[
         { href: '/syllabus-to-calendar', label: 'Syllabus to calendar' },

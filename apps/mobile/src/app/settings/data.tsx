@@ -128,7 +128,7 @@ export default function DataScreen() {
         <ListRow title="Add to Calendar" sub="Export events to Apple or Google Calendar" onPress={() => void exportCalendar()} last />
       </Group>
 
-      <Group title="Recent changes" footer={batches.length ? `Edits can be undone for ${EDIT_DAYS} days, imports for ${IMPORT_DAYS}.` : undefined}>
+      <Group title="Recent changes" footer={batches.length ? `You can undo edits for up to ${EDIT_DAYS} days and imports for up to ${IMPORT_DAYS} days.` : undefined}>
         {batches.length === 0 ? (
           <View style={styles.empty}>
             <T token="callout" color={c.inkSecondary}>Your imports and edits will appear here, with options to undo recent changes.</T>

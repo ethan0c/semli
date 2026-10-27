@@ -21,7 +21,7 @@ const ROWS: { label: string; free: string | boolean; plus: string | boolean }[] 
   { label: 'See changes to your work schedule', free: false, plus: true },
   { label: 'Overlap warnings and manual time edits', free: true, plus: true },
   { label: 'Suggested times for overlapping plans', free: false, plus: true },
-  { label: 'Canvas assignments', free: 'One-time import', plus: 'Updates when you open the app' },
+  { label: 'Canvas and Brightspace assignments', free: 'One-time import', plus: 'Updates when you open the app' },
   { label: 'Optional account with backup', free: true, plus: true },
   { label: 'Export your data', free: true, plus: true },
 ];
@@ -81,7 +81,7 @@ export default function PricingPage() {
           Start free. Add more with <span className="accent-word">Plus</span>.
         </h1>
         <p className="lede">
-          Keep your week organized for free. Plus adds unlimited imports, Canvas updates, work-schedule comparisons,
+          Keep your week organized for free. Plus adds unlimited imports, Canvas and Brightspace updates, work-schedule comparisons,
           suggested times for overlapping plans, and urgent items that ring like an alarm.
         </p>
       </header>

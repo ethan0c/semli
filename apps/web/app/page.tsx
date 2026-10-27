@@ -30,15 +30,15 @@ const PROOF = [
 ];
 
 /** Free and Plus side by side; the full table lives on /pricing. */
-const FREE = ['Calendar, to-dos, and the Today screen', 'Reminders', `Start with ${FREE_IMPORTS_TO_START} AI imports, then ${FREE_IMPORTS_PER_MONTH} a month`, 'Canvas assignments, imported once', 'Export your data'];
-const PLUS = ['Unlimited AI imports', 'Canvas updates when you open the app', 'Changes to your work schedule, compared', 'Suggested times when plans overlap', 'Urgent items that ring like an alarm'];
+const FREE = ['Calendar, to-dos, and the Today screen', 'Reminders', `Start with ${FREE_IMPORTS_TO_START} AI imports, then ${FREE_IMPORTS_PER_MONTH} a month`, 'Canvas or Brightspace assignments, imported once', 'Export your data'];
+const PLUS = ['Unlimited AI imports', 'Canvas and Brightspace updates when you open the app', 'Changes to your work schedule, compared', 'Suggested times when plans overlap', 'Urgent items that ring like an alarm'];
 
 const FAQS = [
   { q: 'What can I add to Semli?', a: 'Paste a message or upload a screenshot, photo, or PDF up to 20 MB. Try a syllabus, class timetable, work schedule, or a deadline from your group chat. Review the dates Semli finds before adding them to your plan.' },
-  { q: 'Does Semli work with Canvas?', a: 'Yes. Paste your Canvas calendar feed link to import assignments. With Plus, Semli checks Canvas for updates when you open the app (at most every few hours), and you can tap Sync now any time. You can also upload a syllabus PDF or a screenshot of your Canvas to-do list.' },
+  { q: 'Does Semli work with Canvas or Brightspace?', a: 'Yes, both, including eLC at UGA. Paste your Canvas calendar feed link, or the Subscribe link from your Brightspace calendar, to import assignments. With Plus, Semli checks for updates when you open the app (at most every few hours), and you can tap Sync now any time. You can also upload a syllabus PDF or a screenshot of your to-do list.' },
   { q: 'Can I use my plan in Apple Calendar or Google Calendar?', a: 'Yes. Go to You → Your data → Add to Calendar to export your events and dated to-dos, then import the file into Apple Calendar or Google Calendar. This creates a one-time copy. Changes in Semli won’t sync automatically, so export again when you need an updated copy.' },
   { q: 'What happens to my uploads?', a: 'Our AI provider reads your upload to find dates and schedule details. Semli’s servers don’t save the upload or the AI response. The plan you confirm stays on your phone, with cloud backup if you create an account. Our privacy policy explains how the AI provider handles your data.' },
-  { q: 'What can I do for free?', a: `Use the calendar, to-dos, and reminders with no time limit. Start with ${FREE_IMPORTS_TO_START} AI imports, then ${FREE_IMPORTS_PER_MONTH} a month. Plus adds unlimited imports, Canvas updates, and comparisons when your work schedule changes.` },
+  { q: 'What can I do for free?', a: `Use the calendar, to-dos, and reminders with no time limit. Start with ${FREE_IMPORTS_TO_START} AI imports, then ${FREE_IMPORTS_PER_MONTH} a month. Plus adds unlimited imports, Canvas and Brightspace updates, and comparisons when your work schedule changes.` },
   { q: 'Is Semli available on Android?', a: 'Not yet. Semli is coming to iPhone first. In the meantime, you can try the syllabus import demo on our website without an account.' },
 ];
 
@@ -190,7 +190,7 @@ export default function Home() {
         <Reveal className={styles.featureCopy}>
           <p className="eyebrow">For your semester</p>
           <h2 id="term-title" className="section-title">Your syllabus, laid out for the semester.</h2>
-          <p className="lede">Bring class times, exams, and assignment dates out of the PDF and into your plan. Connect Canvas for assignments. With Plus, Semli checks for updates when you open the app.</p>
+          <p className="lede">Bring class times, exams, and assignment dates out of the PDF and into your plan. Connect Canvas or Brightspace for assignments. With Plus, Semli checks for updates when you open the app.</p>
           <Link className="textlink" href="/syllabus-to-calendar">How syllabus imports work</Link>
         </Reveal>
         <Reveal className={styles.single} style={stagger(1)}>
@@ -205,7 +205,7 @@ export default function Home() {
       <section className={`${styles.band} ${styles.soft} ${styles.plans}`} aria-labelledby="price-title">
         <Reveal className={styles.plansHead}>
           <h2 id="price-title" className="section-title">Start free. Add more with Plus.</h2>
-          <p className="lede">Everything you need to plan the week is free. Plus adds unlimited imports, Canvas updates, and help when your schedule changes.</p>
+          <p className="lede">Everything you need to plan the week is free. Plus adds unlimited imports, Canvas and Brightspace updates, and help when your schedule changes.</p>
         </Reveal>
         <div className={styles.planCards}>
           <Reveal className={styles.planCard}>

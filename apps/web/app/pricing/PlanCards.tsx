@@ -58,7 +58,7 @@ export function PlanCards() {
               <span className="per">{PERIOD[billing]}</span>
             </div>
             <p className="plan-caption">{money(price)} billed {selected.billed}.{selected.months > 1 ? ` Equivalent to ${money(price / selected.months)} a month.` : ''}</p>
-            <p className="plan-description">Unlimited imports, Canvas updates when you open the app, work-schedule updates, suggested times for overlapping plans, and urgent items that ring like an alarm.</p>
+            <p className="plan-description">Unlimited imports, Canvas and Brightspace updates when you open the app, work-schedule updates, suggested times for overlapping plans, and urgent items that ring like an alarm.</p>
           </header>
 
           <div>
