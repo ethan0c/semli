@@ -44,13 +44,18 @@ export function syncCanvas(feedUrl?: string): Promise<SyncResult> {
 }
 
 async function run(feedUrl?: string): Promise<SyncResult> {
-  const url = feedUrl ?? useStore.getState().settings.canvas.feedUrl;
+  // The connection this sync started from: the saved link, or none yet when Connect passes one.
+  const connection = useStore.getState().settings.canvas.feedUrl;
+  const url = feedUrl ?? connection;
   if (!url) return { ok: false, error: CANVAS_MESSAGES.link };
   const setCanvas = (patch: Partial<ReturnType<typeof useStore.getState>['settings']['canvas']>) => {
     const { settings, setSettings } = useStore.getState();
     setSettings({ canvas: { ...settings.canvas, ...patch } });
   };
   const res = await fetchCanvasFeed(url, undefined, Platform.OS === 'web' ? throughSemli : undefined);
+  // Disconnect during the fetch must stay a disconnect (Oct 27, 2026): writing `feedUrl` back,
+  // or an error for a link that's gone, would quietly reconnect it.
+  if (useStore.getState().settings.canvas.feedUrl !== connection) return { ok: false, error: CANVAS_MESSAGES.disconnected };
   if (!res.ok) {
     setCanvas({ lastError: res.error });
     track('canvas_sync_failed', {});
@@ -75,6 +80,9 @@ async function run(feedUrl?: string): Promise<SyncResult> {
   const summary = syncSummary(plan);
 
   if (summary || newCourses.length) {
+    // applyPlan clears `pending`, which closes an import under review (Oct 27, 2026). Nothing
+    // above awaits, so this is the state the plan is applied to; CanvasAutoSync retries once it closes.
+    if (useStore.getState().pending) return { ok: false, error: CANVAS_MESSAGES.reviewing };
     const batchId = state.applyPlan(plan, `Canvas · ${summary ?? 'courses added'}`, { source: CANVAS_SOURCE, courses: newCourses });
     // Every sync after the first pull is Plus's; it says so, so a subscriber sees it working.
     const byPlus = !!state.settings.canvas.lastSyncedAt;
@@ -91,18 +99,21 @@ async function run(feedUrl?: string): Promise<SyncResult> {
  */
 export function CanvasAutoSync() {
   const hydrated = useStore((s) => s.hydrated);
+  // An import under review waits for no sync; closing or saving it runs the check again.
+  const reviewing = useStore((s) => s.pending !== null);
   const { isPlus } = usePurchases();
   useEffect(() => {
-    if (!hydrated || !isPlus) return;
+    if (!hydrated || !isPlus || reviewing) return;
     const maybeSync = () => {
-      const { feedUrl, lastSyncedAt } = useStore.getState().settings.canvas;
-      if (!feedUrl) return;
+      const { pending, settings } = useStore.getState();
+      const { feedUrl, lastSyncedAt } = settings.canvas;
+      if (!feedUrl || pending) return;
       if (lastSyncedAt && Date.now() - new Date(lastSyncedAt).getTime() < AUTO_SYNC_MS) return;
       void syncCanvas();
     };
     maybeSync();
     const subscription = AppState.addEventListener('change', (s) => { if (s === 'active') maybeSync(); });
     return () => subscription.remove();
-  }, [hydrated, isPlus]);
+  }, [hydrated, isPlus, reviewing]);
   return null;
 }

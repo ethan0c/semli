@@ -1,4 +1,4 @@
-import { addDays, conflictIds, countdownLine, countdownParts, deadlineReason, deadlineWindow, diffDays, findConflicts, featuredCommitment, overdueTasks, pendingDates, spreadWork, startTodaySuggestions, toMinutes, todayItems, tomorrowSummary, weekdayLong, weekendNudge, type CountdownState, planCount, hoursMinutes, andList , count } from '@dayli/core';
+import { addDays, conflictIds, countdownLine, countdownParts, deadlineReason, deadlineWindow, diffDays, findConflicts, featuredCommitment, overdueTasks, pendingDates, spreadWork, startTodaySuggestions, toMinutes, todayItems, tomorrowSummary, weekdayLong, weekendNudge, monthDay, type CountdownState, planCount, hoursMinutes, andList , count } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { palettes } from '@dayli/tokens';
 import { router, useFocusEffect } from 'expo-router';
@@ -85,7 +85,25 @@ function TodayScreen() {
   const weekAhead = useMemo(() => items.filter((item) => item.date >= addDays(now.date, -1) && diffDays(now.date, item.date) <= 7), [items, now.date]);
   const conflictSet = useMemo(() => conflictIds(weekAhead), [weekAhead]);
   const conflictsToday = useMemo(() => findConflicts(weekAhead).filter((k) => items.find((i) => i.id === k.a)?.date === now.date).length, [weekAhead, items, now.date]);
-  const nextWeekPending = schedules.length > 0 && pendingDates(schedules, addDays(now.date, 1), addDays(now.date, 7)).length > 0;
+  // Only jobs still on the calendar ask for next week: after "Remove upcoming shifts" the old
+  // schedules stay as history, and the row kept asking for a job the student had left.
+  const activeSchedules = useMemo(() => schedules.filter((sc) => items.some((i) => i.category === 'work' && i.date >= now.date
+    && i.employer?.trim().toLowerCase() === sc.employer.trim().toLowerCase())), [schedules, items, now.date]);
+  const nextWeekPending = activeSchedules.length > 0 && pendingDates(activeSchedules, addDays(now.date, 1), addDays(now.date, 7)).length > 0;
+  // Nothing in the next two weeks but a plan further on (next term imported in October): say when
+  // it picks up, rather than a bare "Nothing scheduled" that reads as if the import was lost.
+  const resumes = useMemo(() => {
+    const ahead = items.filter((i) => !i.done && i.date > now.date).sort((a, b) => a.date.localeCompare(b.date));
+    const first = ahead[0];
+    if (!first || diffDays(now.date, first.date) <= 14) return null;
+    const classes = ahead.filter((i) => i.kind === 'event' && i.category === 'school' && i.seriesId);
+    const start = classes[0];
+    if (start && diffDays(first.date, start.date) <= 7) {
+      const courses = new Set(classes.filter((i) => diffDays(start.date, i.date) < 7).map((i) => i.courseId ?? i.title)).size;
+      return { date: start.date, title: 'Classes start', sub: `${weekdayLong(start.date)}, ${monthDay(start.date)} · ${count(courses, 'class', 'classes')}` };
+    }
+    return { date: first.date, title: 'Next in your plan', sub: `${first.title} · ${weekdayLong(first.date)}, ${monthDay(first.date)}` };
+  }, [items, now.date]);
   const isSample = items.some((item) => item.sourceId === SAMPLE_SOURCE);
   const devToday = useDevToday();
   const moment = useMemo(() => (__DEV__ && devToday.noMoment ? null : momentFor(items, breaks ?? [], now.date)), [items, breaks, now.date, devToday.noMoment]);
@@ -370,9 +388,13 @@ function TodayScreen() {
         </View>
       ) : null}
 
-      {upcoming.length || nextWeekPending || tomorrow ? (
+      {upcoming.length || nextWeekPending || tomorrow || resumes ? (
         <View style={styles.section}>
           <SectionTitle title="Coming up" onPress={() => router.push('/plan')} />
+          {resumes && !upcoming.length && !tomorrow ? (
+            <ListRow title={resumes.title} sub={resumes.sub} last={!nextWeekPending}
+              onPress={() => { useStore.getState().setSelectedPlanDate(resumes.date); router.push('/plan'); }} />
+          ) : null}
           {tomorrow ? <ListRow title="Tomorrow" sub={tomorrow} onPress={() => router.push('/plan')} /> : null}
           {upcoming.map((item, i) => (
             <Animated.View key={item.id} layout={layout} entering={enter.fade} exiting={exit.fade}>

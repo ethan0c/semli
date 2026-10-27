@@ -1,4 +1,4 @@
-import { addDays, assessment, conflictIds, diffDays, formatRange, formatTime, movableOverlap, pendingDates, relativeDay, toMinutes, weekdayLong, weekdayShort, weekOf, planCount, count, chartRange } from '@dayli/core';
+import { addDays, assessment, conflictIds, spanMinutes, diffDays, formatRange, formatTime, movableOverlap, pendingDates, relativeDay, toMinutes, weekdayLong, weekdayShort, weekOf, planCount, count, chartRange } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { router } from 'expo-router';
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
@@ -86,10 +86,14 @@ function weekRange(days: WeekDay[], now: Now): [number, number] {
   return chartRange(spans, 8);
 }
 
-/** Minutes of work in a list of items: its timed events in the work category. */
+/**
+ * Minutes of work in a list of items: its timed events in the work category. An overnight shift
+ * counts in full on the day it starts (22:00 to 06:00 is 8 hours, not the 2 the chart's bar shows
+ * before midnight), as the employer page counts it.
+ */
 function workMinutes(list: Item[]): number {
   return list.filter((i) => i.kind === 'event' && i.category === 'work' && i.start)
-    .reduce((sum, i) => sum + Math.max(0, toMinutes(eventEnd(i)) - toMinutes(i.start!)), 0);
+    .reduce((sum, i) => sum + (i.end && i.end !== i.start ? spanMinutes(i.start, i.end) : toMinutes(eventEnd(i)) - toMinutes(i.start!)), 0);
 }
 
 /** One page of the week pager. Memoised, so the weeks either side redraw only when their data does. */

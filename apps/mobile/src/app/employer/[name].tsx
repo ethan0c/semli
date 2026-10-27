@@ -1,4 +1,4 @@
-import { addDays, diffDays, formatRange, formatTime, monthDay, pendingDates, relativeDay, toMinutes, weekOf, weekdayLong, hoursMinutes, spanMinutes, monthName, count } from '@dayli/core';
+import { addDays, dayNumber, diffDays, formatRange, intervalOf, formatTime, monthDay, pendingDates, relativeDay, toMinutes, weekOf, weekdayLong, hoursMinutes, spanMinutes, monthName, count } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -40,10 +40,12 @@ export default function EmployerScreen() {
   const nowMin = toMinutes(now.time);
 
   // The one big number: minutes until the next shift starts, or until the current one ends.
-  const ongoing = shifts.find((it) => it.date === now.date && it.start && it.end && toMinutes(it.start) <= nowMin && nowMin < toMinutes(it.end));
+  // On the clock across midnight too: a 22:00 to 06:00 shift is still on at 2 am the next day.
+  const nowAt = dayNumber(now.date) * 1440 + nowMin;
+  const ongoing = shifts.find((it) => { const iv = intervalOf(it); return !!iv && iv.start <= nowAt && nowAt < iv.end; });
   const next = ongoing ?? shifts.find((it) => it.start && !it.done && (it.date > now.date || (it.date === now.date && toMinutes(it.start) >= nowMin)));
   const big = !next ? 'Clear'
-    : ongoing ? hoursMinutes(toMinutes(ongoing.end!) - nowMin)
+    : ongoing ? hoursMinutes(intervalOf(ongoing)!.end - nowAt)
       : hoursMinutes(toMinutes(next.start!) - nowMin + diffDays(now.date, next.date) * 1440);
   const eyebrow = !next ? 'Work' : ongoing ? 'Work · shift ends in' : 'Work · next shift in';
   const line = next ? `${relativeDay(now.date, next.date)} · ${next.end ? formatRange(next.start!, next.end) : formatTime(next.start!)}` : null;

@@ -38,9 +38,20 @@ describe('POST /api/canvas-feed', () => {
   it('refuses without a session, and never fetches a link that isn’t a Canvas feed', async () => {
     const fetchMock = vi.fn(async () => new Response('{"id":"u1"}'));
     vi.stubGlobal('fetch', fetchMock);
-    expect((await POST(request({ url: FEED }, {}))).status).toBe(401);
+    const signedOut = await POST(request({ url: FEED }, {}));
+    expect(signedOut.status).toBe(401);
+    expect(await signedOut.json()).toEqual({ ok: false, reason: 'session' });
     expect((await POST(request({ url: 'https://169.254.169.254/feeds/calendars/a.ics' }))).status).toBe(400);
     expect(fetchMock.mock.calls.every(([u]) => String(u).includes('/auth/v1/user'))).toBe(true);
+  });
+
+  it('tells an expired session apart from Canvas, and a down Supabase from both', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"msg":"JWT expired"}', { status: 401 })));
+    const expired = await POST(request({ url: FEED }));
+    expect(expired.status).toBe(401);
+    expect(await expired.json()).toEqual({ ok: false, reason: 'session' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 503 })));
+    expect((await POST(request({ url: FEED }))).status).toBe(502);
   });
 
   it('passes on Canvas turning the link down, so the app can say so', async () => {

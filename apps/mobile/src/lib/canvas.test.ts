@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Item } from '@dayli/schema';
-import { CANVAS_MESSAGES, canvasEntries, courseCodeOf, fetchCanvasFeed, normalizeFeedUrl, parseIcs, planCanvasSync, syncSummary } from './canvas';
+import { CANVAS_MESSAGES, canvasEntries, courseCodeOf, fetchCanvasFeed, normalizeFeedUrl, parseIcs, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
 
 const FEED = [
   'BEGIN:VCALENDAR',
@@ -111,6 +111,12 @@ describe('fetching', () => {
 
   it('a reset link says so', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 404 })));
+    expect(await fetchCanvasFeed('https://x/feeds/calendars/u.ics')).toEqual({ ok: false, error: CANVAS_MESSAGES.rejected });
+  });
+  it('an expired Semli sign-in on the web is its own reason, not a rejected link', async () => {
+    const semli: FeedLoader = async () => Response.json({ ok: false, reason: 'session' }, { status: 401 });
+    expect(await fetchCanvasFeed('https://x/feeds/calendars/u.ics', undefined, semli)).toEqual({ ok: false, error: CANVAS_MESSAGES.session });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('Unauthorized', { status: 401 })));
     expect(await fetchCanvasFeed('https://x/feeds/calendars/u.ics')).toEqual({ ok: false, error: CANVAS_MESSAGES.rejected });
   });
   it('an offline phone keeps what it has', async () => {
