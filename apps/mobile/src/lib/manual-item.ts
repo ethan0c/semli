@@ -1,5 +1,5 @@
 import { isLocalDate, isLocalTime } from '@dayli/core';
-import type { Category, Item } from '@dayli/schema';
+import type { Category, Item, SeriesRule } from '@dayli/schema';
 
 export interface ManualDraft {
   kind: 'task' | 'event';
@@ -15,10 +15,12 @@ export interface ManualDraft {
   courseId: string | null;
   employer: string;
   notes: string;
+  /** How it repeats, from this date; null for a one-off. */
+  repeat: SeriesRule | null;
 }
 
 export type ManualItem = Omit<Item, 'id' | 'createdAt' | 'batchId'>;
-export type ManualResult = { ok: true; item: ManualItem } | { ok: false; error: string };
+export type ManualResult = { ok: true; item: ManualItem; repeat: SeriesRule | null } | { ok: false; error: string };
 
 /** Validate before touching the store; dates are local calendar dates, never UTC. */
 export function buildManualItem(draft: ManualDraft): ManualResult {
@@ -29,10 +31,14 @@ export function buildManualItem(draft: ManualDraft): ManualResult {
   if (hasStart && !isLocalTime(draft.start)) return { ok: false, error: 'Choose a valid time.' };
   if (timedEvent && !isLocalTime(draft.end)) return { ok: false, error: 'Choose a valid end time.' };
   if (timedEvent && draft.start === draft.end) return { ok: false, error: 'Choose an end time different from the start.' };
-  return { ok: true, item: {
+  if (draft.repeat && draft.repeat.every > 0 && !draft.repeat.days.length) return { ok: false, error: 'Choose a day for it to repeat on.' };
+  if (draft.repeat && (!isLocalDate(draft.repeat.until) || draft.repeat.until < draft.date)) return { ok: false, error: 'Choose a last date on or after the first.' };
+  const start = hasStart ? draft.start : null;
+  const end = timedEvent ? draft.end : null;
+  return { ok: true, repeat: draft.repeat ? { ...draft.repeat, start, end } : null, item: {
     kind: draft.kind, title: draft.title.trim(), category: draft.category,
     icon: draft.kind === 'event' ? 'calendar' : 'check',
-    date: draft.date, start: hasStart ? draft.start : null, end: timedEvent ? draft.end : null,
+    date: draft.date, start, end,
     isDeadline: draft.kind === 'task' && draft.isDeadline,
     ...(draft.urgent ? { urgent: true } : {}),
     done: false, completedAt: null, sourceId: null,

@@ -1,4 +1,4 @@
-import { formatTime, isLocalDate, localParts, monthDay, weekdayShort } from '@dayli/core';
+import { anchorRule, describeRule, formatTime, isLocalDate, localParts, monthDay, weekdayShort } from '@dayli/core';
 import type { Category } from '@dayli/schema';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState, type ReactNode } from 'react';
@@ -7,6 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { CategoryDot, Chip, GroupLabel, PickerPill } from '@/components/Controls';
 import { InlinePicker, NativeToggle } from '@/components/Native';
+import { RepeatEditor } from '@/components/RepeatEditor';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
 import { Press } from '@/components/Press';
 import { Segmented } from '@/components/Segmented';
@@ -25,18 +26,19 @@ const categories: { key: Category; label: string }[] = [
 ];
 
 type Field = 'title' | 'employer' | 'notes';
-type Picker = 'date' | 'start' | 'end' | 'time';
+type Picker = 'date' | 'start' | 'end' | 'time' | 'repeat';
 
 /** New to-do or event by hand: a pill title, hairline rows with pills and toggles, one primary button. */
 export default function CreateScreen() {
   const { c } = useTheme();
   const params = useLocalSearchParams<{ kind?: string; date?: string }>();
   const courses = useCourseList();
+  const breaks = useStore((s) => s.settings.breaks ?? []);
   const [draft, setDraft] = useState<ManualDraft>(() => ({
     kind: params.kind === 'event' ? 'event' : 'task', title: '', category: 'personal',
     date: params.date && isLocalDate(params.date) ? params.date : localParts(new Date()).date,
     ...defaultManualTimes(new Date()), allDay: false, hasDueTime: false, isDeadline: false, urgent: false,
-    courseId: null, employer: '', notes: '',
+    courseId: null, employer: '', notes: '', repeat: null,
   }));
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<Field | null>(null);
@@ -59,13 +61,20 @@ export default function CreateScreen() {
     saving.current = true;
     const store = useStore.getState();
     const id = store.addItem(result.item);
+    // The rest of a series is its own batch after the first one, so Undo on the toast removes them all but the first.
+    const series = result.repeat ? store.startSeries(id, result.repeat, localParts(new Date()).date) : null;
     track('manual_item_created', {
       item_kind: result.item.kind,
       category: result.item.category,
       has_time: !!result.item.start,
       urgent: !!result.item.urgent,
+      repeats: !!result.repeat,
     });
-    store.showToast(`Added ${result.item.title}.`, useStore.getState().items[id]?.batchId ?? undefined);
+    const noun = result.item.kind === 'event' ? 'event' : 'to-do';
+    store.showToast(
+      series && result.repeat ? `Added ${series.created + 1} ${noun}s through ${monthDay(result.repeat.until)}.` : `Added ${result.item.title}.`,
+      series?.batchId ?? useStore.getState().items[id]?.batchId ?? undefined,
+    );
     feedback('success');
     router.back();
   };
@@ -89,7 +98,7 @@ export default function CreateScreen() {
     return (
       <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout}>
         {which === 'date'
-          ? <InlinePicker mode="date" date={draft.date} time={draft.start} onChange={(date) => patch({ date })} />
+          ? <InlinePicker mode="date" date={draft.date} time={draft.start} onChange={(date) => isLocalDate(date) && patch({ date, repeat: draft.repeat ? anchorRule(draft.repeat, date) : null })} />
           : <InlinePicker mode="time" date={draft.date} time={draft[key]} onChange={(value) => patch({ [key]: value })} />}
       </Animated.View>
     );
@@ -118,7 +127,7 @@ export default function CreateScreen() {
                 <>
                   <FieldRow label="Starts">{timeControl('start')}</FieldRow>
                   {inlinePicker('start')}
-                  <FieldRow label="Ends" last={draft.end >= draft.start}>{timeControl('end')}</FieldRow>
+                  <FieldRow label="Ends">{timeControl('end')}</FieldRow>
                   {inlinePicker('end')}
                   {draft.end < draft.start ? <T token="caption" color={c.inkSecondary} style={styles.rowNote}>Ends the next day.</T> : null}
                 </>
@@ -127,11 +136,21 @@ export default function CreateScreen() {
           ) : (
             <>
               <FieldRow label="Deadline"><NativeToggle label="Deadline" value={draft.isDeadline} onChange={(isDeadline) => patch({ isDeadline })} /></FieldRow>
-              <FieldRow label="Set a time" last={!draft.hasDueTime}><NativeToggle label="Set a time" value={draft.hasDueTime} onChange={(hasDueTime) => patch({ hasDueTime })} /></FieldRow>
-              {draft.hasDueTime ? <FieldRow label="Time" last>{timeControl('time')}</FieldRow> : null}
+              <FieldRow label="Set a time"><NativeToggle label="Set a time" value={draft.hasDueTime} onChange={(hasDueTime) => patch({ hasDueTime })} /></FieldRow>
+              {draft.hasDueTime ? <FieldRow label="Time">{timeControl('time')}</FieldRow> : null}
               {draft.hasDueTime ? inlinePicker('time') : null}
             </>
           )}
+          <FieldRow label="Repeats" last>
+            <PickerPill label={draft.repeat ? describeRule(draft.repeat) : 'Never'} open={picker === 'repeat'} accessibilityLabel={`Repeats, ${draft.repeat ? describeRule(draft.repeat) : 'never'}`} onPress={() => toggle('repeat')} />
+          </FieldRow>
+          {picker === 'repeat' ? (
+            <Animated.View entering={enter.fade} exiting={exit.fade} layout={layout} style={styles.repeat}>
+              <RepeatEditor rule={draft.repeat} from={draft.date} today={localParts(new Date()).date} noun={event ? 'event' : 'to-do'} breaks={breaks}
+                times={{ start: event ? (draft.allDay ? null : draft.start) : draft.hasDueTime ? draft.start : null, end: event && !draft.allDay ? draft.end : null }}
+                onChange={(repeat) => patch({ repeat })} />
+            </Animated.View>
+          ) : null}
         </View>
 
         <View>
@@ -191,6 +210,7 @@ const styles = StyleSheet.create({
   rows: { marginTop: -space.hair },
   row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: space.sm },
   rowNote: { paddingTop: space.xs },
+  repeat: { paddingTop: space.sm },
   section: { gap: space.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs },
   courseChip: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, height: 40, borderRadius: 999 },

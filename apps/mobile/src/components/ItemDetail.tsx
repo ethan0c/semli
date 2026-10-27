@@ -76,10 +76,10 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
   const removeItems = useStore((s) => s.removeItems);
   const [title, setTitle] = useState(item?.title ?? '');
   const [notes, setNotes] = useState(item?.notes ?? '');
-  const [editing, setEditing] = useState<'time' | 'date' | 'until' | 'notes' | null>(null);
+  const [editing, setEditing] = useState<'time' | 'date' | 'notes' | null>(null);
   const [scope, setScope] = useState(false);
   // Edits live in a draft until Done, so a wheel scrolled ten times is one change and one undo.
-  const [draft, setDraft] = useState<{ start: string | null; end: string | null; date: string; until: string }>({ start: null, end: null, date: '', until: '' });
+  const [draft, setDraft] = useState<{ start: string | null; end: string | null; date: string }>({ start: null, end: null, date: '' });
   /** On a repeating item: this occurrence, or every one from here on. Time defaults to all; date is always this one. */
   const [reach, setReach] = useState<'one' | 'series'>('series');
   const applySeries = useStore((s) => s.applySeries);
@@ -142,11 +142,11 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
       : item.isDeadline ? deadlineLine : 'Included in the daily summary'
     : 'Reminders are off · Turn them on in You';
 
-  const openEditor = (which: 'time' | 'date' | 'until') => {
+  const openEditor = (which: 'time' | 'date') => {
     feedback('select');
     if (editing === which) { setEditing(null); return; }
     const times = item.start ? { start: item.start, end: item.end } : defaultTimes(item);
-    setDraft({ start: times.start, end: times.end, date: item.date, until: seriesEnd });
+    setDraft({ start: times.start, end: times.end, date: item.date });
     setReach('series');
     setEditing(which);
   };
@@ -178,13 +178,6 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
     setEditing(null);
     if (!isLocalDate(date) || date === item.date) return;
     updateItem(item.id, { date });
-    feedback('success');
-  };
-  const saveUntil = (date: string) => {
-    setEditing(null);
-    if (!rule || !isLocalDate(date) || date === rule.until || date < item.date) return;
-    const r = applySeries(item.seriesId!, { ...rule, until: date }, item.date, now.date, `${date > rule.until ? 'Extended' : 'Shortened'} ${item.title} to ${monthDay(date)}`);
-    if (r.kept) showToast(`${date > rule.until ? 'Extended' : 'Shortened'} ${item.title} to ${monthDay(date)}.${leftAlone(r.kept)}`, r.batchId ?? undefined);
     feedback('success');
   };
   const followFeed = () => {
@@ -317,23 +310,11 @@ export function ItemDetail({ id, onClose, onOpen }: { id?: string; onClose?: () 
               <T token="body" color={c.inkSecondary} style={{ flex: 1 }}>{`Canvas has this on ${weekdayShort(item.feed.date)}, ${monthDay(item.feed.date)}${item.feed.start ? ` at ${formatTime(item.feed.start, true)}` : ''}`}</T>
             </Row>
           ) : null}
-          {repeats && rule ? (
-            <Row onPress={() => openEditor('until')} accessibilityLabel={`${describeRule(rule)} until ${monthDay(seriesEnd)}, ${seriesLeft} left, tap to change when it ends`}>
-              <T token="body" style={{ flex: 1 }}>{`${describeRule(rule)} until ${monthDay(seriesEnd)} · ${seriesLeft} left`}</T>
-            </Row>
-          ) : null}
-          {editing === 'until' && rule ? (
-            <Animated.View entering={enter.drop} exiting={exit.fade} style={styles.editor}>
-              <T token="body">{`Last one ${weekdayLong(draft.until)}, ${longMonthDay(draft.until)}`}</T>
-              <InlinePicker mode="date" date={draft.until} time={null} onChange={(date) => isLocalDate(date) && setDraft((d) => ({ ...d, until: date }))} />
-              <T token="caption" color={c.inkSecondary}>{draft.until > rule.until ? `Adds ${seriesNoun}s through ${monthDay(draft.until)}.` : draft.until < rule.until ? `Removes ${seriesNoun}s after ${monthDay(draft.until)}.` : 'Unchanged.'}</T>
-              <View style={styles.editorActions}>
-                <View style={{ flex: 1 }} />
-                <TextButton label="Cancel" tone="muted" onPress={() => setEditing(null)} />
-                <TextButton label="Done" onPress={() => saveUntil(draft.until)} />
-              </View>
-            </Animated.View>
-          ) : null}
+          {/* The Repeat screen owns the rule: days, how often, until when, and making a one-off repeat. */}
+          <Row onPress={() => router.push(`/repeat/${item.id}`)}
+            accessibilityLabel={repeats && rule ? `${describeRule(rule)} until ${monthDay(seriesEnd)}, ${seriesLeft} left, tap to change how it repeats` : 'Doesn’t repeat, tap to make it repeat'}>
+            <T token="body" color={repeats ? c.inkPrimary : c.inkSecondary} style={{ flex: 1 }}>{repeats && rule ? `${describeRule(rule)} until ${monthDay(seriesEnd)} · ${seriesLeft} left` : 'Doesn’t repeat'}</T>
+          </Row>
           <Row trailing={<NativeToggle label="Urgent" value={!!item.urgent} onChange={(urgent) => void setUrgent(urgent)} />}>
             <T token="body" style={{ flex: 1 }}>Urgent</T>
           </Row>
