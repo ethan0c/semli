@@ -1,45 +1,44 @@
 #!/usr/bin/env python3
-"""Render the campus print pieces, one set per school: a 4 x 6 in hand-out postcard and a
-letter-size flyer for bulletin boards, in maximalist and brand directions.
+"""Render the January hand-out postcards: 4 x 6 in landscape, one PDF per line item.
 
-The concept is "Buried? / Sorted." The front is a wall-to-wall pile of due-date stickers in the
-app's class colors, pushed to print saturation and tilted every which way, burying the card. One
-paper label sits on the pile with the wordmark, a giant "Buried?" in Geist Bold and the survey
-number (83% of the students surveyed in early 2026 had missed or nearly missed an assignment
-that got buried; docs/marketing-500.md). The back is lavender: the same stickers lined up
-straight, "Sorted.", and a plain square QR with an uninterrupted quiet zone. The scan heading,
-code, beta label, and URL share a left edge. "Turn your syllabus into a plan." sits beneath
-"Sorted." The scan block and sorted stickers finish on the same bottom margin.
-The stickers are the problem, the app is the fix, the code is the way there. The flyer is the
-same on one portrait page: the pile on top, the sorted band below. The postcard front includes
-"Flip for the fix" and an arrow, so the two-sided concept is explicit.
+The plan (docs/school-flyer-outreach.md, decided Oct 27, 2026) is 1,000 cards in five line items,
+three fronts, one back system:
 
-The brand alternative keeps the same copy and plain QR. Morning clouds fade into warm paper;
-EB Garamond headlines, Geist supporting text, course dots, and plain rows follow the brand.
-Its front has a small overlapping stack of paper events; its back resolves them into rows.
+    tag        front                                     qty   who gets it
+    york-e     E, "York, your syllabus is a to-do list"  200   York
+    pomona-e   E, Pomona wording                         200   Pomona
+    gatech-e   E, Georgia Tech wording                   200   Georgia Tech
+    pile       the sticker pile and "Buried?" only       250   100 York, 75 Pomona, 75 Georgia Tech
+    c          a sentence that finishes on the back      150   York
 
-Oct 26, 2026, founder's call: maximalist, first-glance, the brand serif optional; only the
-wordmark and the QR destination stay fixed. Geist Bold appears in print art only, like the italic in the
-store captions. Sentence case throughout, never caps.
+E names the school, so it is printed per school. The pile and C do not, so they are printed once
+and the school is known from who hands them out. The fronts came out of the reference research
+(the big apps print one line in the product's voice, about the reader, logo small, QR with a verb)
+and the one-second flash test; see the card drafts artifact linked from the outreach doc.
 
-Postcard: landscape 152.4 x 101.6 mm with 3 mm bleed (1/8 in, what US and AliExpress postcard
-shops ask for) and 5 mm safe. Flyer: portrait 8.5 x 11 in with 3 mm bleed; campus print shops
-print it full bleed, an office printer leaves a thin white border, which is fine.
+E: paper, the wordmark, one EB Garamond line with the accent phrase in italic, as the store
+captions do. C: paper, the wordmark, a serif sentence whose last word runs off the right trim,
+Oatly's "continued on the other billboard" device; the back answers with "Thursday." Pile: the
+previous maximalist front with the survey line and the flip cue removed, so the pile and the
+question are the only two things on it. Every back is lavender with the same scan block in the
+same place (a verb caption, a plain 38 mm QR panel with its quiet zone, the beta line and the
+URL) and its own headline. Geist Bold appears in print art only, like the italic in the store
+captions. Sentence case throughout, never caps.
 
-Every QR goes to semli.app/beta with a `?r=` tag, `<school>` on postcards and `<school>-flyer`
-on flyers, so `select ref, count(*) from waitlist group by ref` shows which school, and which
-piece, sends installs. Every school gets the same front.
+Postcard: landscape 152.4 x 101.6 mm with 3 mm bleed and 5 mm safe. The C front's cut word ends
+at the trim on purpose; a 1.5 mm cut either way still reads as cut, which the proof run checks.
 
-    python3 design/render-cards.py                       # york, pomona, gatech
-    python3 design/render-cards.py emory gsu             # one set per tag
-    python3 design/render-cards.py --style brand         # brand direction only
+Every QR goes to semli.app/beta?r=<tag>, so `select ref, count(*) from waitlist group by ref`
+says which front and, for E, which school sent each install.
 
-Output in design/cards/out: <tag>-postcard.pdf (front, then back, 600 dpi) and <tag>-flyer.pdf
-(300 dpi), plus postcard-front.png, <tag>-postcard-back.png and <tag>-flyer.png for shops that
-want images, and postcard-preview.png and flyer-preview.png for a look at trim before ordering.
-The brand direction has the same files in design/cards/out/brand. The default renders both,
-plus postcard-comparison.png and flyer-comparison.png so the options can be compared at trim.
-Needs Pillow and the repo's node_modules (toqr).
+    python3 design/render-cards.py              # all five line items
+    python3 design/render-cards.py pile c       # some of them
+
+Output in design/cards/out: <tag>-postcard.pdf (front, then back, 600 dpi), <tag>-front.png and
+<tag>-back.png for shops that want images, and preview.png with every pair at trim. The brand
+direction with clouds and the letter-size flyer were dropped Oct 27, 2026 (posters are
+club-only on most campuses); they are in the git history. Needs Pillow and the repo's
+node_modules (toqr).
 """
 from __future__ import annotations
 
@@ -53,35 +52,45 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "design" / "cards" / "out"
 WORDMARK = ROOT / "design" / "wordmark.json"
 SITE_URL = "https://www.semli.app"  # apps/web/lib/site.ts
-SCHOOLS = ["york", "pomona", "gatech"]  # docs/school-flyer-outreach.md
 
 # The store art's caption type and colors, so the pieces and the listing match.
 _spec = importlib.util.spec_from_file_location("store", ROOT / "design" / "render-screenshots.py")
 store = sys.modules["store"] = importlib.util.module_from_spec(_spec)  # its dataclass looks itself up
 _spec.loader.exec_module(store)
-PAPER, INK, ACCENT, DARK_ACCENT = store.PAPER, store.INK, store.ACCENT, store.DARK_ACCENT
+PAPER, INK, ACCENT = store.PAPER, store.INK, store.ACCENT
 ON_DARK = (245, 244, 240)  # the store art's wordmark on a dark ground
 ON_ACCENT_SECONDARY = (222, 214, 245)
 BUTTER = (255, 226, 122)  # the back's accent on lavender
+MUTED = (104, 105, 99)
 SS = 2  # drawn at twice the size and scaled down: Pillow does not antialias shapes
 
+SCHOOLS = {"york": "York", "pomona": "Pomona", "gatech": "Georgia Tech"}  # tag stem, name on the card
+LINE_ITEMS = ["york-e", "pomona-e", "gatech-e", "pile", "c"]  # docs/school-flyer-outreach.md
+
+# Copy. The ~span~ is the accent phrase, EB Garamond Italic in lavender on paper or butter on lavender.
+E_FRONT = "{school}, your syllabus is a ~to-do list~ now."
+E_FOOT = "Spring 2027 · handed to you by someone who uses it"
+E_BACK = "Every due date out of every syllabus, next to your shifts."
+E_BACK_LINE = "Drop in the PDF, screenshot your shifts. Two minutes."
+E_CTA = "Scan to set it up"
+C_FRONT = "The assignment you're about to miss is on page 4 of a syllabus you haven't opened"
+C_CUT = "since September, and it is due on "  # the last line, upright; the accent word runs off the trim
+C_CUT_WORD = "Thursday."
+C_CUT_SHOW = "Thu"  # what is left of it at the trim line
+C_BACK_WORD = "Thursday."
+C_BACK = "Semli opened the syllabus for you. Every due date, your shifts, one plan."
+C_CTA = "Scan to see yours"
 HOOK = "Buried?"
-STAT = "83% of students we surveyed had missed or nearly missed an assignment that got buried."
 FIX = "Sorted."
 PAYOFF = "Turn your syllabus into a plan."
-CTA = "Scan to try Semli"
-BETA = "Free iPhone beta"
-FLIP = "Flip for the fix"
-MUTED = (104, 105, 99)
-ROW = (240, 239, 235)
-LINE = (229, 228, 222)
-SOFT = (240, 236, 248)
+PILE_CTA = "Scan to try Semli"
+BETA = "Free iPhone beta"  # "Free on iPhone" after the App Store release
 
 # (title, detail, fill, text): the class palette (packages/tokens) pushed to print saturation,
 # text in each color's own ink; the behind-red and ink ones carry paper text.
@@ -130,9 +139,11 @@ class Format:
 
 
 POSTCARD = Format(152.4, 101.6, 600)
-FLYER = Format(215.9, 279.4, 300, safe=12)
+INSET = 8  # mm from the trim to the wordmark and the headline's left edge
+SCAN_CENTER = POSTCARD.trim_w - INSET - 26  # the scan block's center x, every back the same
+SCAN_PANEL = 38  # the QR panel: a 29-module code at about 26 mm plus its quiet zone
 
-# Sticker centers (mm from the trim's top left) and tilt, placed by hand like stickers on a laptop.
+
 def flatten(path: str) -> list[list[tuple[float, float]]]:
     """The wordmark's absolute M/L/H/V/Q/Z path as polygons, curves cut into 12 segments."""
     shapes, pts, x, y = [], [], 0.0, 0.0
@@ -184,6 +195,14 @@ def draw_wordmark(img: Image.Image, left: int, top: int, width: int, letters, do
         d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=dots)
 
 
+def wordmark(img: Image.Image, fmt: Format, light: bool) -> None:
+    """Top left, 22 mm, inside the inset: ink and accent on paper, paper on lavender."""
+    if light:
+        draw_wordmark(img, fmt.edge(INSET), fmt.edge(INSET), fmt.px(22), INK, ACCENT)
+    else:
+        draw_wordmark(img, fmt.edge(INSET), fmt.edge(INSET), fmt.px(22), ON_DARK, ON_DARK)
+
+
 def qr_modules(text: str) -> tuple[int, list[int]]:
     """Standard error correction M; the entire matrix is visible without a center overlay."""
     js = "const {toQR}=require('toqr');process.stdout.write(JSON.stringify(Array.from(toQR(process.argv[1],0))))"
@@ -210,11 +229,13 @@ def draw_qr(img: Image.Image, left: int, top: int, width: int, text: str) -> Non
                              oy + (y + 1) * u - 1), fill=INK)
 
 
-def caption(img: Image.Image, fmt: Format, text: str, left: int, top: int, width_mm: float, size_mm: float, color, accent) -> int:
-    """The store caption: EB Garamond Regular, the ~accent~ in italic. Returns its bottom."""
+def serif_block(img: Image.Image, fmt: Format, text: str, left: float, top: float, width: float,
+                size: float, color, accent, leading: float = 1.08) -> int:
+    """A serif headline in mm: EB Garamond Regular, the ~accent~ in italic. Returns the next top."""
     d = ImageDraw.Draw(img)
-    f, af = store.serif(fmt.px(size_mm), 400), store.serif(fmt.px(size_mm), 400, italic=True)
-    return store.rich_block(d, text, f, left, top, fmt.px(width_mm), fmt.px(size_mm), color, accent, "left", tracking=store.SERIF_TRACKING, accent_font=af)
+    f, af = store.serif(fmt.px(size), 400), store.serif(fmt.px(size), 400, italic=True)
+    return store.rich_block(d, text, f, fmt.edge(left), fmt.edge(top), fmt.px(width), round(fmt.px(size) * leading),
+                            color, accent, "left", tracking=store.SERIF_TRACKING, accent_font=af)
 
 
 def sticker(fmt: Format, k: float, title: str, detail: str, fill, text,
@@ -281,19 +302,12 @@ def pile(img: Image.Image, fmt: Format, k: float, cols: int, rows: int) -> None:
         place(img, piece, fmt, x, y, rng.uniform(-22, 22))
 
 
-def label(fmt: Format, width_mm: float, hook_mm: float, stat_mm: float, wordmark_mm: float,
-          flip: bool = False) -> Image.Image:
-    """The paper label on the pile: wordmark, the hook in Geist Bold, the survey line."""
+def label(fmt: Format, width_mm: float, hook_mm: float, wordmark_mm: float) -> Image.Image:
+    """The paper label on the pile: the wordmark and the hook in Geist Bold, nothing else."""
     pad = fmt.px(6)
-    probe = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    # Geist Bold against EB Garamond: the shout and the quiet fact. The serif runs a size up to match.
-    hook_f, stat_f = store.font(fmt.px(hook_mm), "Bold"), store.serif(fmt.px(stat_mm), 500)
-    inner = fmt.px(width_mm) - 2 * pad
-    lines = store.wrap(probe, STAT, stat_f, inner)
+    hook_f = store.font(fmt.px(hook_mm), "Bold")
     mark_h = round(wordmark_mm * 1132.05 / 3620.1)
-    h = pad + fmt.px(mark_h + 4) + round(fmt.px(hook_mm) * 1.0) + fmt.px(3) + len(lines) * round(fmt.px(stat_mm) * 1.4) + pad
-    if flip:
-        h += fmt.px(9)
+    h = pad + fmt.px(mark_h + 4) + round(fmt.px(hook_mm) * 1.0) + pad
     shadow_pad = fmt.px(3)
     out = Image.new("RGBA", (fmt.px(width_mm) + 2 * shadow_pad, h + 2 * shadow_pad), (0, 0, 0, 0))
     shadow = Image.new("RGBA", out.size, (0, 0, 0, 0))
@@ -304,25 +318,7 @@ def label(fmt: Format, width_mm: float, hook_mm: float, stat_mm: float, wordmark
     draw_wordmark(out, shadow_pad + pad, shadow_pad + pad, fmt.px(wordmark_mm), INK + (255,), ACCENT + (255,))
     y = shadow_pad + pad + fmt.px(mark_h + 4)
     d.text((shadow_pad + pad - fmt.px(hook_mm * 0.04), y + round(fmt.px(hook_mm) * 0.92)), HOOK, font=hook_f, fill=INK, anchor="ls")
-    y += round(fmt.px(hook_mm) * 1.0) + fmt.px(3)
-    for line in lines:
-        y += round(fmt.px(stat_mm) * 1.4)
-        d.text((shadow_pad + pad, y - round(fmt.px(stat_mm) * 0.3)), line, font=stat_f, fill=INK, anchor="ls")
-    if flip:
-        flip_cue(d, fmt, shadow_pad + pad, shadow_pad + h - pad, 3.3)
     return out
-
-
-def flip_cue(d: ImageDraw.ImageDraw, fmt: Format, left: int, baseline: int, size: float) -> None:
-    """An explicit instruction and arrow, inside the card's safe area."""
-    font = store.font(fmt.px(size), "Medium")
-    d.text((left, baseline), FLIP, font=font, fill=ACCENT, anchor="ls")
-    x = left + round(d.textlength(FLIP, font=font)) + fmt.px(2.5)
-    y = baseline - fmt.px(size * 0.33)
-    tip = x + fmt.px(size * 1.1)
-    stroke = max(SS, fmt.px(0.25))
-    d.line((x, y, tip, y), fill=ACCENT, width=stroke)
-    d.line((tip - fmt.px(1.1), y - fmt.px(1.1), tip, y, tip - fmt.px(1.1), y + fmt.px(1.1)), fill=ACCENT, width=stroke)
 
 
 def sorted_column(img: Image.Image, fmt: Format, k: float, left: int, top: int, count: int = 4,
@@ -336,184 +332,122 @@ def sorted_column(img: Image.Image, fmt: Format, k: float, left: int, top: int, 
     return y
 
 
-def scan_block(img: Image.Image, fmt: Format, center_x: float, bottom: float, panel: float,
-               gap: float, lead: float, big: float, small: float, url: str,
-               light: bool = False) -> None:
-    """An invitation above a plain QR, with two compact lines below; all share a left edge."""
+def scan_block(img: Image.Image, fmt: Format, cta: str, url: str) -> None:
+    """The one scan block every back shares: a verb caption above a plain QR, the beta line and
+    the URL below, all on one left edge, finishing on the bottom inset."""
+    panel, gap, lead, big, small = SCAN_PANEL, 7, 6, 4.6, 3.1
+    bottom = fmt.trim_h - INSET
     top = bottom - lead - gap - panel
-    left = fmt.edge(center_x - panel / 2)
+    left = fmt.edge(SCAN_CENTER - panel / 2)
     draw_qr(img, left, fmt.edge(top), fmt.px(panel), url)
     d = ImageDraw.Draw(img)
     for text, baseline, size, weight, color in (
-        (CTA, top - lead, big, "Medium", INK if light else ON_DARK),
-        (BETA, bottom - lead, small, "Regular", MUTED if light else ON_DARK),
-        ("semli.app", bottom, small, "Regular", ACCENT if light else ON_ACCENT_SECONDARY),
+        (cta, top - lead, big, "Medium", ON_DARK),
+        (BETA, bottom - lead, small, "Regular", ON_DARK),
+        ("semli.app", bottom, small, "Regular", ON_ACCENT_SECONDARY),
     ):
-        d.text((left, fmt.edge(baseline)), text,
-               font=store.font(fmt.px(size), weight), fill=color, anchor="ls")
+        d.text((left, fmt.edge(baseline)), text, font=store.font(fmt.px(size), weight), fill=color, anchor="ls")
 
 
-def postcard_front() -> Image.Image:
+def beta_url(tag: str) -> str:
+    return f"{SITE_URL}/beta?r={tag}"
+
+
+# The fronts.
+
+def pile_front() -> Image.Image:
     f = POSTCARD
     img = f.canvas(INK)
     pile(img, f, 1.5, 5, 4)
-    tag = label(f, 104, 22, 5.1, 22, flip=True)
+    tag = label(f, 100, 22, 22)
     place(img, tag, f, f.trim_w / 2, f.trim_h / 2, -2)
     return img
 
 
-def postcard_back(tag: str) -> Image.Image:
+def named_front(school: str) -> Image.Image:
+    f = POSTCARD
+    img = f.canvas(PAPER)
+    wordmark(img, f, light=True)
+    serif_block(img, f, E_FRONT.format(school=SCHOOLS[school]), INSET, 26, f.trim_w - 2 * INSET, 17, INK, ACCENT)
+    d = ImageDraw.Draw(img)
+    d.text((f.edge(INSET), f.edge(f.trim_h - INSET)), E_FOOT, font=store.font(f.px(3.2), "Regular"), fill=MUTED, anchor="ls")
+    return img
+
+
+def continued_front() -> Image.Image:
+    """The sentence runs off the right trim mid-word. The size is solved so that the visible part of
+    the last word ends exactly on the trim line; the bleed carries the rest of the letter."""
+    f = POSTCARD
+    img = f.canvas(PAPER)
+    wordmark(img, f, light=True)
+    d = ImageDraw.Draw(img)
+    probe = 100
+    up, it = store.serif(probe, 400), store.serif(probe, 400, italic=True)
+    width_at_probe = (store.tracked_len(d, C_CUT, up, store.SERIF_TRACKING)
+                      + store.tracked_len(d, C_CUT_SHOW, it, store.SERIF_TRACKING))
+    size = f.px(f.trim_w - INSET) * probe / width_at_probe  # canvas px, so the line is trim-wide
+    up, it = store.serif(round(size), 400), store.serif(round(size), 400, italic=True)
+    lead = round(size * 1.08)
+    y = f.edge(30)
+    for line in store.wrap(d, C_FRONT, up, f.px(f.trim_w - 2 * INSET)):
+        store.draw_tracked(d, f.edge(INSET), y, line, up, INK, store.SERIF_TRACKING)
+        y += lead
+    x = f.edge(INSET) + store.draw_tracked(d, f.edge(INSET), y, C_CUT, up, INK, store.SERIF_TRACKING)
+    store.draw_tracked(d, x, y, C_CUT_WORD, it, ACCENT, store.SERIF_TRACKING)  # clipped by the canvas
+    return img
+
+
+# The backs: lavender, the same scan block, their own headline.
+
+def back(tag: str, cta: str) -> Image.Image:
     f = POSTCARD
     img = f.canvas(ACCENT)
-    inset = 8
-    left = f.edge(inset)
+    scan_block(img, f, cta, beta_url(tag))
+    return img
+
+
+def pile_back(tag: str) -> Image.Image:
+    f = POSTCARD
+    img = back(tag, PILE_CTA)
+    left = f.edge(INSET)
     d = ImageDraw.Draw(img)
-    d.text((left - f.px(0.8), f.edge(inset) + round(f.px(22) * 0.92)), FIX, font=store.font(f.px(22), "Bold"), fill=ON_DARK, anchor="ls")
+    d.text((left - f.px(0.8), f.edge(INSET) + round(f.px(22) * 0.92)), FIX, font=store.font(f.px(22), "Bold"), fill=ON_DARK, anchor="ls")
     d.text((left, f.edge(36)), PAYOFF, font=store.font(f.px(3.8), "Medium"), fill=ON_DARK, anchor="ls")
     sorted_column(img, f, 1.1, left, f.edge(38))
-    # Leave room between the headline and the scan block; keep the text inside the right inset.
-    scan_block(img, f, f.trim_w - inset - 26, f.trim_h - inset, 38, 7, 6, 4.6, 3.1,
-               f"{SITE_URL}/beta?r={tag}")
     return img
 
 
-def flyer(tag: str) -> Image.Image:
-    f = FLYER
-    img = f.canvas(INK)
-    band_mm = 172
-    pile(img, f, 2.3, 4, 6)
-    tag_img = label(f, 160, 36, 8.1, 36)
-    place(img, tag_img, f, f.trim_w / 2, band_mm / 2, -2)
-    d = ImageDraw.Draw(img)
-    d.rectangle((0, f.edge(band_mm), img.width, img.height), fill=ACCENT)
-    left = f.edge(f.safe)
-    d.text((left - f.px(1), f.edge(band_mm + 5) + round(f.px(26) * 0.92)), FIX, font=store.font(f.px(26), "Bold"), fill=ON_DARK, anchor="ls")
-    d.text((left, f.edge(band_mm + 36)), PAYOFF, font=store.font(f.px(4.6), "Medium"), fill=ON_DARK, anchor="ls")
-    sorted_column(img, f, 1.4, left, f.edge(band_mm + 39), count=3, width_mm=56)
-    scan_block(img, f, f.trim_w - f.safe - 29, f.trim_h - f.safe - 1, 50, 9, 8, 5.8, 3.7,
-               f"{SITE_URL}/beta?r={tag}-flyer")
-    return img
-
-
-EVENTS = [
-    ("Stats lecture", "STAT 200", "9:00 am", (31, 74, 128)),
-    ("Café shift", "Campus Café", "4 to 9 pm", (122, 62, 26)),
-    ("Essay due", "ENGL 102", "Thu", (107, 79, 0)),
-    ("Study group", "Personal", "7:00 pm", ACCENT),
-]
-
-
-def text_block(img: Image.Image, fmt: Format, text: str, left: float, baseline: float,
-               width: float, size: float, leading: float, color=INK) -> float:
-    d = ImageDraw.Draw(img)
-    font = store.font(fmt.px(size), "Regular")
-    for line in store.wrap(d, text, font, fmt.px(width)):
-        d.text((fmt.edge(left), fmt.edge(baseline)), line, font=font, fill=color, anchor="ls")
-        baseline += leading
-    return baseline
-
-
-def agenda_rows(img: Image.Image, fmt: Format, left: float, top: float, width: float,
-                scale: float = 1, count: int = 4) -> None:
-    """The app's plain rows: course marks, primary titles, secondary context, and time pills."""
-    d = ImageDraw.Draw(img)
-    mm = lambda n: fmt.px(n * scale)
-    x = fmt.edge(left)
-    title_font = store.font(mm(3.3), "Medium")
-    detail_font = store.font(mm(2.4), "Regular")
-    time_font = store.font(mm(2.6), "Medium")
-    for i, (title, detail, time, color) in enumerate(EVENTS[:count]):
-        y = fmt.edge(top + i * 12 * scale)
-        cx, cy, r = x + mm(1), y + mm(5), mm(0.75)
-        if title == "Essay due":
-            d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=color, width=max(SS, mm(0.3)))
-        else:
-            d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=color)
-        d.text((x + mm(5), y + mm(5)), title, font=title_font, fill=INK, anchor="ls")
-        d.text((x + mm(5), y + mm(9)), detail, font=detail_font, fill=MUTED, anchor="ls")
-        pill_w = round(d.textlength(time, font=time_font)) + mm(5)
-        right = x + fmt.px(width)
-        d.rounded_rectangle((right - pill_w, y + mm(2.2), right, y + mm(8.2)), radius=mm(3), fill=ROW)
-        d.text((right - pill_w / 2, y + mm(6.2)), time, font=time_font, fill=INK, anchor="ms")
-        if i < count - 1:
-            d.line((x, y + mm(12), right, y + mm(12)), fill=LINE, width=max(SS, mm(0.15)))
-
-
-def loose_event(fmt: Format, index: int, width: float, scale: float = 1) -> Image.Image:
-    """A quiet paper event for the less crowded front; restrained course color and no shadow."""
-    title, detail, time, color = EVENTS[index]
-    mm = lambda n: fmt.px(n * scale)
-    w, h = fmt.px(width), mm(14)
-    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, w - 1, h - 1), radius=mm(2), fill=PAPER + (255,),
-                        outline=LINE + (255,), width=max(SS, mm(0.2)))
-    d.ellipse((mm(3), mm(5), mm(4.5), mm(6.5)), fill=color)
-    d.text((mm(7), mm(5.8)), title, font=store.font(mm(3), "Medium"), fill=INK, anchor="ls")
-    d.text((mm(7), mm(10.3)), detail, font=store.font(mm(2.3), "Regular"), fill=MUTED, anchor="ls")
-    font = store.font(mm(2.5), "Medium")
-    pill_w = round(d.textlength(time, font=font)) + mm(4)
-    right = w - mm(3)
-    d.rounded_rectangle((right - pill_w, mm(4), right, mm(10)), radius=mm(3), fill=ROW)
-    d.text((right - pill_w / 2, mm(8.1)), time, font=font, fill=INK, anchor="ms")
-    return img
-
-
-def cloud_paper(fmt: Format, strength: float = 0.85, fade_at: float = 0.8) -> Image.Image:
-    """The app's existing morning clouds, fading smoothly into warm paper."""
-    paper = fmt.canvas(PAPER)
-    with Image.open(store.SKY) as source:
-        photo = ImageOps.fit(source.convert("RGB"), paper.size, Image.Resampling.LANCZOS,
-                             centering=(0.5, 0.38))
-    mask = Image.new("L", (1, paper.height))
-    mask.putdata([round(255 * strength * max(0, 1 - y / (paper.height * fade_at)))
-                  for y in range(paper.height)])
-    return Image.composite(photo, paper, mask.resize(paper.size))
-
-
-def brand_postcard_front() -> Image.Image:
+def named_back(tag: str) -> Image.Image:
     f = POSTCARD
-    img = cloud_paper(f)
+    img = back(tag, E_CTA)
+    wordmark(img, f, light=False)
+    width = SCAN_CENTER - SCAN_PANEL / 2 - INSET - 6
+    y = serif_block(img, f, E_BACK, INSET, 24, width, 9.5, ON_DARK, BUTTER)
     d = ImageDraw.Draw(img)
-    draw_wordmark(img, f.edge(8), f.edge(8), f.px(26), INK, ACCENT)
-    d.text((f.edge(7.3), f.edge(43)), HOOK, font=store.serif(f.px(26), 400), fill=INK, anchor="ls")
-    text_block(img, f, STAT, 8, 56, 69, 4.2, 6)
-    for i, (x, y, angle) in enumerate(((116, 30, -9), (112, 44, 5), (119, 58, -4), (113, 72, 6))):
-        place(img, loose_event(f, i, 57), f, x, y, angle)
-    flip_cue(d, f, f.edge(8), f.edge(93), 3.5)
+    d.text((f.edge(INSET), y + f.px(8)), E_BACK_LINE, font=store.font(f.px(3.4), "Regular"), fill=ON_ACCENT_SECONDARY, anchor="ls")
     return img
 
 
-def brand_postcard_back(tag: str) -> Image.Image:
+def continued_back(tag: str) -> Image.Image:
     f = POSTCARD
-    img = cloud_paper(f, 0.6, 0.48)
+    img = back(tag, C_CTA)
+    wordmark(img, f, light=False)
+    width = SCAN_CENTER - SCAN_PANEL / 2 - INSET - 6
     d = ImageDraw.Draw(img)
-    d.text((f.edge(7.3), f.edge(28)), FIX, font=store.serif(f.px(26), 400), fill=INK, anchor="ls")
-    d.text((f.edge(8), f.edge(37)), PAYOFF, font=store.font(f.px(4.2), "Regular"), fill=ACCENT, anchor="ls")
-    agenda_rows(img, f, 8, 43, 73)
-    scan_block(img, f, 118.4, 93.6, 38, 7, 6, 4.6, 3.1,
-               f"{SITE_URL}/beta?r={tag}", light=True)
+    store.draw_tracked(d, f.edge(INSET - 0.5), f.edge(21), C_BACK_WORD, store.serif(f.px(22), 400, italic=True), BUTTER, store.SERIF_TRACKING)
+    serif_block(img, f, C_BACK, INSET, 50, width, 8, ON_DARK, BUTTER)
     return img
 
 
-def brand_flyer(tag: str) -> Image.Image:
-    f = FLYER
-    img = cloud_paper(f, 0.9, 0.65)
-    d = ImageDraw.Draw(img)
-    draw_wordmark(img, f.edge(12), f.edge(12), f.px(38), INK, ACCENT)
-    d.text((f.edge(11), f.edge(75)), HOOK, font=store.serif(f.px(40), 400), fill=INK, anchor="ls")
-    text_block(img, f, STAT, 12, 94, 109, 6.6, 9)
-    for i, (x, y, angle) in enumerate(((168, 105, -6), (162, 125, 5), (169, 145, -4), (163, 165, 3))):
-        place(img, loose_event(f, i, 76, 1.35), f, x, y, angle)
-    band = 177
-    d.rectangle((0, f.edge(band), img.width, img.height), fill=SOFT)
-    d.line((0, f.edge(band), img.width, f.edge(band)), fill=LINE, width=f.px(0.2))
-    d.text((f.edge(11), f.edge(202)), FIX, font=store.serif(f.px(32), 400), fill=INK, anchor="ls")
-    d.text((f.edge(12), f.edge(215)), PAYOFF, font=store.font(f.px(5.3), "Regular"), fill=ACCENT, anchor="ls")
-    agenda_rows(img, f, 12, 224, 115, 1.1, count=3)
-    scan_block(img, f, 174.9, 266.4, 42, 9, 8, 5.6, 3.7,
-               f"{SITE_URL}/beta?r={tag}-flyer", light=True)
-    return img
+def render(tag: str) -> tuple[Image.Image, Image.Image]:
+    if tag == "pile":
+        return pile_front(), pile_back(tag)
+    if tag == "c":
+        return continued_front(), continued_back(tag)
+    stem, _, letter = tag.rpartition("-")
+    if letter == "e" and stem in SCHOOLS:
+        return named_front(stem), named_back(tag)
+    sys.exit(f"unknown line item {tag!r}; expected one of {LINE_ITEMS}")
 
 
 def finish(img: Image.Image) -> Image.Image:
@@ -525,64 +459,39 @@ def at_trim(img: Image.Image, fmt: Format) -> Image.Image:
     return img.crop((b, b, img.width - b, img.height - b))
 
 
-def render_set(tags: list[str], style: str) -> None:
-    output = OUT if style == "maximalist" else OUT / style
-    front_fn, back_fn, flyer_fn = ((postcard_front, postcard_back, flyer) if style == "maximalist"
-                                   else (brand_postcard_front, brand_postcard_back, brand_flyer))
-    output.mkdir(parents=True, exist_ok=True)
-    front = finish(front_fn())
-    front.save(output / "postcard-front.png", dpi=(POSTCARD.dpi,) * 2)
-    for i, tag in enumerate(tags):
-        back = finish(back_fn(tag))
-        back.save(output / f"{tag}-postcard-back.png", dpi=(POSTCARD.dpi,) * 2)
-        front.save(output / f"{tag}-postcard.pdf", save_all=True, append_images=[back], resolution=POSTCARD.dpi)
-        page = finish(flyer_fn(tag))
-        page.save(output / f"{tag}-flyer.png", dpi=(FLYER.dpi,) * 2)
-        page.save(output / f"{tag}-flyer.pdf", resolution=FLYER.dpi)
-        if i == 0:
-            sides = [at_trim(front, POSTCARD), at_trim(back, POSTCARD)]
-            gap = 160
-            preview = Image.new("RGB", (sides[0].width * 2 + gap * 3, sides[0].height + gap * 2), (214, 212, 206))
-            for j, side in enumerate(sides):
-                preview.paste(side, (gap + j * (side.width + gap), gap))
-            preview.thumbnail((3000, 3000), Image.LANCZOS)
-            preview.save(output / "postcard-preview.png")
-            small = at_trim(page, FLYER)
-            small.thumbnail((1400, 1400), Image.LANCZOS)
-            small.save(output / "flyer-preview.png")
-    print(f"wrote {style}: " + ", ".join(f"{t}-postcard.pdf, {t}-flyer.pdf" for t in tags), flush=True)
+def preview_sheet(pairs: list[tuple[str, Image.Image, Image.Image]]) -> Image.Image:
+    """Every pair at trim, front beside back, one row per line item."""
+    sides = [(tag, at_trim(fr, POSTCARD), at_trim(bk, POSTCARD)) for tag, fr, bk in pairs]
+    w, h = sides[0][1].size
+    gap, header = 120, 110
+    sheet = Image.new("RGB", (2 * w + 3 * gap, len(sides) * (h + header + gap) + gap), (214, 212, 206))
+    d = ImageDraw.Draw(sheet)
+    for i, (tag, fr, bk) in enumerate(sides):
+        y = gap + i * (h + header + gap)
+        d.text((gap, y + 20), tag, font=store.font(64, "Medium"), fill=INK)
+        sheet.paste(fr, (gap, y + header))
+        sheet.paste(bk, (2 * gap + w, y + header))
+    sheet.thumbnail((2400, 2400 * len(sides)), Image.LANCZOS)
+    return sheet
 
 
-def comparison_previews() -> None:
-    for name, vertical in (("postcard", True), ("flyer", False)):
-        previews = [Image.open(path / f"{name}-preview.png") for path in (OUT, OUT / "brand")]
-        w, h = previews[0].size
-        pad, header = 40, 80
-        canvas = Image.new("RGB", ((w + pad) * (1 if vertical else 2) + pad,
-                                   (h + header + pad) * (2 if vertical else 1) + pad), PAPER)
-        d = ImageDraw.Draw(canvas)
-        for i, (preview, title) in enumerate(zip(previews, ("01 / Maximalist", "02 / Minimalist + clouds"))):
-            x = pad if vertical else pad + i * (w + pad)
-            y = pad + i * (h + header + pad) if vertical else pad
-            d.text((x, y + 10), title, font=store.font(38, "Medium"), fill=INK)
-            canvas.paste(preview, (x, y + header))
-        canvas.save(OUT / f"{name}-comparison.png")
-
-
-def main(tags: list[str], style: str = "both") -> None:
+def main(tags: list[str]) -> None:
     bad = [t for t in tags if not re.fullmatch(r"[\w.-]{1,57}", t)]
     if bad:
         sys.exit(f"tags must be letters, digits, dots, dashes or underscores (cleanRef drops others): {bad}")
-    for selected in (("maximalist", "brand") if style == "both" else (style,)):
-        render_set(tags, selected)
-    if all((path / f"{name}-preview.png").exists()
-           for path in (OUT, OUT / "brand") for name in ("postcard", "flyer")):
-        comparison_previews()
+    OUT.mkdir(parents=True, exist_ok=True)
+    pairs = []
+    for tag in tags:
+        front, rear = (finish(side) for side in render(tag))
+        front.save(OUT / f"{tag}-front.png", dpi=(POSTCARD.dpi,) * 2)
+        rear.save(OUT / f"{tag}-back.png", dpi=(POSTCARD.dpi,) * 2)
+        front.save(OUT / f"{tag}-postcard.pdf", save_all=True, append_images=[rear], resolution=POSTCARD.dpi)
+        pairs.append((tag, front, rear))
+        print(f"wrote {tag}-postcard.pdf", flush=True)
+    preview_sheet(pairs).save(OUT / "preview.png")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("tags", nargs="*", help="school referral tags")
-    parser.add_argument("--style", choices=("both", "maximalist", "brand"), default="both")
-    args = parser.parse_args()
-    main(args.tags or SCHOOLS, args.style)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("tags", nargs="*", help=f"line items to render (default: all of {', '.join(LINE_ITEMS)})")
+    main(parser.parse_args().tags or LINE_ITEMS)
