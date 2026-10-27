@@ -49,3 +49,13 @@ describe('fast mode on documents', () => {
     await expect(extract(pdf, client, { fast: true })).rejects.toBeInstanceOf(Anthropic.BadRequestError);
   });
 });
+
+describe('readers set on the server', () => {
+  it('uses the models the server names', async () => {
+    const { client, standard } = fakeClient(() => Promise.resolve(parsed));
+    const readers = { quick: 'claude-sonnet-5-5', document: 'claude-opus-5' };
+    await extract(text, client, { readers });
+    await extract(pdf, client, { readers });
+    expect(standard.mock.calls.map((c) => c[0].model)).toEqual(['claude-sonnet-5-5', 'claude-opus-5']);
+  });
+});

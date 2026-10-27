@@ -38,9 +38,13 @@ export async function POST(request: Request) {
   if (!access.ok) return reply({ ok: false, error: access.error }, access.status);
 
   try {
-    // Messages and screenshots read on Haiku for everyone; syllabi on Opus, in fast mode for Plus
-    // (a third of the wait for twice the price) unless EXTRACT_FAST=0. docs/import-speed.md.
-    const result = await extract(parsed.data, undefined, { fast: !!access.plus && process.env.EXTRACT_FAST !== '0' });
+    // Which model reads is the server's call, never the app's, so it changes on Vercel without a
+    // release (docs/env.md): messages and screenshots on the quick reader (Haiku), documents on the
+    // document reader (Opus), in fast mode for Plus unless EXTRACT_FAST=0. docs/import-speed.md.
+    const result = await extract(parsed.data, undefined, {
+      fast: !!access.plus && process.env.EXTRACT_FAST !== '0',
+      readers: { quick: process.env.EXTRACT_QUICK_MODEL, document: process.env.EXTRACT_DOCUMENT_MODEL },
+    });
     if (!result.ok) {
       // A failed read never costs an import.
       await access.refund();

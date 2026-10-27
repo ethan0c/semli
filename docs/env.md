@@ -31,7 +31,9 @@ Sentry token is.
 | Variable | What it does |
 | --- | --- |
 | `ANTHROPIC_API_KEY` | `/api/extract` reads schedules and syllabi. Secret. |
-| `EXTRACT_FAST` | Optional. `0` turns fast mode off for `/api/extract` (standard speed, half the price). Unset means fast. See `docs/import-speed.md`. |
+| `EXTRACT_QUICK_MODEL` | Optional. The model that reads typed and spoken messages and screenshots. Unset means `claude-haiku-5-5`. Change it here, redeploy, and every app uses it; no release. Run the benchmark first (`npm run eval:extract -- --model <id>`). |
+| `EXTRACT_DOCUMENT_MODEL` | Optional. The model that reads syllabi and other PDFs, and re-reads anything the quick model can't finish. Unset means `claude-opus-5-5`. |
+| `EXTRACT_FAST` | Optional. `0` turns fast mode off for Plus subscribers' documents (standard speed, half the price). Unset means fast for Plus. Free users always read at standard speed. See `docs/import-speed.md`. |
 | `SUPABASE_URL`, `SUPABASE_KEY` | Import limits and the beta waitlist. Same project as the app. |
 | `REVENUECAT_SECRET_KEY` | Confirms a Plus subscriber before a paid import. Secret. Production only. |
 | `TESTFLIGHT_URL` | Set once the public TestFlight link exists; `semli.app/beta` then redirects there. |

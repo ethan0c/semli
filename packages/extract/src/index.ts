@@ -12,10 +12,16 @@ export const MODEL = 'claude-opus-5-5';
  */
 export const QUICK_MODEL = 'claude-haiku-5-5';
 
-/** Which model reads an input. */
-export function modelFor(kind: ExtractRequest['input']['kind']): string {
-  return kind === 'pdf' ? MODEL : QUICK_MODEL;
+/** Server-side overrides, so a model can change on Vercel without an app release. */
+export type Readers = { quick?: string; document?: string };
+
+/** Which model reads an input: the document reader for PDFs, the quick reader for the rest. */
+export function modelFor(kind: ExtractRequest['input']['kind'], readers: Readers = {}): string {
+  return kind === 'pdf' ? readers.document || MODEL : readers.quick || QUICK_MODEL;
 }
+
+/** Fast mode is an Opus feature; any other model reads at its own speed. */
+const hasFast = (model: string) => model.startsWith('claude-opus');
 export const PROMPT_VERSION = '2026-10-27.1';
 
 const SYSTEM = `You read the things busy students and shift workers send to their planner app, Semli, and turn them into calendar events and to-dos.
@@ -64,7 +70,7 @@ export type ExtractResult =
   | { ok: false; error: string };
 
 /** Which model reads (default: `modelFor` the input), and whether Opus runs in fast mode (Plus syllabi). */
-export type ExtractOptions = { model?: string; fast?: boolean };
+export type ExtractOptions = { model?: string; fast?: boolean; readers?: Readers };
 
 export async function extract(req: ExtractRequest, client = new Anthropic(), opts: ExtractOptions = {}): Promise<ExtractResult> {
   const content: Anthropic.ContentBlockParam[] = [];
@@ -83,7 +89,7 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   });
 
   const params = {
-    model: opts.model ?? modelFor(req.input.kind),
+    model: opts.model ?? modelFor(req.input.kind, opts.readers),
     max_tokens: 16000,
     system: [{ type: 'text' as const, text: SYSTEM, cache_control: { type: 'ephemeral' as const } }],
     output_config: {
@@ -98,7 +104,7 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
   // so a 429 there falls back to standard speed rather than failing the import.
   const standard = () => client.messages.parse(params);
   // Fast mode exists only for Opus; on any other model the flag is ignored.
-  const response = opts.fast && params.model === MODEL
+  const response = opts.fast && hasFast(params.model)
     ? await client.beta.messages.parse({ ...params, speed: 'fast', betas: ['fast-mode-2026-02-01'] }).catch((err: unknown) => {
       if (err instanceof Anthropic.RateLimitError) return standard();
       throw err;
@@ -107,7 +113,8 @@ export async function extract(req: ExtractRequest, client = new Anthropic(), opt
 
   // The quick reader handing back nothing usable is never the person's problem: Opus reads it again.
   const usable = response.stop_reason !== 'refusal' && response.stop_reason !== 'max_tokens' && !!response.parsed_output;
-  if (!usable && params.model !== MODEL && !opts.model) return extract(req, client, { ...opts, model: MODEL });
+  const documentReader = opts.readers?.document || MODEL;
+  if (!usable && params.model !== documentReader && !opts.model) return extract(req, client, { ...opts, model: documentReader });
   if (response.stop_reason === 'refusal') {
     return { ok: false, error: IMPORT_MESSAGES.unreadable };
   }
