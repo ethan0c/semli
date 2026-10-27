@@ -88,9 +88,14 @@ describe('app links', () => {
 });
 
 describe('the footer address', () => {
-  it('is small and broken up so mail apps do not turn it into a map link', () => {
-    const html = renderHtml(transactional.welcome, '441 Country Club Road, York, PA 17403-3651, USA');
-    expect(html).toContain('font-size:11px;line-height:16px;color:#686963;text-decoration:none;">4&zwnj;4&zwnj;1 Country Club Road,&zwnj; York,&zwnj; PA 1&zwnj;7&zwnj;4&zwnj;0&zwnj;3-3&zwnj;6&zwnj;5&zwnj;1,&zwnj; USA</p>');
-    expect(html.replace(/&zwnj;/g, '')).toContain('441 Country Club Road, York, PA 17403-3651, USA');
+  const html = renderHtml(transactional.welcome, '441 Country Club Road, York, PA 17403-3651, USA');
+  it('is already a small grey link of ours, so Gmail does not make it a blue map link', () => {
+    expect(html).toContain('<span class="address"><a href="https://www.semli.app/contact" style="color:#686963;text-decoration:none;font-size:11px;line-height:16px;">441 Country Club Road, York, PA 17403-3651, USA</a></span>');
+  });
+  it('keeps the Gmail rule out of the style block with the attribute selector, which Gmail drops whole', () => {
+    const blocks = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
+    const gmail = blocks.find((b) => b.includes('.address a'));
+    expect(gmail).toBeDefined();
+    expect(gmail).not.toContain('[');
   });
 });
