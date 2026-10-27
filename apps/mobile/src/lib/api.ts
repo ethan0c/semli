@@ -10,8 +10,11 @@ export const DEFAULT_API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localh
  * arrived signed out (Oct 27, 2026). Installs keep the old address in their saved settings, so it
  * is corrected here on every call rather than only in the default.
  */
-export function apiBase(apiUrl: string | undefined): string {
-  return (apiUrl || DEFAULT_API_URL).replace(/\/+$/, '').replace(/^https:\/\/semli\.app(?=$|\/)/, 'https://www.semli.app');
+export function apiBase(apiUrl: string | undefined, dev: boolean = typeof __DEV__ === 'undefined' || __DEV__): string {
+  // A release build only talks to Semli: a phone whose development build pointed at a laptop's
+  // address kept sending sign-in tokens there after updating (Oct 27, 2026).
+  const saved = apiUrl && (dev || /^https:\/\/(www\.)?semli\.app(\/|$)/.test(apiUrl)) ? apiUrl : undefined;
+  return (saved || DEFAULT_API_URL).replace(/\/+$/, '').replace(/^https:\/\/semli\.app(?=$|\/)/, 'https://www.semli.app');
 }
 
 /** One row as it's read. */

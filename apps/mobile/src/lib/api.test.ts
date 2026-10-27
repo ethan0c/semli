@@ -96,6 +96,11 @@ describe('apiBase', () => {
     expect(apiBase('http://localhost:3000/')).toBe('http://localhost:3000');
     expect(apiBase('https://semli.application.dev')).toBe('https://semli.application.dev');
   });
+  it('ignores a saved non-Semli address in a release build', async () => {
+    const { apiBase, DEFAULT_API_URL } = await import('./api');
+    expect(apiBase('http://192.168.1.20:3000', false)).toBe(DEFAULT_API_URL.replace(/\/+$/, ''));
+    expect(apiBase('https://semli.app', false)).toBe('https://www.semli.app');
+  });
   it('sends imports to www even when settings hold the old address', async () => {
     const fetch = vi.fn().mockRejectedValue(new TypeError('stop')); vi.stubGlobal('fetch', fetch);
     await requestExtraction('https://semli.app', request);
