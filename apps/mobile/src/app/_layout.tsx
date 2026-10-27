@@ -157,7 +157,7 @@ function RootLayout() {
       const demo = cmd === 'demo' || cmd === 'demo-syllabus';
       if (cmd === 'sample' || cmd === 'moment' || cmd === 'spread' || cmd === 'item' || cmd === 'review' || cmd === 'review-syllabus' || cmd === 'review-update' || cmd === 'hours' || cmd === 'list' || demo) {
         // Every first-time tip counts as seen, so the captures show the screens without them.
-        store.setSettings({ onboarded: true, seeded: true, isStudent: true, major: 'nursing', firsts: { overlap: true, urgent: true, canvas: true, reimport: true, hours: true, week: true, added: true }, ...(cmd === 'hours' || cmd === 'list' ? { todayView: cmd } : {}), breaks: cmd === 'moment' ? [{ label: 'Fall break', start: addDays(today, 9), end: addDays(today, 13) }] : [] });
+        store.setSettings({ onboarded: true, seeded: true, isStudent: true, major: 'nursing', firsts: { overlap: true, urgent: true, canvas: true, reimport: true, hours: true, week: true, added: true, plusImport: true }, ...(cmd === 'hours' || cmd === 'list' ? { todayView: cmd } : {}), breaks: cmd === 'moment' ? [{ label: 'Fall break', start: addDays(today, 9), end: addDays(today, 13) }] : [] });
         if (cmd === 'hours' || cmd === 'list') setDevToday({ noMoment: true });
         if (cmd === 'spread') {
           // Two weeks with a dense run of deadlines, so Today shows the heavy-week moment, its list open.
