@@ -7,6 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { Chip, GroupLabel, TextButton } from '@/components/Controls';
 import { NativeToggle } from '@/components/Native';
+import { Segmented } from '@/components/Segmented';
 import { Button, Sheet } from '@/components/Sheet';
 import { T } from '@/components/Text';
 import { Wordmark } from '@/components/Wordmark';
@@ -15,7 +16,7 @@ import { SHARING_ENABLED } from '@/lib/auth';
 import { reportError } from '@/lib/errors';
 import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
-import { SHARE_CATEGORIES, createShare, shareable, loadShares, shareUrl, stopShare, useShares, type ShareLink } from '@/lib/shares';
+import { SHARE_CATEGORIES, createShare, shareEndsAt, shareable, type ShareEnd, loadShares, shareUrl, stopShare, useShares, type ShareLink } from '@/lib/shares';
 import { accountOf, useSession } from '@/lib/supabase';
 import { useStore } from '@/store';
 import { SCREEN_GUTTER, corner, radius, useTheme, space, size } from '@/theme';
@@ -61,6 +62,7 @@ function ShareSchedule() {
   const links = useShares((s) => s.links);
   const [categories, setCategories] = useState<Category[]>(SHARE_CATEGORIES);
   const [showTitles, setShowTitles] = useState(true);
+  const [end, setEnd] = useState<ShareEnd>('never');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { if (signedIn) loadShares().catch((e: unknown) => reportError('shares.load', e)); }, [signedIn]);
@@ -75,7 +77,7 @@ function ShareSchedule() {
     setBusy(true);
     setError(null);
     try {
-      const url = await createShare(categories, showTitles);
+      const url = await createShare(categories, showTitles, end);
       feedback('success');
       const note = await send(url, 'My schedule');
       showToast(note ?? 'Your link is ready. It stays current while you use Semli.');
@@ -127,6 +129,18 @@ function ShareSchedule() {
               <T token="caption" color={c.inkSecondary}>Switch off to show “Busy” and “To-do” instead.</T>
             </View>
             <NativeToggle label="Show what each plan is" value={showTitles} onChange={setShowTitles} />
+          </View>
+          <View style={{ gap: space.xs }}>
+            <T token="body">Stop sharing</T>
+            <Segmented label="When the link stops" value={end} onChange={setEnd} options={[
+              { key: 'never', label: 'When I stop it' },
+              { key: 'week', label: 'In a week' },
+              { key: 'term', label: 'End of term' },
+            ]} />
+            <T token="caption" color={c.inkSecondary}>
+              {end === 'never' ? 'For a parent: it keeps showing your next two weeks until you stop it.'
+                : `It stops on its own on ${monthDay(localParts(new Date(shareEndsAt(end)!)).date)}. You can stop it sooner.`}
+            </T>
           </View>
         </View>
 
@@ -188,7 +202,7 @@ function LinkRow({ link }: { link: ShareLink }) {
     <View style={[styles.link, { borderBottomColor: c.line }]}>
       <View style={{ gap: space.xxs }}>
         <T token="body">{shows}</T>
-        <T token="caption" color={c.inkSecondary}>Created {monthDay(link.createdAt.slice(0, 10))} · Updated {ago(link.updatedAt)}</T>
+        <T token="caption" color={c.inkSecondary}>{link.expiresAt ? `Stops ${monthDay(localParts(new Date(link.expiresAt)).date)}` : 'Until you stop it'} · Updated {ago(link.updatedAt)}</T>
       </View>
       {confirming ? (
         <View style={{ gap: space.xs }}>

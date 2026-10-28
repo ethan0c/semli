@@ -1,4 +1,4 @@
-import { SHARE_SNAPSHOT_DAYS, addDays, localParts, shareEntries, type SharedEntry } from '@dayli/core';
+import { SHARE_SNAPSHOT_DAYS, addDays, localParts, shareEntries, typicalTermEnd, type SharedEntry } from '@dayli/core';
 import type { Category, Item } from '@dayli/schema';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
@@ -27,7 +27,21 @@ export type ShareLink = {
   options: { categories: Category[]; showTitles: boolean; timezone: string };
   createdAt: string;
   updatedAt: string;
+  /** When the link stops on its own; null runs until it's stopped. */
+  expiresAt: string | null;
 };
+
+/** How long a new link lasts: until it's stopped (the parent's link), a week, or the end of the term. */
+export type ShareEnd = 'never' | 'week' | 'term';
+
+/** The moment a link with this end stops: a week from now, or the last minute of the term's estimated last day. */
+export function shareEndsAt(end: ShareEnd, now = new Date()): string | null {
+  if (end === 'never') return null;
+  if (end === 'week') return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  return new Date(`${typicalTermEnd(localParts(now).date).date}T23:59:00`).toISOString();
+}
+
+const live = (link: ShareLink) => !link.expiresAt || new Date(link.expiresAt).getTime() > Date.now();
 
 /** What a link may show; personal plans are never shared. */
 export const SHARE_CATEGORIES: Category[] = ['school', 'work'];
@@ -56,29 +70,30 @@ export function snapshot(options: Pick<ShareLink['options'], 'categories' | 'sho
   return shareEntries(items, addDays(today, -1), addDays(today, SHARE_SNAPSHOT_DAYS - 1), categories, options.showTitles);
 }
 
-type Row = { id: string; token: string; title: string; options: ShareLink['options']; created_at: string; updated_at: string };
-const toLink = (r: Row): ShareLink => ({ id: r.id, token: r.token, title: r.title, options: r.options, createdAt: r.created_at, updatedAt: r.updated_at });
-const COLUMNS = 'id, token, title, options, created_at, updated_at';
+type Row = { id: string; token: string; title: string; options: ShareLink['options']; created_at: string; updated_at: string; expires_at: string | null };
+const toLink = (r: Row): ShareLink => ({ id: r.id, token: r.token, title: r.title, options: r.options, createdAt: r.created_at, updatedAt: r.updated_at, expiresAt: r.expires_at });
+const COLUMNS = 'id, token, title, options, created_at, updated_at, expires_at';
 
 export async function loadShares(): Promise<void> {
   if (!signedIn()) return;
-  const { data, error } = await supabase!.from('schedule_shares').select(COLUMNS).is('revoked_at', null).order('created_at', { ascending: false });
+  const { data, error } = await supabase!.from('schedule_shares').select(COLUMNS).is('revoked_at', null)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('created_at', { ascending: false });
   if (error) throw error;
   useShares.setState({ links: (data as Row[]).map(toLink), loaded: true });
 }
 
 /** Makes a link and returns its address. The title is the owner's first name, never their email. */
-export async function createShare(categories: Category[], showTitles: boolean): Promise<string> {
+export async function createShare(categories: Category[], showTitles: boolean, end: ShareEnd = 'never'): Promise<string> {
   if (!signedIn()) throw new Error('Sign in to share your schedule.');
   const first = firstOf(useStore.getState().settings.name);
   const options = { categories: categories.filter((c) => SHARE_CATEGORIES.includes(c)), showTitles, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
   const { data, error } = await supabase!.from('schedule_shares')
-    .insert({ title: first ? `${first}’s schedule` : 'My schedule', options, entries: snapshot(options) })
+    .insert({ title: first ? `${first}’s schedule` : 'My schedule', options, entries: snapshot(options), expires_at: shareEndsAt(end) })
     .select(COLUMNS).single();
   if (error) throw error;
   const link = toLink(data as Row);
   useShares.setState((s) => ({ links: [link, ...s.links] }));
-  track('share_link_created', { categories: options.categories.join(','), titles: showTitles });
+  track('share_link_created', { categories: options.categories.join(','), titles: showTitles, ends: end });
   return shareUrl(link.token);
 }
 
@@ -95,7 +110,9 @@ let pushing: Promise<void> | null = null;
 /** Sends every live link a fresh copy of what it shows. A failure waits for the next change or launch. */
 export function pushShares(): Promise<void> {
   pushing ??= (async () => {
-    const { links } = useShares.getState();
+    // A link past its end reads as stopped on the site; it drops out here too.
+    const links = useShares.getState().links.filter(live);
+    useShares.setState({ links });
     if (!signedIn() || !links.length) return;
     const now = new Date().toISOString();
     await Promise.all(links.map(async (link) => {
