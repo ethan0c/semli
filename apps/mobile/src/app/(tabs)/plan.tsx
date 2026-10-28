@@ -32,6 +32,7 @@ import { useNow } from '@/lib/now';
 import { defaultTimes } from '@/lib/times';
 import { useReschedule } from '@/lib/use-reschedule';
 import { useSettling } from '@/lib/use-settling';
+import { isPhoneItemId, openPhoneEvent, useWithPhoneCalendar } from '@/lib/phone-calendar';
 import { useCourseList, useScheduleList, useItemList, useStore } from '@/store';
 import { SCREEN_GUTTER, NAV_INSET, useTheme, shadow, screen, radius, size, space } from '@/theme';
 
@@ -108,7 +109,9 @@ const PlanWeek = memo(function PlanWeek({ start, items, now, selected, onSelect,
 function PlanScreen() {
   const { c } = useTheme();
   const now = useNow();
-  const items = useItemList();
+  // The week and the day show the iPhone's calendar beside the plan, and count it for overlaps.
+  const stored = useItemList();
+  const items = useWithPhoneCalendar(stored);
   const schedules = useScheduleList();
   const courses = useCourseList();
   const toggleDone = useStore((s) => s.toggleDone);
@@ -157,7 +160,7 @@ function PlanScreen() {
   // A wide web window can show the week as a board of day columns instead of the chart and one day.
   const [view, setView] = useState<'week' | 'board'>('week');
   const board = twoPane && view === 'board';
-  const openItem = (id: string) => (twoPane ? setOpenId(id) : router.push(`/item/${id}`));
+  const openItem = (id: string) => (isPhoneItemId(id) ? void openPhoneEvent(id) : twoPane ? setOpenId(id) : router.push(`/item/${id}`));
   const selectDay = useCallback((date: string) => {
     if (date !== selectedRef.current) feedback('select');
     setSelected(date);
@@ -227,7 +230,7 @@ function PlanScreen() {
   // The day's soonest overlap Semli could resolve: the flexible event moves, the other stays.
   const move = useMemo(() => movableOverlap(items, now, shown), [items, now, shown]);
   const reschedule = useReschedule(move?.flexible ?? null, items);
-  const starting = items.length === 0 && schedules.length === 0;
+  const starting = stored.length === 0 && schedules.length === 0;
   const isToday = shown === now.date;
 
   const where = (it: Item) => courses.find((k) => k.id === it.courseId)?.code ?? it.employer ?? (it.category === 'school' ? 'Coursework' : it.category === 'work' ? 'Work' : 'Personal');

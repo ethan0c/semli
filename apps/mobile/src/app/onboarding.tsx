@@ -34,6 +34,7 @@ import { feedback } from "@/lib/feedback";
 import { reportError } from "@/lib/errors";
 import { COLUMN, useWebLayout } from "@/lib/layout";
 import { enter, exit, layout, springs } from "@/lib/motion";
+import { PHONE_CALENDAR_AVAILABLE, turnOnPhoneCalendar, usePhoneCalendar } from "@/lib/phone-calendar";
 import { requestNotifications, syncReminders } from "@/lib/notifications";
 import { usePlusAccess } from "@/lib/plus-access";
 import { purchaseErrorMessage } from "@/lib/revenuecat";
@@ -473,6 +474,7 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
         </View>
       ) : null}
       {!busy ? <RecentShots onPick={(uri) => void openShot(uri)} /> : null}
+      {!busy ? <PhoneCalendarOffer /> : null}
       <View style={[styles.footer, { alignItems: "center" }]}>
         <Press haptic="select" accessibilityRole="button" accessibilityHint={SAMPLE_HINT} disabled={!!busy} onPress={onSample} style={{ minHeight: size.target, justifyContent: "center", alignItems: "center", gap: space.hair }}>
           <T token="subhead" color={c.inkSecondary}>{copy.sample}</T>
@@ -480,6 +482,20 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
         </Press>
       </View>
     </ScrollView>
+  );
+}
+
+/** The iPhone's own calendar beside the plan: offered here once, and kept in You (Oct 28, 2026). */
+function PhoneCalendarOffer() {
+  const { c } = useTheme();
+  const on = usePhoneCalendar((s) => s.on && !s.denied);
+  if (!PHONE_CALENDAR_AVAILABLE) return null;
+  if (on) return <T token="subhead" color={c.inkSecondary}>Your iPhone calendar shows in Today and Plan.</T>;
+  return (
+    <Press haptic="select" accessibilityRole="button" accessibilityHint="Shows events from Outlook, Google and iCloud beside your plan"
+      onPress={() => void turnOnPhoneCalendar("onboarding")} scale={1} style={{ minHeight: size.target, justifyContent: "center", alignSelf: "flex-start" }}>
+      <T token="subhead" color={c.accentInk}>Show your iPhone calendar too</T>
+    </Press>
   );
 }
 

@@ -44,6 +44,7 @@ import { preloadSounds } from '@/lib/feedback';
 import { useStore } from '@/store';
 import { useTheme, headerTitle } from '@/theme';
 import { SURFACE, WEB_VERSION, posthog, posthogLogs } from '@/lib/analytics';
+import { usePhoneCalendarSync } from '@/lib/phone-calendar';
 
 // NativeTabs sends PRELOAD and ROUTE_NAMES_CHANGED actions the stack has no handler for; the
 // warnings are noise (nothing is lost) and their toast sits at the bottom of every dev recording.
@@ -140,6 +141,7 @@ function RootLayout() {
   useAppLanguage();
   useEffect(() => { if (fontError) reportError('fonts.load', fontError); }, [fontError]);
   useReminderSync();
+  usePhoneCalendarSync();
   useNotificationTaps(ready);
   const alarmItems = useStore((s) => s.items);
   const alarmsEnabled = useStore((s) => s.settings.reminders.urgentAlarmsEnabled);

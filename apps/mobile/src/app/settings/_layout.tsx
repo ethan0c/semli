@@ -40,6 +40,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="region" dangerouslySingular options={{ title: t`Region` }} />
       <Stack.Screen name="plan" dangerouslySingular options={{ title: 'Semli Plus', headerTransparent: true, headerStyle: { backgroundColor: 'transparent' }, contentStyle: { backgroundColor: palettes.dark.canvas }, headerTintColor: palettes.dark.inkPrimary, headerTitleStyle: { fontFamily: mobileFonts.medium, color: palettes.dark.inkPrimary, fontSize: 16 } }} />
       <Stack.Screen name="canvas" dangerouslySingular options={{ title: t`Class calendar` }} />
+      <Stack.Screen name="phone-calendar" dangerouslySingular options={{ title: 'iPhone calendar' }} />
       <Stack.Screen name="data" dangerouslySingular options={{ title: t`Your data` }} />
       <Stack.Screen name="can-do" dangerouslySingular options={{ title: t`What Semli can do` }} />
       <Stack.Screen name="plan-status" dangerouslySingular options={{ title: t`Plan diagnostics` }} />

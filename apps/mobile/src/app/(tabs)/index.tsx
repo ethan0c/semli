@@ -34,6 +34,7 @@ import { useScreenShortcuts } from '@/lib/shortcuts';
 import { useNow } from '@/lib/now';
 import { skySlot, skyTextLight } from '@/lib/sky';
 import { useSettling } from '@/lib/use-settling';
+import { isPhoneItemId, openPhoneEvent, useWithPhoneCalendar } from '@/lib/phone-calendar';
 import { useCourseList, useScheduleList, useItemList, useStore } from '@/store';
 import { ACCOUNTS_ENABLED } from '@/lib/auth';
 import { accountOf, useSession } from '@/lib/supabase';
@@ -48,9 +49,13 @@ function TodayScreen() {
   const { sidebar, twoPane } = useWebLayout();
   // A wide web window opens an item in the pane in place of the hours; the X or Esc brings them back.
   const [openId, setOpenId] = useState<string | null>(null);
-  const openItem = (id: string) => (twoPane ? setOpenId(id) : router.push(`/item/${id}`));
+  // An iPhone calendar event opens in iOS's own event view; the calendar is where it changes.
+  const openItem = (id: string) => (isPhoneItemId(id) ? void openPhoneEvent(id) : twoPane ? setOpenId(id) : router.push(`/item/${id}`));
   useScreenShortcuts({ Escape: () => setOpenId(null) }, !!openId);
-  const items = useItemList();
+  // The plan, and the plan with the iPhone's calendar beside it: the day and its overlaps read both,
+  // while suggestions, nudges and the first-run checks read only what is Semli's.
+  const stored = useItemList();
+  const items = useWithPhoneCalendar(stored);
   const schedules = useScheduleList();
   const courses = useCourseList();
   const breaks = useStore((s) => s.settings.breaks);
@@ -65,7 +70,7 @@ function TodayScreen() {
   const undoBatch = useStore((s) => s.undoBatch);
   const signedIn = useSession((s) => !!accountOf(s.session));
   const offerSave = useStore((s) => ACCOUNTS_ENABLED && s.settings.onboarded && !s.settings.savePlanDismissed)
-    && !signedIn && items.some((i) => i.batchId !== sampleBatchId);
+    && !signedIn && stored.some((i) => i.batchId !== sampleBatchId);
   const planTasks = useStore((s) => s.planTasks);
   const unplanTask = useStore((s) => s.unplanTask);
   const dismissSuggestion = useStore((s) => s.dismissSuggestion);
@@ -77,9 +82,9 @@ function TodayScreen() {
   const overdue = useMemo(() => overdueTasks(items, now.date, workDates), [items, now.date, workDates]);
   const dismissed = useMemo(() => dismissals.date === now.date ? dismissals.ids : [], [dismissals, now.date]);
   // Friday afternoon: work due by Monday and a free evening. "Not this weekend" is Friday's own dismissal.
-  const weekend = useMemo(() => dismissed.includes('weekend') ? null : weekendNudge(items, now, workDates), [items, now, workDates, dismissed]);
-  const suggestions = useMemo(() => startTodaySuggestions(items, now, workDates, dismissed)
-    .filter((s) => !weekend?.items.some((i) => i.id === s.item.id)), [items, now, workDates, dismissed, weekend]);
+  const weekend = useMemo(() => dismissed.includes('weekend') ? null : weekendNudge(stored, now, workDates), [stored, now, workDates, dismissed]);
+  const suggestions = useMemo(() => startTodaySuggestions(stored, now, workDates, dismissed)
+    .filter((s) => !weekend?.items.some((i) => i.id === s.item.id)), [stored, now, workDates, dismissed, weekend]);
   const tomorrow = useMemo(() => tomorrowSummary(items, now, workDates), [items, now, workDates]);
   const upcoming = useMemo(() => items.filter((item) => !item.done && item.isDeadline && item.date > now.date && diffDays(now.date, item.date) <= 14
     && !suggestions.some((suggestion) => suggestion.item.id === item.id)).slice(0, 5), [items, now.date, suggestions]);
@@ -94,7 +99,7 @@ function TodayScreen() {
   // Nothing in the next two weeks but a plan further on (next term imported in October): say when
   // it picks up, rather than a bare "Nothing scheduled" that reads as if the import was lost.
   const resumes = useMemo(() => {
-    const ahead = items.filter((i) => !i.done && i.date > now.date).sort((a, b) => a.date.localeCompare(b.date));
+    const ahead = stored.filter((i) => !i.done && i.date > now.date).sort((a, b) => a.date.localeCompare(b.date));
     const first = ahead[0];
     if (!first || diffDays(now.date, first.date) <= 14) return null;
     const classes = ahead.filter((i) => i.kind === 'event' && i.category === 'school' && i.seriesId);
@@ -104,10 +109,10 @@ function TodayScreen() {
       return { date: start.date, title: 'Classes start', sub: `${weekdayLong(start.date)}, ${monthDay(start.date)} · ${count(courses, 'class', 'classes')}` };
     }
     return { date: first.date, title: 'Next in your plan', sub: `${first.title} · ${weekdayLong(first.date)}, ${monthDay(first.date)}` };
-  }, [items, now.date]);
+  }, [stored, now.date]);
   const isSample = items.some((item) => item.sourceId === SAMPLE_SOURCE);
   const devToday = useDevToday();
-  const moment = useMemo(() => (__DEV__ && devToday.noMoment ? null : momentFor(items, breaks ?? [], now.date)), [items, breaks, now.date, devToday.noMoment]);
+  const moment = useMemo(() => (__DEV__ && devToday.noMoment ? null : momentFor(stored, breaks ?? [], now.date)), [stored, breaks, now.date, devToday.noMoment]);
   // A dark sky under a light page (night): the header and the day bar take the dark palette, the
   // sky stays dark behind them down to the end of the bar, and the status bar turns light until
   // the page scrolls past the sky.
@@ -122,7 +127,7 @@ function TodayScreen() {
   }, [skyDark, pastSky]));
   // A moment that can spread its deadlines shows the start days first; nothing changes until "Sounds good".
   const spreadAction = moment?.action && 'spread' in moment.action ? moment.action : null;
-  const spread = useMemo(() => spreadAction ? spreadWork(items, spreadAction.spread, now, workDates, spreadAction.until) : [], [spreadAction, items, now, workDates]);
+  const spread = useMemo(() => spreadAction ? spreadWork(stored, spreadAction.spread, now, workDates, spreadAction.until) : [], [spreadAction, stored, now, workDates]);
   // Closed until opened; a `spread` capture opens it until the person chooses.
   const [spreadChoice, setSpreadOpen] = useState<boolean | null>(null);
   const spreadOpen = spreadChoice ?? (__DEV__ && devToday.spreadOpen);

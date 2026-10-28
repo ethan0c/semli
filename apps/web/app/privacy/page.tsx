@@ -100,6 +100,11 @@ export default function PrivacyPage() {
             Photo access lets Semli show recent screenshots for you to choose from. You can limit access using your iPhone’s permission
             controls. Camera access lets you photograph a printed schedule. Only the image you choose to import is sent for reading.
           </p>
+          <p>
+            Calendar access, if you turn on your iPhone calendar in Semli, lets Semli show the events on the calendars you choose beside
+            your plan and warn you when they overlap. They are read on your iPhone each time Semli opens, and are never sent to us or saved
+            to your account; Semli on the web doesn&apos;t see them.
+          </p>
           <h3>2.8 Speaking instead of typing</h3>
           <p>
             Microphone access lets you say your plans instead of typing them. On iPhone, Apple&apos;s speech recognition turns your voice

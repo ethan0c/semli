@@ -8,6 +8,7 @@ import { CategoryDot, IconButton, StatusPill, itemStatus } from '@/components/Co
 import { Icon } from '@/components/Icon';
 import { PressRow } from '@/components/Press';
 import { SwipeRow } from '@/components/SwipeRow';
+import { isPhoneItemId, phoneCalendarName } from '@/lib/phone-calendar';
 import { T } from '@/components/Text';
 import { useWebLayout } from '@/lib/layout';
 import { durations, ease, springs } from '@/lib/motion';
@@ -32,14 +33,17 @@ export function ItemRow({ item, conflict, planned, today, onPress, onToggle, onD
   const date = today ?? localParts(new Date()).date;
   const status = itemStatus(item, date, conflict);
   const tint = course ? c.tint[courseTint(courses, course.id) ?? 'sky'].ink : c.category[item.category].ink;
-  const where = course?.code ?? item.employer ?? (item.category === 'school' ? 'Coursework' : item.category === 'work' ? 'Work' : 'Personal');
+  // An iPhone calendar event is read-only here: it names its calendar and can't be deleted from Semli.
+  const phone = !!item.id && isPhoneItemId(item.id);
+  const remove = phone ? undefined : onDelete;
+  const where = phone && item.id ? phoneCalendarName(item.id) : course?.code ?? item.employer ?? (item.category === 'school' ? 'Coursework' : item.category === 'work' ? 'Work' : 'Personal');
   const sub = [where, conflict ? 'Overlaps something else' : null, planned ? 'Working on it today' : null].filter(Boolean).join(' · ');
   const [hover, setHover] = useState(false);
   const pointer = Platform.OS === 'web';
   // Touch rows are 64 tall; a pointer on a wide window needs less (desktop lists run 44–52).
   const { sidebar } = useWebLayout();
   return (
-    <SwipeRow onDelete={onDelete} completed={item.done} onComplete={!isEvent && onToggle ? () => {
+    <SwipeRow onDelete={remove} completed={item.done} onComplete={!isEvent && onToggle ? () => {
       // A swipe is easy to make by accident, so completing one offers Undo; the check needs none.
       const completing = !item.done;
       onToggle();
@@ -65,11 +69,11 @@ export function ItemRow({ item, conflict, planned, today, onPress, onToggle, onD
             <T token="caption" color={c.inkSecondary} numberOfLines={1} style={styles.subText}>{item.urgent ? <T token="caption" color={item.done ? c.inkSecondary : c.conflict}>Urgent · </T> : null}{sub}</T>
           </View>
         </View>
-        {hover && onDelete ? null : <StatusPill label={status.label} tone={status.tone} />}
+        {hover && remove ? null : <StatusPill label={status.label} tone={status.tone} />}
         {/* The row opens the item; the chevron says so, as it does on course and settings rows. */}
-        {onPress && !(hover && onDelete) ? <Icon name="chevronRight" size={iconSize.disclosure} color={c.disclosureInk} /> : null}
+        {onPress && !(hover && remove) ? <Icon name="chevronRight" size={iconSize.disclosure} color={c.disclosureInk} /> : null}
       </PressRow>
-      {hover && onDelete ? <IconButton icon="trash" label={`Delete ${item.title}`} size={36} haptic="remove" onPress={onDelete} /> : null}
+      {hover && remove ? <IconButton icon="trash" label={`Delete ${item.title}`} size={36} haptic="remove" onPress={remove} /> : null}
     </View>
     </SwipeRow>
   );

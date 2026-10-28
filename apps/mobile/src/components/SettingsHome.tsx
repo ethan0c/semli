@@ -26,6 +26,7 @@ import { profileFor } from '@/lib/majors';
 import { useCanDo } from '@/lib/can-do';
 import { useNotificationsAllowed } from '@/lib/notifications';
 import { freeImportAllowance } from '@/lib/plans';
+import { PHONE_CALENDAR_AVAILABLE, usePhoneCalendar } from '@/lib/phone-calendar';
 import { PLUS_ENTITLEMENT } from '@/lib/revenuecat';
 import { usePurchases } from '@/providers/PurchasesProvider';
 import { useOpenSetting } from '@/lib/settings-pane';
@@ -49,6 +50,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
   const canDo = useCanDo();
   const notificationsOn = useNotificationsAllowed();
   const openSetting = useOpenSetting();
+  const phoneCalendarOn = usePhoneCalendar((s) => s.on && !s.denied);
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const [openedAt] = useState(() => Date.now());
   const open = async (url: string, fallback: string) => {
@@ -104,6 +106,8 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
         <Group title={t`Preferences`}>
           <Row label={t`Reminders`} icon="bell" value={reminderStatus} onPress={() => openSetting('reminders')} />
           <Row label={t`Class calendar`} icon="book" value={canvasStatus} onPress={() => openSetting('canvas')} />
+          {/* Only the iPhone can read its own calendar; the web has no such row. */}
+          {PHONE_CALENDAR_AVAILABLE ? <Row label="iPhone calendar" icon="calendar" value={phoneCalendarOn ? t`On` : t`Off`} onPress={() => openSetting('phone-calendar')} /> : null}
           {LANGUAGE_PICKER ? <Row label={t`Language`} icon="globe" value={LANGUAGES.find((l) => l.id === settings.language)?.name ?? (SYSTEM_NAME === 'system' ? t`Match system` : t`Match iPhone`)} onPress={() => openSetting('language')} /> : null}
           <Row label={t`Region`} icon="globe" value={regionName(settings.region ?? deviceRegion(), i18n.locale)} onPress={() => openSetting('region')} />
           <Row label={t`Appearance`} icon="appearance" value={appearanceLabels[settings.appearance]} onPress={() => openSetting('appearance')} />

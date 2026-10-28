@@ -4,6 +4,7 @@ import {
   addDays,
   diffSchedule,
   findConflicts,
+  PHONE_CALENDAR_SOURCE,
   findOverloads,
   dateLocaleFrom,
   formatHour,
@@ -125,6 +126,15 @@ describe('conflicts and overload', () => {
     expect(o2).toEqual([]);
     const o3 = findOverloads([...items, item({ id: 's3', date: '2026-10-26', start: '07:00', end: '08:30' })], { date: '2026-10-24', time: '06:00' });
     expect(o3).toEqual([{ deadlineId: 'exam', freeHours: 2.5 }]);
+  });
+  it('counts iPhone calendar events against the plan, never against each other', () => {
+    const phone = { sourceId: PHONE_CALENDAR_SOURCE };
+    const c = findConflicts([
+      item({ id: 'standup', date: '2026-10-26', start: '09:00', end: '10:00', ...phone }),
+      item({ id: 'one-on-one', date: '2026-10-26', start: '09:30', end: '10:30', ...phone }),
+      item({ id: 'lecture', date: '2026-10-26', start: '10:00', end: '11:00' }),
+    ]);
+    expect(c).toEqual([{ a: 'one-on-one', b: 'lecture', minutes: 30 }]);
   });
   it('gives an event with no end the hour the charts draw', () => {
     const c = findConflicts([

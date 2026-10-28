@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { createContext, useContext } from 'react';
 
 /** The settings that open in You's pane on a wide web window; Your plan keeps its own photo page. */
-export const PANE_SETTINGS = ['name', 'major', 'reminders', 'canvas', 'language', 'region', 'appearance', 'can-do', 'data', 'plan-status', 'server'] as const;
+export const PANE_SETTINGS = ['name', 'major', 'reminders', 'canvas', 'phone-calendar', 'language', 'region', 'appearance', 'can-do', 'data', 'plan-status', 'server'] as const;
 export type SettingKey = (typeof PANE_SETTINGS)[number];
 
 export const isSettingKey = (value: unknown): value is SettingKey => (PANE_SETTINGS as readonly unknown[]).includes(value);

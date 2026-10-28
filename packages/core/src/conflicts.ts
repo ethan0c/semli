@@ -2,7 +2,14 @@ import type { Item } from '@dayli/schema';
 import { addDays, dayNumber, toMinutes } from './dates';
 import { eventInterval, intervalOf, overlap, union, type Interval } from './intervals';
 
-type Timed = Pick<Item, 'id' | 'kind' | 'date' | 'start' | 'end' | 'done'>;
+type Timed = Pick<Item, 'id' | 'kind' | 'date' | 'start' | 'end' | 'done'> & { sourceId?: string | null };
+
+/**
+ * Events read from the iPhone's own calendar, shown beside the plan but never saved in it. They
+ * count for overlaps with the plan, never with each other: two meetings that overlap in Outlook
+ * are Outlook's business.
+ */
+export const PHONE_CALENDAR_SOURCE = 'phone-calendar';
 
 export interface Conflict {
   a: string;
@@ -14,13 +21,14 @@ export interface Conflict {
 export function findConflicts(items: Timed[]): Conflict[] {
   const timed = items
     .filter((i) => i.kind === 'event' && !i.done)
-    .map((i) => ({ id: i.id, iv: eventInterval(i) }))
-    .filter((x): x is { id: string; iv: Interval } => x.iv !== null)
+    .map((i) => ({ id: i.id, iv: eventInterval(i), phone: i.sourceId === PHONE_CALENDAR_SOURCE }))
+    .filter((x): x is { id: string; iv: Interval; phone: boolean } => x.iv !== null)
     .sort((x, y) => x.iv.start - y.iv.start);
 
   const out: Conflict[] = [];
   for (let i = 0; i < timed.length; i++) {
     for (let j = i + 1; j < timed.length && timed[j]!.iv.start < timed[i]!.iv.end; j++) {
+      if (timed[i]!.phone && timed[j]!.phone) continue;
       const minutes = overlap(timed[i]!.iv, timed[j]!.iv);
       if (minutes > 0) out.push({ a: timed[i]!.id, b: timed[j]!.id, minutes });
     }

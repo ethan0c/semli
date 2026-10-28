@@ -18,13 +18,14 @@ import DataScreen from '../settings/data';
 import LanguageScreen from '../settings/language';
 import MajorScreen from '../settings/major';
 import NameScreen from '../settings/name';
+import PhoneCalendarScreen from '../settings/phone-calendar';
 import PlanStatusScreen from '../settings/plan-status';
 import RegionScreen from '../settings/region';
 import RemindersScreen from '../settings/reminders';
 import ServerScreen from '../settings/server';
 
 const SCREENS: Record<SettingKey, ComponentType> = {
-  name: NameScreen, major: MajorScreen, reminders: RemindersScreen, canvas: CanvasScreen, language: LanguageScreen, region: RegionScreen,
+  name: NameScreen, major: MajorScreen, reminders: RemindersScreen, canvas: CanvasScreen, 'phone-calendar': PhoneCalendarScreen, language: LanguageScreen, region: RegionScreen,
   appearance: AppearanceScreen, 'can-do': CanDoScreen, data: DataScreen, 'plan-status': PlanStatusScreen, server: ServerScreen,
 };
 
@@ -49,7 +50,7 @@ function YouTab() {
   if (!twoPane) return <SettingsHome inTab />;
 
   const titles: Record<SettingKey, string> = {
-    name: t`Name`, major: t`Field of study`, reminders: t`Reminders`, canvas: 'Canvas', language: t`Language`, region: t`Region`,
+    name: t`Name`, major: t`Field of study`, reminders: t`Reminders`, canvas: 'Canvas', 'phone-calendar': 'iPhone calendar', language: t`Language`, region: t`Region`,
     appearance: t`Appearance`, 'can-do': t`What Semli can do`, data: t`Your data`, 'plan-status': t`Plan diagnostics`, server: t`Semli server`,
   };
   const Screen = open ? SCREENS[open] : null;
