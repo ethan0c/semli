@@ -334,6 +334,9 @@ export function useLeaveIfSignedIn(enabled = true) {
  * only closed a screen left people unsure it had worked. `message` replaces the line (a new password).
  */
 export function leaveAuth(message?: string) {
+  // Only text: wired straight to a button's onPress, the tap event arrived here as the message and
+  // the toast tried to render it, crashing the first screen after "Get started" (Oct 27, 2026).
+  if (typeof message !== 'string') message = undefined;
   // The web has no cover to dismiss: the callback page, or a typed URL, may be the only screen.
   if (Platform.OS === 'web') router.replace(useStore.getState().settings.onboarded ? '/' : '/onboarding?step=role');
   else if (useStore.getState().settings.onboarded) router.dismissTo('/');

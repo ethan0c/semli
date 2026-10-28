@@ -116,7 +116,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <TextButton label={forgot ? 'Back to sign in' : signup ? 'Already have an account? Sign in' : 'New to Semli? Sign up'} tone="muted"
             disabled={busy}
             onPress={() => { setPassword(''); if (forgot && router.canGoBack()) router.back(); else router.replace({ pathname: signup || forgot ? '/auth/login' : '/auth/signup', params: carried() }); }} style={styles.footerLink} />
-          {ACCOUNT_REQUIRED ? null : <TextButton label="Continue as a guest" tone="muted" disabled={busy} onPress={leaveAuth} style={styles.footerLink} />}
+          {ACCOUNT_REQUIRED ? null : <TextButton label="Continue as a guest" tone="muted" disabled={busy} onPress={() => leaveAuth()} style={styles.footerLink} />}
         </View>
       </ScrollView>
     </Sheet>

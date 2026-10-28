@@ -241,7 +241,9 @@ export const useStore = create<State>()(
 
       setHydrated: () => set({ hydrated: true }),
       setPending: (pending) => set({ pending: pending ? { at: nowIso(), ...pending } : null }),
-      showToast: (message, batchId) => set({ toast: { message, batchId } }),
+      // A toast is text or nothing: anything else (a tap event passed by mistake) is dropped here
+      // rather than crashing the screen that renders it.
+      showToast: (message, batchId) => (typeof message === 'string' ? set({ toast: { message, batchId: typeof batchId === 'string' ? batchId : undefined } }) : undefined),
       showDoneToast: (done) => {
         if (!done.length) return;
         set({ toast: { message: done.length === 1 ? `Done: ${done[0]!.title}.` : `Marked ${done.length} done.`, doneIds: done.map((it) => it.id) } });
