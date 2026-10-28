@@ -26,6 +26,11 @@ account holders.
 - **Voice.** The mic in Add uses the browser's own speech recognition (`lib/voice.web.ts`): Chrome,
   Edge and Safari, hidden in Firefox. The browser asks for the microphone on the first click; Chrome
   sends the audio to Google, Edge to Microsoft, Safari to Apple (privacy §2.8).
+- **Analytics and errors** go to the same PostHog and Sentry projects as the iPhone. Every PostHog
+  event and Sentry error carries `platform` (`ios` or `web`); filter on it, not on OS or device type,
+  which Safari on an iPhone shares with the app. Web events add `app_version` (version + commit) and
+  web errors use the release `app.semli.web@<version>+<commit>`; `vercel.json` passes the commit in.
+  Web stack traces stay minified until source maps are uploaded (not set up).
 - **Dates and times** use the browser's own pickers.
 - **Reminders and ringing alarms** ring on the iPhone. The web edits their settings and says so.
 - **Canvas** feeds can't be read from another site's page, so the web fetches them through
