@@ -1,6 +1,6 @@
 # The web planner
 
-Status: built Oct 22, 2026, not yet deployed. The plan and sketches: the "Semli Web Plan" artifact.
+Status: built Oct 22, 2026; rechecked in Chrome for 1.2 on Oct 28 (every tab, Add, the item pane, shortcuts, voice), not yet deployed. The plan and sketches: the "Semli Web Plan" artifact.
 
 The planner on a laptop is the Expo app's web build (`apps/mobile`, `npx expo export -p web`), the
 same screens as the iPhone with a desktop layout, served at `app.semli.app`. The Next.js site
@@ -23,6 +23,9 @@ account holders.
 - **Pointer.** Rows highlight under the pointer and show Delete in place of the pill (a mouse can't
   swipe). A file dropped anywhere, or an image pasted with ⌘V, opens Add and imports it
   (`lib/web-drop.ts`).
+- **Voice.** The mic in Add uses the browser's own speech recognition (`lib/voice.web.ts`): Chrome,
+  Edge and Safari, hidden in Firefox. The browser asks for the microphone on the first click; Chrome
+  sends the audio to Google, Edge to Microsoft, Safari to Apple (privacy §2.8).
 - **Dates and times** use the browser's own pickers.
 - **Reminders and ringing alarms** ring on the iPhone. The web edits their settings and says so.
 - **Canvas** feeds can't be read from another site's page, so the web fetches them through
@@ -51,8 +54,8 @@ Without the key the paywall says Plus on the web is on its way. Prices match the
 
 ## Setup before launch
 
-1. **Database.** `supabase db push` for `20261022120000_plan_records.sql`. Then, in Database →
-   Replication, confirm `plan_records` is in the `supabase_realtime` publication.
+1. **Database.** Done (checked Oct 28): every migration through `20261027180000` is on the linked
+   project, and `20261022120000_plan_records.sql` adds `plan_records` to `supabase_realtime` itself.
 2. **Supabase redirect URLs** (Authentication → URL Configuration → Redirect URLs). Without these,
    Google sends people to the Site URL (semli.app) instead of back to the planner:
    `https://app.semli.app/auth/callback`, and for development `http://localhost:8081/auth/callback`
@@ -68,10 +71,24 @@ Without the key the paywall says Plus on the web is on its way. Prices match the
    Managed Payments for sales tax. Copy the public key (`rcb_…`; sandbox `rcb_sb_…` for development)
    into `EXPO_PUBLIC_REVENUECAT_WEB_API_KEY`.
 6. **Hosting.** A Vercel project with root `apps/mobile` (it has a `vercel.json`: `npx expo export -p web`,
-   output `dist`, every path rewritten to `index.html`), domain `app.semli.app`, and the mobile
-   environment variables with `EXPO_PUBLIC_API_URL=https://www.semli.app`.
+   output `dist`, every path rewritten to `index.html`) and domain `app.semli.app`. Environment
+   variables for Production (the build inlines them, so a change needs a redeploy):
+   - `EXPO_PUBLIC_API_URL=https://www.semli.app`
+   - `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_KEY`: the same as `.env.production`
+   - `EXPO_PUBLIC_POSTHOG_KEY`, `EXPO_PUBLIC_POSTHOG_HOST`, `EXPO_PUBLIC_SENTRY_DSN`: the same
+   - `EXPO_PUBLIC_REVENUECAT_WEB_API_KEY=rcb_…` once step 5 is done; until then the paywall says Plus
+     on the web is on its way
+   - `EXPO_PUBLIC_APPLE_WEB_SIGNIN=true` only after step 4
+   - Not needed: the iOS and Android RevenueCat keys, `SENTRY_AUTH_TOKEN` (the build deletes source maps).
 7. **Site.** Flip `WEB_APP_LIVE` in `apps/web/lib/site.ts` to show "Open Semli" in the site header.
-8. **Legal.** Terms and privacy: web billing through Stripe, refunds, and Canvas feeds fetched by the server.
+8. **Legal.** Privacy already covers Canvas feeds fetched by the server (§2.2) and speech on the web
+   (§2.8, Oct 28). Still to write, once web billing is on: privacy §1 names only the iPhone app and the
+   site, §2.4 says purchase records come from Apple, §2.6 says purchases are handled by Apple; Terms
+   need web billing through Stripe and its refunds.
+9. **After the first deploy, on app.semli.app.** Create an account with email and with Google (Google
+   must come back to `/auth/callback`, not semli.app); add an item on the iPhone and see it on the web
+   within a few seconds, then the other way; connect a Canvas feed; speak into Add in Chrome and in
+   Safari; then flip step 7.
 
 ## Not built yet
 
