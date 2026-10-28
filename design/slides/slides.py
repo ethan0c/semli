@@ -10,6 +10,8 @@ first comment for each set land in out/<set>/caption.txt.
 Text stays out of the bottom 250 px (TikTok's caption bar) and the right 130 px (its buttons).
 `~words~` in a title is the one lavender phrase, the way render-screenshots.py marks it. The
 screens are design/screenshots/raw/<name>.png; the syllabus page is drawn here as a prop.
+Edit the slide text, post captions and first comments together in DECKS, then regenerate every
+affected set. Read the rendered slides in order before calling a wording change finished.
 Needs Pillow.
 """
 from __future__ import annotations
@@ -50,49 +52,49 @@ class Deck:
     slides: list[Slide] = field(default_factory=list)
 
 
-END = Slide('semli.app', 'Free on iPhone. Link in bio.', end=True)
+END = Slide('Try Semli.', 'Get it on iPhone. Link in bio.', end=True)
 
 DECKS = [
     Deck('overlap',
-         'The shift that lands on your lab. Semli flags it before you save anything. #nursingstudent #collegestudent #workingstudent #studytok',
-         'Semli reads your syllabus and your shift screenshot onto one calendar and marks overlaps in red. The calendar, to-dos and reminders are free; Plus adds unlimited imports. Link in bio.',
+         'Your shift and your study group are at the same time. Semli puts them on one plan so you can catch the clash. #workingstudent #college #studentplanner',
+         'Overlap warnings are free. Add your plans by hand or import a syllabus or shift screenshot. You get five AI imports to start, then three a month.',
          [
-             Slide('A shift that lands on your lab. You find out ~the day of~, unless something checks first.'),
-             Slide('Work is in one app. Classes are in another.', 'Nothing compares them, so you do, from memory.'),
-             Slide('Put both on one week. An overlap turns red before you save anything.', screen='today'),
-             Slide('Then you can swap the shift a week early, while a swap is still possible.', screen='plan'),
+             Slide('Your shift and your study group are ~at the same time~.'),
+             Slide('Checking two schedules ~gets old~.', 'Especially when your shifts change every week.'),
+             Slide('See school and work ~together~.', 'Add your classes, shifts and study plans to Semli.', screen='today-hours'),
+             Slide('Check what needs ~to move~.', 'Open an overlap to see which plans clash.', screen='overlap-fix'),
              END,
          ]),
     Deck('syllabus',
-         'Nine dates in one PDF, and where they end up. #syllabus #collegestudent #nursingschool #studytok',
-         'Semli reads the syllabus, lists every date it found so you can check them, and adds them in one tap. The calendar, to-dos and reminders are free; Plus adds unlimited imports. Link in bio.',
+         'Got your syllabus? Upload the PDF to Semli, check the dates it finds and add them to your plan. Less typing at the start of term. #syllabus #college #studentplanner',
+         'One syllabus PDF counts as one import. You get five AI imports to start, then three a month. Plus adds unlimited imports. Download Semli through the link in our bio.',
          [
-             Slide('A syllabus has ~nine dates~ in it. Here’s where they end up.', prop='syllabus'),
-             Slide('Drop the PDF in. Every exam, quiz and due date is listed, so you can check them before adding.', screen='review-syllabus'),
-             Slide('One tap, and the whole term is on your calendar next to your shifts.', screen='plan'),
+             Slide('Get those due dates ~out of the PDF~.', 'Put them somewhere you’ll actually check.', prop='syllabus'),
+             Slide('Upload it. ~Check the dates~.', 'Fix anything Semli missed or got wrong before you save.', screen='review-syllabus'),
+             Slide('Plan your week ~around what’s due~.', 'See your course dates alongside your work shifts.', screen='plan'),
              END,
          ]),
     Deck('five-things',
-         'Five things to know before your first semester working and in school. #workingstudent #collegetips #nursingstudent #studytok',
-         'Number 1 is what we built Semli for: shifts and classes on one calendar, with overlaps marked. The calendar, to-dos and reminders are free; Plus adds unlimited imports. Link in bio.',
+         'A changing work schedule can make college harder to keep track of. A few habits that can help, whether you use Semli, a calendar or a notebook. #workingstudent #collegetips #studentplanner',
+         'Semli is the planner shown here. Add a syllabus or a shift screenshot, check the dates, and keep them together. Free to download on iPhone. Link in bio.',
          [
-             Slide('5 things to know before your first semester ~working and in school~.'),
-             Slide('1. Put your shifts and your classes on the same calendar.', 'The overlap you can’t see is the one that gets you.', screen='plan'),
-             Slide('2. Read the syllabus properly in week one.', 'Every exam date for the term is already in it. Get them out of the PDF and onto your calendar.'),
-             Slide('3. Your manager’s schedule screenshot is a calendar.', 'Add it the day it arrives, not the night before the shift.'),
-             Slide('4. Set reminders for the evening before.', 'That leaves time to actually do the thing.'),
-             Slide('5. Pick one place and check it every morning.', 'Before Canvas, before the group chat.', screen='today'),
+             Slide('5 things that help with ~classes and shifts~.'),
+             Slide('1. Check your shifts ~against your classes~.', 'Do it when the schedule comes out, while there’s time to ask about a clash.', screen='plan'),
+             Slide('2. Add ~due dates~ when you get them.', 'Include the ones from emails and group chats, too.'),
+             Slide('3. Leave time ~to do the work~.', 'Put a study session on your calendar before the deadline gets close.'),
+             Slide('4. Set reminders ~early enough to help~.', 'Give yourself time to prepare, get there or hand something in.'),
+             Slide('5. Check your plan ~each morning~.', 'See what’s due and when you need to leave.', screen='today'),
              END,
          ]),
     Deck('four-apps',
-         'Four apps for students who also work. One of them is ours. #studentapps #workingstudent #collegestudent #studytok',
-         'Semli is the second one. It reads syllabi and shift screenshots onto one calendar and marks overlaps. The calendar, to-dos and reminders are free; Plus adds unlimited imports. Link in bio.',
+         'Flashcards, lecture notes, a study timer and a place for your schedule. Four apps to try if you’re balancing college with a job. We make Semli. #studentapps #workingstudent #college',
+         'Semli is free to download on iPhone through the link in our bio. What do you use to keep track of class and work?',
          [
-             Slide('4 apps for students who ~also work~. One of them is ours.'),
-             Slide('Quizlet', 'Flashcards on the bus and between shifts.'),
-             Slide('Semli', 'Your syllabus and your shift screenshot, read onto one calendar. Overlaps turn red.', screen='plan'),
-             Slide('GoodNotes', 'Lecture notes on the iPad that you can search in finals week.'),
-             Slide('Forest', 'A timer that keeps you off your phone while you study.'),
+             Slide('4 apps to try for ~college and work~.', 'We make Semli, one of the apps on this list.'),
+             Slide('Quizlet: ~review between classes~.', 'Make flashcards for the material you need to remember.'),
+             Slide('Semli: ~keep track of your week~.', 'Put class dates and work shifts in one plan, and check where they overlap.', screen='plan'),
+             Slide('Goodnotes: ~keep your notes together~.', 'Write lecture notes and find them again when it’s time to study.'),
+             Slide('Forest: ~make time to focus~.', 'Set a study timer and grow a virtual tree while you focus.'),
              END,
          ]),
 ]
