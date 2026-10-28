@@ -27,7 +27,7 @@
           "canvas"
         ],
         "releaseNotes": "Connect your Brightspace calendar, including eLC, as well as Canvas. When you import a syllabus, Semli now points out anything it wasn't sure about, lets you leave items out, and lets you set times for repeating classes. A review you didn't finish comes back if Semli closes. Undo is safer and shows up on more screens, Today shows when classes start, and overnight shifts count in full. Fixes imports failing right after install and a crash after Get started.",
-        "promoText": "Turn your syllabus and work schedules into one plan for classes, shifts, and deadlines. Review the dates, then see what’s next.",
+        "promoText": "Registered for spring? Add your classes now. Import a syllabus, a schedule screenshot, or your Canvas or Brightspace calendar, and see the whole term in one plan.",
         "marketingUrl": "https://semli.app",
         "supportUrl": "https://semli.app/contact",
         "privacyPolicyUrl": "https://semli.app/privacy"
@@ -52,7 +52,7 @@
           "organiser"
         ],
         "releaseNotes": "Connect your Brightspace calendar as well as Canvas. When you import a module handbook, Semli now points out anything it wasn't sure about, lets you leave items out, and lets you set times for repeating lectures. A review you didn't finish comes back if Semli closes. Undo is safer and shows up on more screens, Today shows when lectures start, and overnight shifts on your rota count in full. Fixes imports failing right after install and a crash after Get started.",
-        "promoText": "Turn your module handbooks and rotas into one plan for lectures, shifts and deadlines. Review the dates, then see what's next.",
+        "promoText": "New term coming up? Import a module handbook, a timetable screenshot, or your Canvas or Brightspace calendar, and see lectures, shifts and deadlines in one plan.",
         "marketingUrl": "https://semli.app",
         "supportUrl": "https://semli.app/contact",
         "privacyPolicyUrl": "https://semli.app/privacy"
@@ -76,7 +76,7 @@
           "organiser"
         ],
         "releaseNotes": "Connect your Brightspace calendar as well as Canvas. When you import a unit outline, Semli now points out anything it wasn't sure about, lets you leave items out, and lets you set times for repeating lectures. A review you didn't finish comes back if Semli closes. Undo is safer and shows up on more screens, Today shows when lectures start, and overnight shifts on your roster count in full. Fixes imports failing right after install and a crash after Get started.",
-        "promoText": "Turn your unit outlines and rosters into one plan for lectures, shifts and deadlines. Review the dates, then see what's next.",
+        "promoText": "Planning next semester? Import a unit outline, a timetable screenshot, or your Canvas or Brightspace calendar, and see lectures, shifts and deadlines in one plan.",
         "marketingUrl": "https://semli.app",
         "supportUrl": "https://semli.app/contact",
         "privacyPolicyUrl": "https://semli.app/privacy"
@@ -100,7 +100,7 @@
           "canvas"
         ],
         "releaseNotes": "Connect your Brightspace calendar as well as Canvas. When you import a syllabus or course outline, Semli now points out anything it wasn't sure about, lets you leave items out, and lets you set times for repeating classes. A review you didn't finish comes back if Semli closes. Undo is safer and shows up on more screens, Today shows when classes start, and overnight shifts count in full. Fixes imports failing right after install and a crash after Get started.",
-        "promoText": "Turn your syllabus and work schedules into one plan for classes, shifts and deadlines. Review the dates, then see what’s next.",
+        "promoText": "Registered for winter term? Add your classes now. Import a syllabus, a schedule screenshot, or your Canvas or Brightspace calendar, and see the term in one plan.",
         "marketingUrl": "https://semli.app",
         "supportUrl": "https://semli.app/contact",
         "privacyPolicyUrl": "https://semli.app/privacy"
