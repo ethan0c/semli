@@ -100,6 +100,13 @@ export default function PrivacyPage() {
             Photo access lets Semli show recent screenshots for you to choose from. You can limit access using your iPhone’s permission
             controls. Camera access lets you photograph a printed schedule. Only the image you choose to import is sent for reading.
           </p>
+          <h3>2.8 Speaking instead of typing</h3>
+          <p>
+            Microphone access lets you say your plans instead of typing them. On iPhone, Apple&apos;s speech recognition turns your voice
+            into text, on the phone when it can and otherwise on Apple&apos;s servers. On the web, your browser&apos;s speech recognition does
+            it: Chrome sends the audio to Google, Edge to Microsoft, and Safari to Apple. Semli never receives the audio, only the text,
+            which is sent for reading like a typed message.
+          </p>
         </section>
 
         <section>

@@ -152,7 +152,7 @@ function PlanScreen() {
     if (!settings.firsts.week) setSettings({ firsts: { ...settings.firsts, week: true } });
   }, []);
   // A wide web window opens an item beside the list instead of on its own screen.
-  const { twoPane } = useWebLayout();
+  const { sidebar, twoPane } = useWebLayout();
   const [openId, setOpenId] = useState<string | null>(null);
   // A wide web window can show the week as a board of day columns instead of the chart and one day.
   const [view, setView] = useState<'week' | 'board'>('week');
@@ -330,7 +330,7 @@ function PlanScreen() {
             days.some((d) => d.unknown) && { glyph: 'outline', color: c.changed, label: 'Needs a time' },
             thisWeek && { glyph: 'now', color: c.inkPrimary, label: 'Now' },
           ])} />
-          {legendSeen ? null : <T token="caption" color={c.inkSecondary}>Swipe for next week.</T>}
+          {legendSeen ? null : <T token="caption" color={c.inkSecondary}>{sidebar ? '⇧→ for next week.' : 'Swipe for next week.'}</T>}
         </View>
 
         <Animated.View layout={layout} style={styles.section}>

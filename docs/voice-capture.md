@@ -17,7 +17,7 @@ On Add, tap the mic, talk the way you'd text a friend, watch the words appear as
 | Network fallback | Allowed; on-device whenever the phone supports it | If the on-device model is missing, Apple recognises over its network. That is Apple's server, not ours; the privacy page must say so before release. Decided Oct 21, 2026. |
 | Where the mic shows | Add only. Not the onboarding composer. | Onboarding should not add a permission prompt before the first result. Revisit with data. |
 | Free or Plus | Same as text: counts toward the 3 free imports a month | Voice is an input, not a feature. Gating it would gate the free path's best moment. |
-| Platforms | iOS. Hidden on web. | The app is iOS plus web; web speech APIs differ and the site has its own try-it. |
+| Platforms | iOS, and the web planner where the browser has speech recognition (Chrome, Edge, Safari; hidden in Firefox). | Added to the web Oct 28, 2026 for 1.2: `lib/voice.web.ts`, the same hook on the browser's own recognizer. Chrome sends the audio to Google, Edge to Microsoft, Safari to Apple; the privacy page says so. The bars come from the microphone through an analyser, and the mic permission is asked before listening starts. |
 
 ## 3. The flow
 
