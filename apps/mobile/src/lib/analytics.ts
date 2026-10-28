@@ -88,7 +88,10 @@ export type AnalyticsEvent =
   | 'phone_calendar_permission'
   | 'phone_calendar_off'
   | 'term_over_shown'
-  | 'term_over_action';
+  | 'term_over_action'
+  | 'share_link_created'
+  | 'share_link_stopped'
+  | 'share_link_sent';
 
 export function track(event: AnalyticsEvent, properties: Record<string, string | number | boolean | null> = {}): void {
   if (posthog) {

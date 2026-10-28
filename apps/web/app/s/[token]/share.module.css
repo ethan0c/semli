@@ -1,0 +1,71 @@
+/* A shared schedule: the plan's own rows, plain paper, no photo (planner screens stay plain). */
+.page {
+  gap: 32px;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.title {
+  font-size: clamp(32px, 6vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-weight: var(--type-display-weight);
+  text-wrap: balance;
+}
+.meta {
+  font-size: var(--type-callout-size);
+  line-height: var(--type-callout-line);
+  color: var(--ink-2);
+}
+.day {
+  display: flex;
+  flex-direction: column;
+}
+.date {
+  font-size: var(--type-headline-size);
+  line-height: var(--type-headline-line);
+  font-weight: var(--type-headline-weight);
+  padding-bottom: 4px;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  min-height: 52px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.what {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.when {
+  flex-shrink: 0;
+  font-size: var(--type-subhead-size);
+  line-height: var(--type-subhead-line);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 16px;
+  font-size: var(--type-callout-size);
+  color: var(--ink-2);
+}

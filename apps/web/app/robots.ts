@@ -3,7 +3,7 @@ import { SITE_URL, absoluteUrl } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/', '/delete-account'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/', '/delete-account', '/s/'] }],
     sitemap: absoluteUrl('/sitemap.xml'),
     host: SITE_URL,
   };
