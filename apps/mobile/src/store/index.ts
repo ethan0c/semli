@@ -78,6 +78,8 @@ interface Settings {
   sampleBatchId: string | null;
   /** The guest's one-time "Save your plan" row on Today was dismissed. */
   savePlanDismissed: boolean;
+  /** The last class of the term whose "term is over" row on Today was answered, so it asks once a term. */
+  termOverSeen?: string | null;
   appearance: Appearance;
   /** This device's app language; null follows its preferred languages. Not synced to the account. */
   language: AppLanguage | null;
@@ -196,6 +198,8 @@ interface State {
   removeItems: (ids: string[], label: string) => void;
   /** Drop a course: the course and every item in it, one Undo. */
   removeCourse: (courseId: string) => void;
+  /** Several courses and their plans in one undoable step: the old term's, when the next begins. */
+  removeCourses: (courseIds: string[]) => void;
   /** The person's own colour for a course's dot. */
   setCourseColor: (courseId: string, color: TintName) => void;
   /** Quit a job: upcoming shifts only, or everything including past shifts and the schedules. */
@@ -463,19 +467,22 @@ export const useStore = create<State>()(
         set({ courses: get().courses.map((k) => (k.id === courseId ? { ...k, color } : k)) });
       },
 
-      removeCourse: (courseId) => {
-        const course = get().courses.find((k) => k.id === courseId);
-        if (!course) return;
+      removeCourse: (courseId) => get().removeCourses([courseId]),
+
+      removeCourses: (courseIds) => {
+        const removed = get().courses.filter((k) => courseIds.includes(k.id));
+        if (!removed.length) return;
+        const gone = new Set(removed.map((k) => k.id));
         const items = { ...get().items };
         const changes: Change[] = [];
         for (const it of Object.values(items)) {
-          if (it.courseId !== courseId) continue;
+          if (!it.courseId || !gone.has(it.courseId)) continue;
           delete items[it.id];
           changes.push({ op: 'delete', before: it, after: null });
         }
-        const name = course.code ?? course.title;
-        const b: Batch = { ...batch(`Removed ${name} · ${count(changes.length, 'plan')}`, changes), removedCourses: [course] };
-        set({ items, courses: get().courses.filter((k) => k.id !== courseId), batches: [b, ...get().batches], toast: { message: `${b.label}.`, batchId: b.id } });
+        const name = removed.length === 1 ? removed[0]!.code ?? removed[0]!.title : count(removed.length, 'course');
+        const b: Batch = { ...batch(`Removed ${name} · ${count(changes.length, 'plan')}`, changes), removedCourses: removed };
+        set({ items, courses: get().courses.filter((k) => !gone.has(k.id)), batches: [b, ...get().batches], toast: { message: `${b.label}.`, batchId: b.id } });
         if (changes.length) track('item_deleted', { deletion_scope: 'course', item_count: changes.length });
       },
 

@@ -11,6 +11,7 @@ export const SHORTCUTS: { keys: string; does: string }[] = [
   { keys: '← →', does: 'Previous or next day on Plan' },
   { keys: '⇧← ⇧→', does: 'Previous or next week on Plan' },
   { keys: 'T', does: 'Back to today on Plan' },
+  { keys: 'J K', does: 'Next or previous item on Plan' },
   { keys: 'Esc', does: 'Close the open item or this list' },
   { keys: '?', does: 'Show these shortcuts' },
 ];

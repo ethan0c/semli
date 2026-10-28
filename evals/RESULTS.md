@@ -49,3 +49,15 @@ The app now reads in fast mode (`docs/import-speed.md`). The syllabus extra-item
 53 unit tests passed; workspace and eval type checks passed; mobile lint passed; Next.js production build passed. The downloader fetched and SHA-256 verified all 15 public assets. Raw model outputs and token usage remain in the ignored local report `evals/reports/full-v7.json`.
 
 Earlier complete runs are retained locally: v4 passed text/images but failed PDF extra-item limits; v5 passed text/PDF but missed the image threshold (94.7%). Increasing image effort alone did not fix the tiny grid; bounded image enlargement passed that probe before this full rerun. Earlier partial PDF probes used incomplete annotations and are not directly comparable.
+
+## Notes from the document, Oct 28, 2026
+
+Prompt `2026-10-28.1` adds `notes` (what to bring, what it covers, where, how to submit), `claude-opus-5-5` fast, all 47 cases:
+
+| Input | Date/time accuracy | Recall | Other labeled fields | Extra items | Gate |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Synthetic text (32) | 100.0% | 100.0% | 98.5% | 0.0% | pass |
+| Public schedule images (10) | 100.0% | 100.0% | 100.0% | 0.0% | pass |
+| Public syllabi PDFs (5) | 96.9% | 97.6% | 96.8% | 3.5% | fail (extra items over 2%, as at `2026-10-27.1` fast) |
+
+63 of 162 items carry notes. Most are what the field is for ("Submit through Canvas", a room, "60m meal break"); two kinds are weak: a remark about missing information ("No end time has been announced.") and a shift's work area repeated from its title ("Front Bar"). The syllabus gate was already failing at the previous prompt in fast mode; no syllabus number moved by more than one field.

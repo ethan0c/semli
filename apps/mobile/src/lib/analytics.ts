@@ -86,7 +86,9 @@ export type AnalyticsEvent =
   | 'voice_failed'
   | 'today_view_changed'
   | 'phone_calendar_permission'
-  | 'phone_calendar_off';
+  | 'phone_calendar_off'
+  | 'term_over_shown'
+  | 'term_over_action';
 
 export function track(event: AnalyticsEvent, properties: Record<string, string | number | boolean | null> = {}): void {
   if (posthog) {

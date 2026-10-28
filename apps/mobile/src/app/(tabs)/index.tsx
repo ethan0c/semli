@@ -35,6 +35,7 @@ import { useNow } from '@/lib/now';
 import { skySlot, skyTextLight } from '@/lib/sky';
 import { useSettling } from '@/lib/use-settling';
 import { isPhoneItemId, openPhoneEvent, useWithPhoneCalendar } from '@/lib/phone-calendar';
+import { termOver, type TermOver } from '@/lib/term-over';
 import { useCourseList, useScheduleList, useItemList, useStore } from '@/store';
 import { ACCOUNTS_ENABLED } from '@/lib/auth';
 import { accountOf, useSession } from '@/lib/supabase';
@@ -75,6 +76,11 @@ function TodayScreen() {
   const unplanTask = useStore((s) => s.unplanTask);
   const dismissSuggestion = useStore((s) => s.dismissSuggestion);
   const [overdueExpanded, setOverdueExpanded] = useState(false);
+  // Once a term: the classes have all met for the last time and nothing from the next term is in.
+  const isStudent = useStore((s) => s.settings.isStudent);
+  const termOverSeen = useStore((s) => s.settings.termOverSeen ?? null);
+  const term = useMemo(() => (isStudent ? termOver(stored, now.date) : null), [isStudent, stored, now.date]);
+  const askTerm = term && term.lastClass !== termOverSeen ? term : null;
   // Open by default: seeing the green tick land is the reward for checking something off.
   const [completedExpanded, setCompletedExpanded] = useState(true);
 
@@ -417,6 +423,8 @@ function TodayScreen() {
 
       <ResumeReview style={styles.section} />
 
+      {askTerm ? <TermOverRow term={askTerm} onDone={() => setSettings({ termOverSeen: askTerm.lastClass })} /> : null}
+
       {offerSave ? <SavePlanRow onDismiss={() => setSettings({ savePlanDismissed: true })} /> : null}
 
       {isSample ? (
@@ -459,6 +467,28 @@ function TodayScreen() {
 const MOMENT_TEXT_TOP = 206;
 
 /** Once, for a guest with a real plan: an account backs it up. Dismissed for good with "Not now". */
+/**
+ * The term is over and the next hasn't arrived: ask for the new syllabi, and offer to clear the old
+ * courses in one undoable step. "Done with school" joins it with the Work tab in 1.3 (phase-2.md).
+ */
+function TermOverRow({ term, onDone }: { term: TermOver; onDone: () => void }) {
+  const { c } = useTheme();
+  const removeCourses = useStore((s) => s.removeCourses);
+  const old = term.oldCourses.length;
+  useEffect(() => { track('term_over_shown', { courses: old }); }, [term.lastClass, old]);
+  const act = (action: 'import' | 'remove' | 'dismiss') => { track('term_over_action', { action, courses: old }); onDone(); };
+  return (
+    <Animated.View layout={layout} entering={enter.fade} exiting={exit.fade} style={styles.section}>
+      <ListRow leading={<Icon name="school" size={20} color={c.inkPrimary} />} title={`Your ${term.name} is over`} sub="Add next term's syllabi" last
+        onPress={() => { act('import'); router.navigate({ pathname: '/add', params: { source: 'file', at: String(Date.now()) } }); }} />
+      <View style={[styles.inlineAction, styles.actions]}>
+        {old ? <TextButton label={`Remove ${count(old, 'old course')}`} onPress={() => { removeCourses(term.oldCourses); act('remove'); }} /> : null}
+        <TextButton label="Not now" tone="muted" onPress={() => act('dismiss')} />
+      </View>
+    </Animated.View>
+  );
+}
+
 function SavePlanRow({ onDismiss }: { onDismiss: () => void }) {
   const { c } = useTheme();
   useEffect(() => { track('save_plan_card_shown', {}); }, []);

@@ -16,7 +16,9 @@ import { courseTint, useStore } from '@/store';
 import { iconSize, textStyle, useTheme, space, size } from '@/theme';
 
 type RowItem = Pick<Item, 'kind' | 'title' | 'category' | 'icon' | 'start' | 'end' | 'done' | 'isDeadline' | 'date' | 'urgent'> & { id?: string; courseId?: string | null; employer?: string | null };
-type Props = { item: RowItem; conflict?: boolean; planned?: boolean; today?: string; onPress?: () => void; onToggle?: () => void; onDelete?: () => void; last?: boolean };
+type Props = { item: RowItem; conflict?: boolean; planned?: boolean; today?: string; onPress?: () => void; onToggle?: () => void; onDelete?: () => void; last?: boolean;
+  /** The item open in the pane beside the list on a wide web window. */
+  selected?: boolean };
 
 /**
  * One agenda row: a check (to-dos) or a category dot (events), the title with its context,
@@ -25,7 +27,7 @@ type Props = { item: RowItem; conflict?: boolean; planned?: boolean; today?: str
  * Swipe right to complete a to-do, left to delete, when the handlers are given. On the web a
  * pointer can't swipe: the row highlights under it and Delete takes the pill's place.
  */
-export function ItemRow({ item, conflict, planned, today, onPress, onToggle, onDelete, last }: Props) {
+export function ItemRow({ item, conflict, planned, today, onPress, onToggle, onDelete, last, selected }: Props) {
   const { c } = useTheme();
   const courses = useStore((s) => s.courses);
   const course = item.courseId ? courses.find((k) => k.id === item.courseId) : undefined;
@@ -50,7 +52,7 @@ export function ItemRow({ item, conflict, planned, today, onPress, onToggle, onD
       if (completing && item.id) useStore.getState().showDoneToast([{ id: item.id, title: item.title }]);
     } : undefined}>
     <View onPointerEnter={pointer ? () => setHover(true) : undefined} onPointerLeave={pointer ? () => setHover(false) : undefined}
-      style={[styles.row, sidebar ? { minHeight: 52 } : null, { backgroundColor: hover ? c.row : c.canvas }, !last ? { borderBottomColor: c.line, borderBottomWidth: StyleSheet.hairlineWidth } : null]}>
+      style={[styles.row, sidebar ? { minHeight: 52 } : null, { backgroundColor: hover || selected ? c.row : c.canvas }, !last ? { borderBottomColor: c.line, borderBottomWidth: StyleSheet.hairlineWidth } : null]}>
       {!isEvent ? (
         <Pressable onPress={onToggle} disabled={!onToggle} accessibilityRole="checkbox" hitSlop={8}
           accessibilityLabel={`${item.done ? 'Mark incomplete' : 'Complete'}: ${item.title}`} accessibilityState={{ checked: item.done }} style={styles.checkTarget}>

@@ -219,6 +219,15 @@ function PlanScreen() {
   }, [items, shown, settling]);
   const conflicts = useMemo(() => conflictIds(items.filter((i) => i.date === shown || i.date === addDays(shown, -1))), [items, shown]);
   const dayOverlaps = dayItems.filter((i) => conflicts.has(i.id)).length;
+  // The web's J and K walk the day's list in the pane beside it, as a mail app walks its messages.
+  const step = (by: 1 | -1) => {
+    if (!dayItems.length) return;
+    const at = dayItems.findIndex((i) => i.id === openId);
+    const next = dayItems[at < 0 ? (by === 1 ? 0 : dayItems.length - 1) : Math.min(dayItems.length - 1, Math.max(0, at + by))]!;
+    if (next.id !== openId) feedback('select');
+    setOpenId(next.id);
+  };
+  useScreenShortcuts({ j: () => step(1), k: () => step(-1) }, twoPane && !board);
   const rest = useMemo(() => weekItems.filter((i) => !i.done && i.date > shown).slice(0, 4), [weekItems, shown]);
   // The week after this one has no schedule yet, and this one is at least partly covered.
   const nextWeekPending = schedules.length > 0
@@ -344,7 +353,7 @@ function PlanScreen() {
           {dayItems.length ? dayItems.map((it) => (
             <Animated.View key={it.id} layout={layout} entering={enter.fade} exiting={exit.fade}>
               {isUntimedEvent(it) || it.id in timing ? renderShift(it) : (
-                <ItemRow item={it} today={now.date} conflict={conflicts.has(it.id)}
+                <ItemRow item={it} today={now.date} conflict={conflicts.has(it.id)} selected={twoPane && openId === it.id}
                   onPress={() => openItem(it.id)}
                   onToggle={() => { feedback(it.done ? 'uncomplete' : 'complete'); if (!it.done) settle(it.id); toggleDone(it.id); }}
                   onDelete={() => removeItem(it.id)} />
