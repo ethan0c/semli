@@ -41,6 +41,8 @@ export const ExtractedItem = z.object({
   repeat_until: z.string().nullable().describe('YYYY-MM-DD last date of a repeating item; null if unknown'),
   course_code: z.string().nullable(),
   evidence: z.string().describe('the exact text this item was read from'),
+  // Optional so a cached or older answer without it still reads (added Oct 28, 2026).
+  notes: z.string().nullable().optional().describe('practical details for the day the title cannot hold, from the input only; null if none'),
   confidence: z.number().describe('0 to 1'),
   question: z.string().nullable().describe('a short question for the user when something is ambiguous; otherwise null'),
 });

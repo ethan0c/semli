@@ -224,6 +224,25 @@ describe('drafts and commit planning', () => {
   });
 });
 
+describe('notes from the document', () => {
+  const base = { is_deadline: false, repeat_weekdays: [] as never[], repeat_until: null, course_code: null, evidence: '', confidence: 0.95, question: null };
+  const ex = (notes: string | null): Extraction => ({
+    detected_type: 'syllabus', employer: null, course: null, covers_from: null, covers_to: null,
+    items: [{ ...base, kind: 'event', title: 'Lab 3', category: 'school', date: '2026-10-21', start: '14:00', end: '16:00', notes }],
+  });
+  it('carries the details into a new item', () => {
+    const plan = planCommit(ex(' Bring a lab coat '), toDrafts(ex(' Bring a lab coat '), '2026-10-19'), [], () => null);
+    expect(plan.create[0]!.notes).toBe('Bring a lab coat');
+  });
+  it('fills an empty note on re-import and never replaces the student’s own', () => {
+    const blank = item({ id: 'a', title: 'Lab 3', date: '2026-10-21', start: '13:00', end: '16:00', category: 'school', notes: null });
+    const written = { ...blank, id: 'b', notes: 'Ask about the makeup lab' };
+    const doc = ex('Bring a lab coat');
+    expect(planCommit(doc, toDrafts(doc, '2026-10-19'), [blank], () => null).update[0]!.patch).toMatchObject({ notes: 'Bring a lab coat' });
+    expect(planCommit(doc, toDrafts(doc, '2026-10-19'), [written], () => null).update[0]!.patch).not.toHaveProperty('notes');
+  });
+});
+
 describe('typical term end', () => {
   it('ends a fall class in mid-December, spring in mid-May, summer in early August', () => {
     expect(typicalTermEnd('2026-08-24')).toEqual({ date: '2026-12-11', term: 'fall', name: 'fall semester' });

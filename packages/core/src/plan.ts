@@ -19,6 +19,8 @@ export interface Draft {
   isDeadline: boolean;
   courseCode: string | null;
   evidence: string;
+  /** What to bring, what it covers, where: from the document, never made up. Lands in the item's notes. */
+  notes: string | null;
   question: string | null;
   needsInput: boolean;
   /** Set on every occurrence expanded from one repeating item; null for one-offs. */
@@ -115,6 +117,7 @@ function normalize(raw: ExtractedItem, today: string): Omit<Draft, 'key'> {
     isDeadline: raw.is_deadline,
     courseCode: raw.course_code,
     evidence: raw.evidence,
+    notes: raw.notes?.trim() || null,
     question,
     needsInput,
     seriesId: null,
@@ -208,7 +211,7 @@ export function planCommit(
     courseId: courseIdByCode(d.courseCode),
     employer: d.category === 'work' ? employerName : null,
     seriesId: d.seriesId,
-    notes: null,
+    notes: d.notes,
   });
 
   if (extraction.detected_type === 'work_schedule' && extraction.employer) {
@@ -243,9 +246,9 @@ export function planCommit(
     else if (m?.type === 'update') {
       // A newer version of something already planned changes only what the document says: its
       // title and times. Done, notes, its course and its series are the student's (Oct 27, 2026: a
-      // re-import reopened finished work and wiped its notes).
+      // re-import reopened finished work and wiped its notes). Notes from the document fill only an empty field.
       const was = existing.find((e) => e.id === m.existingId);
-      plan.update.push({ id: m.existingId, patch: { title: d.title, start: d.start, end: d.end, isDeadline: d.isDeadline, ...(!was?.courseId && courseId ? { courseId } : {}) } });
+      plan.update.push({ id: m.existingId, patch: { title: d.title, start: d.start, end: d.end, isDeadline: d.isDeadline, ...(!was?.courseId && courseId ? { courseId } : {}), ...(!was?.notes?.trim() && d.notes ? { notes: d.notes } : {}) } });
     } else plan.create.push(toItem(d));
   }
   return plan;

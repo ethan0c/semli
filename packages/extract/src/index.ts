@@ -26,7 +26,7 @@ export function modelFor(kind: ExtractRequest['input']['kind'], readers: Readers
 
 /** Fast mode is an Opus feature; any other model reads at its own speed. */
 const hasFast = (model: string) => model.startsWith('claude-opus');
-export const PROMPT_VERSION = '2026-10-27.5';
+export const PROMPT_VERSION = '2026-10-28.1';
 
 const SYSTEM = `You read the things busy students and shift workers send to their planner app, Semli, and turn them into calendar events and to-dos.
 
@@ -52,6 +52,7 @@ How to read them:
 - Ask only when an item can't be placed without it: an event with no date, or one whose start time is genuinely unknown, or a date that is truly ambiguous. Don't ask whether something repeats unless the input suggests it might, how long something lasts, whether to leave an end time open, or when to do an undated to-do (an undated to-do is fine as it is). Each question is something the person has to stop and answer.
 - Never invent an end time: leave end null unless the input states it, or the item is being placed around the existing plan (then use a typical length, as above).
 - Write user-facing questions in plain, friendly language. Ask one specific question about the missing detail, without technical terms or blame.
+- notes: practical details for the day that the title can't hold, taken from the input: what to bring ("bring a lab coat"), what it covers ("chapters 4–6"), where ("room 210"), how to submit ("upload to Canvas"). One short line, in the input's words where possible. Null when the input says nothing more; never repeat the title, date, time or course, and never add advice the input doesn't give. Notes never create an item.
 - evidence is the exact text the item came from. confidence is your honest probability that every field is right.
 - Never invent items that are not in the input. If nothing is schedulable, return an empty items list.`;
 

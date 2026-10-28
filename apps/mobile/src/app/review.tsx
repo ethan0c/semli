@@ -1,4 +1,4 @@
-import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, newCourses, planCommit, courseKey, diffDays, findCourse, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount } from '@dayli/core';
+import { WEEKDAYS, assessment, conflictIds, dateLocale, formatTime, isLocalDate, localParts, monthDay, newCourses, planCommit, courseKey, diffDays, findCourse, toDrafts, weekOf, weekdayLong, weekdayOf, weekdayShort, type CommitPlan, type DatedDraft, type Draft, typicalTermEnd, spanMinutes, count, planCount, type TermSystem } from '@dayli/core';
 import type { Item } from '@dayli/schema';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -20,6 +20,7 @@ import { T } from '@/components/Text';
 import { WeekChart, compactRange, type WeekBlock, type WeekDay } from '@/components/WeekChart';
 import { track } from '@/lib/analytics';
 import { feedback } from '@/lib/feedback';
+import { deviceRegion, hasQuarters } from '@/lib/locale';
 import { enter, exit, layout } from '@/lib/motion';
 import { requestNotifications, syncReminders } from '@/lib/notifications';
 import { noteConfirmedImport } from '@/lib/store-review';
@@ -94,6 +95,23 @@ export default function ReviewScreen() {
     pending ? toDrafts(pending.extraction, today, { breaks }).map((d) => ({ ...d, include: isLocalDate(d.date) })) : [],
   );
   const [seriesEnd, setSeriesEnd] = useState<Record<string, SeriesEnd>>(() => suggestSeriesEnds(drafts));
+  // A US or Canadian school on quarters gets the semester guess until someone says so; nobody opens
+  // You for it, so the term-end row asks, and the answer redoes the guess in place (phase-2.md).
+  const region = useStore((s) => s.settings.region) ?? deviceRegion();
+  const termSystem = useStore((s) => s.settings.termSystem);
+  const offerQuarters = hasQuarters(region) && termSystem === 'semester';
+  const switchToQuarters = () => {
+    feedback('select');
+    useStore.getState().setSettings({ termSystem: 'quarter' });
+    const firsts = new Map<string, string>();
+    for (const d of drafts) if (d.seriesId && d.date && (!firsts.has(d.seriesId) || d.date < firsts.get(d.seriesId)!)) firsts.set(d.seriesId, d.date);
+    const next = drafts.map((d) => (d.seriesId && d.seriesEndUnknown && firsts.has(d.seriesId)
+      ? { ...d, seriesUntil: typicalTermEnd(firsts.get(d.seriesId)!, region, 'quarter').date } : d));
+    setDrafts(next);
+    // A date someone picked stays; only the suggestions move to the quarter's end.
+    const fresh = suggestSeriesEnds(next);
+    setSeriesEnd((prev) => ({ ...prev, ...Object.fromEntries(Object.entries(fresh).filter(([id]) => prev[id]?.mode !== 'pick')) }));
+  };
   /** Existing shifts the user chose to keep although the new schedule drops them. */
   const [kept, setKept] = useState<Set<string>>(() => new Set());
   /** Draft keys with their editor pills shown. */
@@ -527,7 +545,7 @@ export default function ReviewScreen() {
 
   const seriesRow = (s: Series) => {
     const end = seriesEnd[s.id];
-    const suggested = suggestedEnd(drafts, s.first) ?? { date: s.last.date, label: monthDay(s.last.date) };
+    const suggested = suggestedEnd(drafts, s.first, region, termSystem) ?? { date: s.last.date, label: monthDay(s.last.date) };
     const when = s.first.start && s.first.end ? `${s.weekdays} ${longRange(s.first.start, s.first.end)}` : s.weekdays;
     const unknown = s.first.seriesEndUnknown;
     const keys = drafts.filter((d) => d.seriesId === s.id).map((d) => d.key);
@@ -562,6 +580,7 @@ export default function ReviewScreen() {
               ? <ReviewPill label={monthDay(end.date)} selected open={picker === `${s.id}:end`} onPress={() => togglePicker(`${s.id}:end`)} />
               : <ReviewPill label="Pick a date" onPress={() => { setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date: end?.date ?? suggested.date } })); setPicker(`${s.id}:end`); }} />}
           </ReviewPillRow>
+          {offerQuarters && suggested.date === s.first.seriesUntil ? <TextButton label="On quarters?" accessibilityLabel="My school is on quarters" onPress={switchToQuarters} style={{ alignSelf: 'flex-start' }} /> : null}
           {end?.mode === 'pick' && picker === `${s.id}:end`
             ? opened(<InlinePicker mode="date" date={end.date} time={null} onChange={(date) => { if (isLocalDate(date)) setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date } })); }} />)
             : null}
@@ -720,7 +739,7 @@ function groupSeries(drafts: Draft[]): Series[] {
  * (Oct 27, 2026: with the final undated, classes stopped at the midterm). The label and the date
  * come from this one place, so the selected pill always names the date it applies.
  */
-function suggestedEnd(drafts: Draft[], first: Draft): { date: string; label: string } | null {
+function suggestedEnd(drafts: Draft[], first: Draft, region?: string, system?: TermSystem): { date: string; label: string } | null {
   const guess = first.seriesUntil;
   if (!guess || !first.date) return null;
   const exams = drafts.filter((d) => !d.seriesId && d.isDeadline && isLocalDate(d.date) && d.date >= first.date! && assessment(d.title) === 'exam');
@@ -728,7 +747,7 @@ function suggestedEnd(drafts: Draft[], first: Draft): { date: string; label: str
     ?? exams.filter((d) => diffDays(d.date!, guess) <= 21).sort((a, b) => a.date!.localeCompare(b.date!)).at(-1);
   return final
     ? { date: final.date!, label: `${monthDay(final.date!)} · ${/final/i.test(final.title) ? 'Final exam' : 'Last exam'}` }
-    : { date: guess, label: `${monthDay(guess)} · Estimated end of ${typicalTermEnd(first.date).name}` };
+    : { date: guess, label: `${monthDay(guess)} · Estimated end of ${typicalTermEnd(first.date, region, system).name}` };
 }
 
 /** The default term end for each open-ended series. */
