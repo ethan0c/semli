@@ -1,6 +1,6 @@
 # The web planner
 
-Status: built Oct 22, 2026; rechecked in Chrome for 1.2 on Oct 28 (every tab, Add, the item pane, shortcuts, voice), not yet deployed. The plan and sketches: the "Semli Web Plan" artifact.
+Status: built Oct 22, 2026; rechecked in Chrome for 1.2 on Oct 28 (every tab, Add, the item pane, shortcuts, voice). Deployed to app.semli.app Oct 28 (founder); step 9 below, the signed-in check, is next. The plan and sketches: the "Semli Web Plan" artifact.
 
 The planner on a laptop is the Expo app's web build (`apps/mobile`, `npx expo export -p web`), the
 same screens as the iPhone with a desktop layout, served at `app.semli.app`. The Next.js site
@@ -56,7 +56,7 @@ Without the key the paywall says Plus on the web is on its way. Prices match the
 
 1. **Database.** Done (checked Oct 28): every migration through `20261027180000` is on the linked
    project, and `20261022120000_plan_records.sql` adds `plan_records` to `supabase_realtime` itself.
-2. **Supabase redirect URLs** (Authentication → URL Configuration → Redirect URLs). Without these,
+2. **Supabase redirect URLs.** Done by the founder Oct 28; step 9 confirms Google lands back on the planner. (Authentication → URL Configuration → Redirect URLs). Without these,
    Google sends people to the Site URL (semli.app) instead of back to the planner:
    `https://app.semli.app/auth/callback`, and for development `http://localhost:8081/auth/callback`
    and `http://localhost:8099/auth/callback`.
@@ -70,7 +70,7 @@ Without the key the paywall says Plus on the web is on its way. Prices match the
    `semli_plus`, and put them in the `student` and `regular` offerings. Choose Stripe Tax or Stripe
    Managed Payments for sales tax. Copy the public key (`rcb_…`; sandbox `rcb_sb_…` for development)
    into `EXPO_PUBLIC_REVENUECAT_WEB_API_KEY`.
-6. **Hosting.** A Vercel project with root `apps/mobile` (it has a `vercel.json`: `npx expo export -p web`,
+6. **Hosting.** Done Oct 28: live at app.semli.app with today's build (voice, the Plan hint) and the `vercel.json` headers. A Vercel project with root `apps/mobile` (it has a `vercel.json`: `npx expo export -p web`,
    output `dist`, every path rewritten to `index.html`) and domain `app.semli.app`. Environment
    variables for Production (the build inlines them, so a change needs a redeploy):
    - `EXPO_PUBLIC_API_URL=https://www.semli.app`
