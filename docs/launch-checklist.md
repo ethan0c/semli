@@ -16,7 +16,7 @@ Everything the campaign needs to have ready, with where it lives. Make these onc
 | Eight faceless clips from the simulator | `design/clips/` | Eight MP4s, captions burned in, scheduled on the brand accounts |
 | Brand TikTok and Instagram accounts | Not personal; bio link `semli.app/get` | Clips scheduled one a week through December |
 | Founder post, written once | [marketing-500.md](marketing-500.md) §3.6, "more than 50 students" | Saved as a text file with the Today screenshot |
-| Survey email | One paragraph, from you, to the survey respondents | Drafted, sent Nov 3 |
+| Survey email | One paragraph, from you, to the survey respondents | Sent Oct 28, 2026 (`survey-invite`), with `app-store-launch` to the waitlist |
 | Creator brief and DM | One page: $75 on publish, free Plus for a year, one real import on screen, link in bio, we may repost with credit | Sent to 20 nursing and study creators; 4 booked |
 | Creator list | 20 names, 5k to 50k followers, last five videos show their own screen | Spreadsheet with handle, size, niche, status |
 | Product Hunt coming-soon page | producthunt.com | Live, collecting followers |

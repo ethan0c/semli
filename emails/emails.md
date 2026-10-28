@@ -24,7 +24,7 @@ Write like the founder talking to one person, and sign off as Semli. Use everyda
 ## survey-invite
 
 To: Survey
-When: Wed Oct 28, 2026, 10 am Eastern: the launch, for the survey respondents (they gave their emails on the survey form, so they get their own email)
+When: Sent Wed Oct 28, 2026, 10 am Eastern: the launch, for the survey respondents (they gave their emails on the survey form, so they get their own email)
 Subject: An update on that student planner survey
 Preview: Your survey feedback helped me build Semli. You can try it now.
 Sign-off: Thanks again,
@@ -66,7 +66,7 @@ I'd love to hear how it goes. You can reply to this email.
 ## app-store-launch
 
 To: Waitlist
-When: Wed Oct 28, 2026, 10 am Eastern, the morning after the listing went public (was Nov 3; the app released Oct 27)
+When: Sent Wed Oct 28, 2026, 10 am Eastern, the morning after the listing went public (was Nov 3; the app released Oct 27)
 Subject: Semli is on the App Store
 Preview: Bring your classes, shifts, and deadlines into one plan.
 Sign-off: Thanks,
