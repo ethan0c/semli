@@ -70,12 +70,12 @@ If the questionnaire asks about "frequent or intense" anything, every answer is 
 
 ## 3. Version information (the 1.0 page)
 
-**Promotional text** [170], editable without a new build (127 characters):
+**Promotional text** [170], editable without a new build (162 characters):
 ```
-Turn your syllabus and work schedules into one plan for classes, shifts, and deadlines. Review the dates, then see what’s next.
+Registered for spring? Add your classes now. Import a syllabus, a schedule screenshot, or your Canvas or Brightspace calendar, and see the whole term in one plan.
 ```
 
-**Description** [4000] (1,818 characters):
+**Description** [4000] (1,844 characters):
 ```
 Keep classes, work shifts, and assignment deadlines in one student planner.
 
@@ -85,7 +85,7 @@ See what’s next
 Check today’s plans, view your week, and spot overlaps between work and school.
 
 Bring your course dates together
-Add exams and assignments from a syllabus, or import assignments from your Canvas calendar feed.
+Add exams and assignments from a syllabus, or import assignments from your Canvas or Brightspace calendar feed.
 
 Choose your reminders
 Set reminders for events and deadlines, with an optional daily summary. Choose reminder times and quiet hours.
@@ -94,7 +94,11 @@ Start with the free plan
 Use the calendar, to-dos, reminders, and five AI imports to start, then three a month. No account is required.
 
 Add more with Semli Plus
-With Plus, get unlimited AI imports, apply a new work schedule as changes to the shifts you already have, see suggested times for overlaps, and have Semli check Canvas for updates when you open the app or tap Sync now. Also with Plus, urgent items can ring like an alarm; ringing alarms need a timed urgent item, iOS 26 or later, and alarm permission. Plus is billed monthly, every six months, or yearly, and student pricing is on the honor system. Eligible new subscribers can try Plus for seven days.
+Import as often as you need with Plus. Compare a new work schedule with your existing shifts and choose which changes to keep. Get suggested times for overlaps. Plus also checks Canvas or Brightspace for updates when you open the app or tap Sync now.
+
+With Plus, add a time to an urgent item to have it ring like an alarm. You’ll need iOS 26 or later and alarm permission.
+
+Choose monthly, six-month, or yearly billing. Student pricing is on the honor system. Eligible new subscribers can try Plus for seven days.
 
 Private by default
 Your plan stays on your phone, with optional account backup. Semli’s servers don’t save your original uploads; our privacy policy explains how the AI provider handles requests.
@@ -109,10 +113,10 @@ Section headers are sentence case, like everything else we publish; Apple allows
 
 | Locale | Title / 30 | Subtitle / 30 | Keywords / 100 | Description / 4,000 | Promo / 170 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| en-US | 25 | 28 | 98 | 1,818 | 127 |
-| en-GB | 25 | 29 | 99 | 1,882 | 126 |
-| en-AU | 25 | 29 | 94 | 1,883 | 125 |
-| en-CA | 25 | 28 | 99 | 1,865 | 126 |
+| en-US | 25 | 28 | 98 | 1,844 | 162 |
+| en-GB | 25 | 29 | 99 | 1,909 | 161 |
+| en-AU | 25 | 29 | 94 | 1,910 | 162 |
+| en-CA | 25 | 28 | 99 | 1,892 | 161 |
 
 **Keywords** [100], no spaces, no words already in the name or subtitle:
 ```

@@ -43,9 +43,9 @@ export default function AssignmentTrackerPage() {
       }
       faqs={[
         { q: 'Is the assignment tracker free?', a: 'Yes. The calendar, to-dos, reminders, and repeating classes are free with no time limit. Reading syllabi and screenshots uses AI imports; the free plan starts with five, then three a month.' },
-        { q: 'Does it sync with Canvas or Brightspace?', a: 'Yes. Paste your Canvas calendar feed link, or your Brightspace calendar’s Subscribe link (eLC at UGA), once to import your assignments. With Plus, Semli checks for updates when you open the app, so a moved due date moves in Semli too. Screenshots of the Canvas to-do list and syllabus PDFs work as well.' },
+        { q: 'Does it sync with Canvas or Brightspace?', a: 'Yes, including eLC at UGA. Copy the Calendar feed link from Canvas, or the Subscribe link from Brightspace, and paste it into Semli to import your assignments. With Plus, Semli checks for updates when you open the app. You can also upload a screenshot of your to-do list or a syllabus PDF.' },
         { q: 'Can I add an assignment by hand?', a: 'Yes, and it never counts as an import. Tap the plus button and type it.' },
-        { q: 'What happens when a due date changes?', a: 'You can edit the assignment directly. If it came from a connected Canvas or Brightspace feed, Plus checks for updates when you open the app and moves the due date to match.' },
+        { q: 'What happens when a due date changes?', a: 'You can edit it yourself. With Plus, Semli also checks your connected class calendar when you open the app. Updated due dates follow the calendar unless you’ve edited them in Semli.' },
       ]}
       related={[
         { href: '/syllabus-to-calendar', label: 'Syllabus to calendar' },

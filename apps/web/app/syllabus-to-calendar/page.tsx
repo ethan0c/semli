@@ -45,7 +45,7 @@ export default function SyllabusPage() {
       faqs={[
         { q: 'Which file types work?', a: 'PDF syllabi, and screenshots or photos (PNG, JPEG) of a course schedule or a registration page. Word documents can be exported to PDF first.' },
         { q: 'What if my syllabus only lists week numbers?', a: 'Week numbers need a term start date to make sense. Check the proposed dates carefully and correct any missing or unclear details before adding them.' },
-        { q: 'Does it work with Canvas or Brightspace?', a: 'Yes, two ways. Upload the syllabus PDF, or import assignments from your Canvas calendar feed or your Brightspace calendar’s Subscribe link (eLC at UGA). With Plus, Semli checks for updates when you open the app, so a changed due date is picked up.' },
+        { q: 'Does it work with Canvas or Brightspace?', a: 'Yes, including eLC at UGA. Upload your syllabus PDF, or paste a calendar link into Semli: Calendar feed in Canvas, or Subscribe in Brightspace. With Plus, Semli checks for updates when you open the app.' },
         { q: 'Can I undo an import?', a: 'Yes, for 180 days. Open You, then Your data, and find the import under Recent changes. Tap Undo next to it. Anything you’ve changed since, like a task you checked off, stays as it is.' },
         { q: 'Is my syllabus stored?', a: 'Semli’s servers don’t save the uploaded file. The dates and course details you confirm live on your phone, with cloud backup if you create an account. See our privacy policy for how the AI provider handles requests.' },
       ]}
