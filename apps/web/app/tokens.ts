@@ -33,6 +33,7 @@ function colorVars(p: Palette): Record<string, string> {
     '--control-outline': p.controlOutline,
     '--chart-booked': p.chartBooked,
     '--chart-on-booked': p.chartOnBooked,
+    '--chart-other': p.chartOther,
     '--conflict': p.conflict,
     '--conflict-bg': p.conflictBg,
     '--changed': p.changed,

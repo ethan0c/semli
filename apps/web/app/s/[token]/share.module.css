@@ -69,3 +69,126 @@
   font-size: var(--type-callout-size);
   color: var(--ink-2);
 }
+
+/* The two weeks at a glance: Plan's week chart, one row per Monday-to-Sunday week. Sizes follow the
+   chart tokens (column, dot, halo, now line, block gap); colour means kind, never decoration. */
+.grid {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.week {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  align-items: end;
+}
+.axis {
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: var(--type-caption-size);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.outside {
+  opacity: 0.35;
+}
+.dayName {
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line);
+  color: var(--ink-2);
+}
+.today {
+  color: var(--accent-ink);
+}
+.dayNum {
+  font-size: var(--type-subhead-size);
+  line-height: 24px;
+  min-width: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4px;
+}
+.todayNum {
+  background: var(--control-fill);
+  color: var(--control-ink);
+  border-radius: 999px;
+}
+.track {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border-radius: 6px;
+  background: var(--row);
+}
+.block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 3px;
+  border-radius: 3px;
+}
+.work {
+  background: var(--chart-booked);
+}
+.school {
+  background: var(--chart-other);
+}
+.now {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--row);
+}
+.due {
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--row);
+}
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-left: 55px;
+  font-size: var(--type-caption-size);
+  color: var(--ink-2);
+}
+.key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.keyDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+.keyNow {
+  width: 1.5px;
+  height: 12px;
+  background: var(--ink);
+}
