@@ -57,17 +57,27 @@ The semester plan sells in the two weeks before classes. This was always the mom
 
 ## The founder post, rewritten for a live store
 
-Replaces beta-copy §2's TestFlight version. Adjust the first paragraph per subreddit; never the numbers.
+Replaces beta-copy §2's TestFlight version. Use the shared [writing rules](../AGENTS.md#writing-for-people) and make the final editing pass before posting. Adjust the opening for the audience without changing the survey results. Confirm platform availability before adding a limitations paragraph. Use “launched this week” only during the actual launch week. If adding accuracy results, state the size and scope of the test set; a passing test is not a promise about every syllabus.
 
-> Earlier this year I surveyed more than 50 students about keeping track of classes and work. 83% said they'd missed or nearly missed an assignment because the date was buried somewhere: a syllabus PDF, a Canvas page, a group chat, a shift schedule taped to a wall.
+**Title:** I built an iPhone planner that reads syllabi and work schedules.
+
+> Earlier this year, I surveyed more than 50 college students about how they keep track of school and work. 83% said they'd missed or nearly missed an assignment because the due date got buried somewhere.
 >
-> I've spent the year building a planner around that one problem. You drop in a syllabus, a screenshot of your work schedule, or a message from a classmate, and it pulls the dates into one week with reminders. It's called Semli and it went live on the App Store this week.
+> That's what I wanted to make easier with Semli.
 >
-> The calendar, to-dos and reminders are free. There's a paid tier for unlimited imports; I'm saying that up front so nobody feels ambushed.
+> You add a syllabus PDF, a screenshot of your shifts, or a class message. It finds the dates and times for you to check, then adds them to your plan with reminders. Nothing from the import is saved until you confirm it.
 >
-> Things it doesn't do yet: Android, Google Calendar sync, anything outside iPhone. If you try it, I'd genuinely like to hear where the schedule it built was wrong. I read every reply.
+> Getting that right took some work. A syllabus has plenty of dates that aren't deadlines, and a work schedule can have everyone's shifts on the same sheet. The review step lets you correct what Semli missed or misunderstood.
 >
-> [Today screenshot]
+> It also flags overlaps, so you can see when a work shift clashes with a class or exam.
+>
+> The calendar, to-dos and reminders are free, with five imports to start and then three a month. Plus adds unlimited imports.
+>
+> If you try adding a syllabus, let me know what it missed or got wrong. I read every reply.
+>
+> https://www.semli.app/get?r=sideproject
+
+Attach `design/screenshots/01-today.png`. Use a channel-specific referral tag when adapting the link for another subreddit.
 
 ## Weekly installs: target and actual
 

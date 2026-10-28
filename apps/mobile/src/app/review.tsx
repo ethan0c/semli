@@ -3,6 +3,7 @@ import type { Item } from '@dayli/schema';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { devAutoConfirmMs } from '@/lib/dev';
+import { useNow } from '@/lib/now';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -73,7 +74,8 @@ export default function ReviewScreen() {
     };
   }, [allCourses, allItems, sampleBatchId, sampleIds]);
   const breaks = useStore((s) => s.settings.breaks);
-  const today = localParts(new Date()).date;
+  // The dev clock's day in a capture; the real one otherwise (lib/now.ts).
+  const today = useNow().date;
   const leaving = useRef(false);
   const confirming = useRef(false);
   const { requirePlus } = usePlusAccess();

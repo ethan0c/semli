@@ -2,6 +2,7 @@ import type { ExtractRequest, ExtractResponse } from '@dayli/schema';
 import Purchases from 'react-native-purchases';
 
 import { requestExtraction, type StreamHooks } from './api';
+import { devImportAnswer } from './dev';
 import { reportError } from './errors';
 import { initializePurchases } from './revenuecat';
 import { supabase } from './supabase';
@@ -36,5 +37,10 @@ async function importHeaders(): Promise<Record<string, string>> {
 
 /** Sends an import with who is asking; with `hooks`, rows arrive as they're read. */
 export async function requestImport(apiUrl: string, req: ExtractRequest, hooks?: StreamHooks): Promise<ExtractResponse> {
+  if (__DEV__) {
+    // A recording (design/clips): the sample answer, streamed, with no network.
+    const sample = await devImportAnswer(hooks);
+    if (sample) return sample;
+  }
   return requestExtraction(apiUrl, req, await importHeaders(), hooks);
 }

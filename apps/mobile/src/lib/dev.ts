@@ -1,6 +1,9 @@
+import type { ExtractResponse, Extraction } from '@dayli/schema';
 import { File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
+
+import { sampleScheduleExtraction, sampleScheduleUpdate, sampleSyllabusExtraction } from '@/store/sample';
 
 /** On the web there is no Documents folder: the same commands come from the URL (`?dev=sample&clock=09:41`). */
 function webParam(name: string): string | null {
@@ -37,6 +40,52 @@ export async function devCommand(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Development only: `dev-import.txt` names the import a recording makes, answered from the
+ * samples instead of the API: "schedule" (next week's shifts), "update" (this week's, changed)
+ * or "syllabus". The screens are the real ones; only the network is skipped.
+ */
+export type DevImport = 'schedule' | 'update' | 'syllabus';
+export async function devImport(): Promise<DevImport | null> {
+  if (!__DEV__) return null;
+  const v = Platform.OS === 'web' ? webParam('import') : await (async () => {
+    try {
+      const f = new File(Paths.document, 'dev-import.txt');
+      return f.exists ? (await f.text()).trim() : null;
+    } catch {
+      return null;
+    }
+  })();
+  return v === 'schedule' || v === 'update' || v === 'syllabus' ? v : null;
+}
+
+let devImportMode: { mode: DevImport; today: string } | null = null;
+export function setDevImport(mode: DevImport | null, today: string) {
+  if (__DEV__) devImportMode = mode ? { mode, today } : null;
+}
+
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** The recording's import, answered from the samples: rows arrive one by one, as a real read would. */
+export async function devImportAnswer(hooks?: { onItem: (item: Extraction['items'][number]) => void }): Promise<ExtractResponse | null> {
+  if (!__DEV__ || !devImportMode) return null;
+  const { mode, today } = devImportMode;
+  const extraction = mode === 'syllabus' ? sampleSyllabusExtraction(today) : mode === 'update' ? sampleScheduleUpdate(today) : sampleScheduleExtraction(today);
+  await wait(1400);
+  for (const item of extraction.items) {
+    hooks?.onItem(item);
+    await wait(mode === 'syllabus' ? 240 : 340);
+  }
+  await wait(700);
+  return { ok: true, extraction };
+}
+
+/** The syllabus a recording "picks": the Files sheet is system UI, so it is skipped and the PDF is named. */
+export function devImportFile(): { input: { kind: 'pdf'; data: string }; source: string } | null {
+  if (!__DEV__ || devImportMode?.mode !== 'syllabus') return null;
+  return { input: { kind: 'pdf', data: '' }, source: 'NURS210-syllabus.pdf' };
 }
 
 /** Development only: `dev-clock.txt` holds an HH:mm the app shows as now, so screenshots match the 9:41 status bar. */

@@ -129,11 +129,26 @@ SHOTS: list[tuple[str, str, str, str]] = [
     ("review-syllabus", "Your syllabus, in your ~planner~.", "Drop in a syllabus. Check the exams and due dates Semli finds.", "sky"),
     ("review-update", "See what changed in your ~shifts~.", "New, moved, and dropped shifts, before anything is saved.", "sky"),
     ("plan", "School and work, ~one calendar~.", "Every class in its own color, overlaps in red, exams ringed.", "sky"),
+    ("share", "Share your week with a ~link~.", "Anyone with the link sees your next two weeks in a browser. Stop it any time.", "sky"),
+    # Oct 28, 2026: the hours shot carries the overlap message (the shift over the study group, in red).
     ("spread", "Plan ahead for ~busy weeks~.", "Semli finds the light days before each deadline. One tap to plan them.", "sky"),
-    ("today-hours", "Your day, ~hour by hour~.", "Classes, shifts, and the gaps between them on one timeline.", "sky"),
-    ("school", "Keep your ~course dates~ together.", "Courses, due dates, and the weeks left in the term.", "sky"),
-    ("item", "Choose your ~reminders~.", "A reminder before class, or before the things you can't miss.", "sky"),
+    ("today-hours", "Catch ~overlaps~ in advance.", "A shift that lands on a class shows in red, days before it happens.", "sky"),
+    # Oct 28, 2026: the fix, right after the overlap (a capture by hand).
+    ("overlap-fix", "Then move it to a ~free time~.", "The overlap is named, and Semli suggests a time that's clear on your calendar.", "sky"),
+    # Oct 28, 2026: the course screen (a capture by hand) stands in for the School tab; swap back by name.
+    ("course", "Everything for ~one course~.", "Lectures, office hours, the next exam, and the weeks left in the term.", "sky"),
+    # Oct 28, 2026: `item` ("Choose your ~reminders~.", "A reminder before class, or before the things you can't miss.")
+    # left the set so `spread` could come back; its raw stays in raw/.
     ("canvas", "Bring in your ~class calendar~.", "Import your class calendar. With Plus, Semli checks for updates when you open the app.", "sky"),
+]
+# The views that are not in the store set, rendered the same way by `--extras` into <out>/extra/
+# for the site and social posts (Oct 28, 2026). The paywall shows prices: never in the store set.
+EXTRA_SHOTS: list[tuple[str, str, str, str]] = [
+    ("item", "Choose your ~reminders~.", "A reminder before class, or before the things you can't miss.", "sky"),
+    ("school", "Keep your ~course dates~ together.", "Courses, due dates, and the weeks left in the term.", "sky"),
+    ("add", "Type it, paste it, or ~drop it in~.", "A message, a screenshot or a PDF. You check the dates before anything is saved.", "sky"),
+    ("review", "Check the dates ~before adding~.", "Every shift Semli found, with the one it wasn't sure of marked.", "sky"),
+    ("paywall", "Calendar, to-dos, reminders: ~always free~.", "Plus adds unlimited imports and class calendar sync.", "sky"),
 ]
 # No paywall shot: App Review rejected 1.0 under 2.3.7 (Oct 23, 2026) because a screenshot showed
 # prices and a "free" caption. Screenshots show the app, never prices, trials or "free".
@@ -562,6 +577,7 @@ def main() -> None:
     ap.add_argument("--header", action="store_true", help="render the product page header (3840x1646) and the search results card (3840x2560) instead of screenshots")
     ap.add_argument("--bg", choices=sorted(BACKGROUNDS), default="sky", help="one background for every shot (default: the morning sky)")
     ap.add_argument("--locale", choices=["en-US", "en-CA", *sorted(LOCALE_CAPTIONS)], default="en-US", help="storefront captions; non-US output goes to <out>/<locale>")
+    ap.add_argument("--extras", action="store_true", help="render EXTRA_SHOTS (the views outside the store set) into <out>/extra")
     ap.add_argument("--canvas", help="WIDTHxHEIGHT of the output, default 1320x2868 (6.9-inch); e.g. 2007x2853 for the foldable's inner display")
     args = ap.parse_args()
     L = LAYOUTS[args.layout]
@@ -575,7 +591,11 @@ def main() -> None:
         W, H = (int(v) for v in args.canvas.lower().split("x"))
     captions = LOCALE_CAPTIONS.get(args.locale, {})
     out_dir = args.out / args.locale if args.locale != "en-US" else args.out
-    for i, (name, title, sub, bg) in enumerate(SHOTS, start=1):
+    shots = SHOTS
+    if args.extras:
+        shots, out_dir = EXTRA_SHOTS, out_dir / "extra"
+        out_dir.mkdir(parents=True, exist_ok=True)
+    for i, (name, title, sub, bg) in enumerate(shots, start=1):
         if args.names and name not in args.names:
             continue
         raw = RAW / args.locale if (RAW / args.locale / f"{name}.png").exists() else RAW

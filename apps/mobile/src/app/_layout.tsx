@@ -20,6 +20,8 @@ import { useStorageStatus } from '@/lib/storage';
 import { CanvasAutoSync } from '@/lib/canvas-sync';
 import { LaunchUpdate } from '@/components/LaunchUpdate';
 import { CloudBackup } from '@/lib/cloud';
+import type { Session } from '@supabase/supabase-js';
+
 import { accountOf, useSession } from '@/lib/supabase';
 import { ACCOUNT_REQUIRED } from '@/lib/web';
 import { frameStyle, useWebLayout } from '@/lib/layout';
@@ -27,7 +29,7 @@ import { columnHeader } from '@/components/ColumnHeader';
 import { Sidebar } from '@/components/DesktopTabs';
 import { PlanChoice } from '@/components/PlanChoice';
 import { Toast } from '@/components/Overlay';
-import { devAppearance, devClock, devCommand, setDevAutoConfirm, setDevToday } from '@/lib/dev';
+import { devAppearance, devClock, devCommand, devImport, setDevImport, setDevToday } from '@/lib/dev';
 import { i18n } from '@/lib/i18n';
 import { SHOWCASE, SKY, preloadPhotos } from '@/lib/images';
 import { skySlot } from '@/lib/sky';
@@ -45,7 +47,7 @@ import { useStore } from '@/store';
 import { useTheme, headerTitle } from '@/theme';
 import { SURFACE, WEB_VERSION, posthog, posthogLogs } from '@/lib/analytics';
 import { usePhoneCalendarSync } from '@/lib/phone-calendar';
-import { useShareSync } from '@/lib/shares';
+import { seedDevShares, useShareSync } from '@/lib/shares';
 
 // NativeTabs sends PRELOAD and ROUTE_NAMES_CHANGED actions the stack has no handler for; the
 // warnings are noise (nothing is lost) and their toast sits at the bottom of every dev recording.
@@ -174,14 +176,15 @@ function RootLayout() {
   // Development: a command file in Documents seeds a state for screenshots (see lib/dev.ts).
   useEffect(() => {
     if (!ready) return;
-    void Promise.all([devClock(), devCommand(), devAppearance()]).then(([clock, cmd, appearance]) => {
+    void Promise.all([devClock(), devCommand(), devAppearance(), devImport()]).then(([clock, cmd, appearance, imp]) => {
       setDevTime(clock);
       if (appearance) useStore.getState().setSettings({ appearance });
-      if (!cmd) return;
-      const store = useStore.getState();
       // A clock with a day ("2026-10-19 09:41") seeds the week around that day.
       const today = /^\d{4}-\d{2}-\d{2}/.exec(clock ?? '')?.[0] ?? localParts(new Date()).date;
-      const demo = cmd === 'demo' || cmd === 'demo-syllabus';
+      setDevImport(imp, today);
+      if (!cmd) return;
+      const store = useStore.getState();
+      const demo = cmd === 'demo' || cmd === 'share';
       if (cmd === 'sample' || cmd === 'moment' || cmd === 'spread' || cmd === 'item' || cmd === 'review' || cmd === 'review-syllabus' || cmd === 'review-update' || cmd === 'hours' || cmd === 'list' || demo) {
         // Every first-time tip counts as seen, so the captures show the screens without them.
         store.setSettings({ onboarded: true, seeded: true, isStudent: true, major: 'nursing', firsts: { overlap: true, urgent: true, canvas: true, reimport: true, hours: true, week: true, added: true, plusImport: true }, ...(cmd === 'hours' || cmd === 'list' ? { todayView: cmd } : {}), breaks: cmd === 'moment' ? [{ label: 'Fall break', start: addDays(today, 9), end: addDays(today, 13) }] : [] });
@@ -216,18 +219,14 @@ function RootLayout() {
         store.setPending({ extraction: sampleSyllabusExtraction(today), source: 'NURS210-syllabus.pdf' });
         setTimeout(() => router.push('/review'), 2500);
       }
-      // A recording: Today, then the Add tab, then the review of a screenshot or a syllabus,
-      // which confirms itself and lands on Plan. Every transition is the real one.
-      if (demo) {
-        store.setSettings({ remindersAsked: true });
-        setDevAutoConfirm(7000);
-        setTimeout(() => router.navigate('/add'), 3000);
-        setTimeout(() => {
-          store.setPending(cmd === 'demo'
-            ? { extraction: sampleScheduleExtraction(today), source: 'Screenshot' }
-            : { extraction: sampleSyllabusExtraction(today), source: 'NURS210-syllabus.pdf' });
-          router.push('/review');
-        }, 6500);
+      // A recording: the sample week with no prompts in the way. Maestro taps through the real
+      // screens (design/clips/flows) and an import is answered from the samples (dev-import.txt).
+      if (demo) store.setSettings({ remindersAsked: true });
+      if (cmd === 'share') {
+        // The share screen as a signed-in person with two links, with no account or server.
+        seedDevShares();
+        useSession.setState({ session: { access_token: 'dev', refresh_token: 'dev', expires_in: 3600, token_type: 'bearer', user: { id: 'dev', aud: 'authenticated', is_anonymous: false, email: 'maya@example.com', app_metadata: {}, user_metadata: {}, created_at: '' } } as unknown as Session, ready: true });
+        setTimeout(() => router.push('/share-schedule'), 2500);
       }
       if (cmd === 'item') {
         // The item screen's reminder line, shown with class reminders on so it names a real reminder.

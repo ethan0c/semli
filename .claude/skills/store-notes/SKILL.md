@@ -7,6 +7,8 @@ description: Draft the App Store text for the next store build (What's New in ev
 
 `apps/mobile/store.config.json` is the source of truth for the listing: four English storefronts (en-US, en-GB, en-AU, en-CA), pushed with `eas metadata:push`. The rules come from `docs/app-store-connect.md` and `docs/copy-audit-2026-10-23.md`; `npm run store:check` enforces the ones a script can check.
 
+Use the shared [writing rules](../../../AGENTS.md#writing-for-people) for every draft and revision. Make the final editing pass before showing the text: simplify stiff sentences, name what changed for the person, and keep limits and evidence intact. `store:check` checks listing constraints; it cannot tell whether the wording sounds natural.
+
 ## Every store build: What's New
 
 1. Run `npm run store:changes`. It lists commits since the last release tag (`v1.2.3`, skipping `-ota` tags) that touch the app, with their files.

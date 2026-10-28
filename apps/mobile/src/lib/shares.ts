@@ -74,8 +74,26 @@ type Row = { id: string; token: string; title: string; options: ShareLink['optio
 const toLink = (r: Row): ShareLink => ({ id: r.id, token: r.token, title: r.title, options: r.options, createdAt: r.created_at, updatedAt: r.updated_at, expiresAt: r.expires_at });
 const COLUMNS = 'id, token, title, options, created_at, updated_at, expires_at';
 
+/** Development only: two links for a screenshot of the share screen, with no account or server. */
+let devSeeded = false;
+export function seedDevShares() {
+  if (!__DEV__) return;
+  devSeeded = true;
+  const options = { categories: SHARE_CATEGORIES, showTitles: true, timezone: 'America/New_York' };
+  // Real time, not the pinned clock: "Updated just now", and the week-long link is still live.
+  const now = Date.now();
+  const at = new Date(now - 90 * 1000).toISOString();
+  useShares.setState({
+    links: [
+      { id: 'dev-1', token: 'a'.repeat(32), title: 'Maya’s schedule', options, createdAt: at, updatedAt: at, expiresAt: null },
+      { id: 'dev-2', token: 'b'.repeat(32), title: 'Maya’s schedule', options: { ...options, showTitles: false }, createdAt: at, updatedAt: at, expiresAt: new Date(now + 7 * 86400 * 1000).toISOString() },
+    ],
+    loaded: true,
+  });
+}
+
 export async function loadShares(): Promise<void> {
-  if (!signedIn()) return;
+  if (devSeeded || !signedIn()) return;
   const { data, error } = await supabase!.from('schedule_shares').select(COLUMNS).is('revoked_at', null)
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`).order('created_at', { ascending: false });
   if (error) throw error;

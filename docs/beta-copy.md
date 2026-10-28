@@ -1,5 +1,7 @@
 # Beta copy, ready to paste
 
+**Writing standard:** Follow the shared [writing rules](../AGENTS.md#writing-for-people) for every draft and revision, including the final editing pass before showing copy. For the current founder post, start with the [live-store version](launch-week.md#the-founder-post-rewritten-for-a-live-store). The TestFlight drafts below are historical; check current release status before reusing them.
+
 Oct 20, 2026. Copy for the steps in [marketing-500.md](marketing-500.md). Rules for all of it: no founder name or face, say "more than 50" survey respondents, never the exact count in public, never name a vendor. There are two separate TestFlight links: **Survey has a 60-person cap for the 58 survey respondents; public Beta has a 200-person cap.** Use "200 beta spots" only in public Beta outreach. Survey emails use their own invite and do not advertise the public group's spots. Replace `LINK` in public outreach with `https://semli.app/beta?r=<source>`, which logs the click and forwards to the Beta group's TestFlight link `https://testflight.apple.com/join/j15Rp5m4` (cap 200) once `TESTFLIGHT_URL` is set on Vercel so every channel shows up in the referral leaderboard (`select ref, count(*) from waitlist group by ref`).
 
 | Where | `r=` tag |
@@ -107,13 +109,13 @@ Attach one clip from `design/clips/out/` (the syllabus one).
 
 ## 4. Creator DM (nursing and study creators, 5k to 50k followers)
 
-> Hey! I built an iPhone planner called Semli. It takes dates from a syllabus or work schedule so you don't have to enter them all by hand.
+> Hey! I built an iPhone planner called Semli. You drop in a syllabus or a screenshot of your work schedule and it puts every date on one calendar, so you don't type them in by hand.
 >
-> Would you be interested in making a paid video trying it with one of your own syllabi or schedules? No script. I'd just want you to show how it goes and say what you think.
+> Would you make a paid video trying it with one of your own syllabi or schedules? No script. Just show how it goes and say what you honestly think, including anything it gets wrong.
 >
-> The offer is $75 when the video goes live, plus a year of Semli Plus. I'd also ask you to put the beta link in your bio. Happy to send you an invite so you can try it before deciding.
+> The offer is $75 when the video goes live (marked as a paid partnership), plus a free year of Semli Plus, and your link in your bio for two weeks. It's free on the App Store if you want to try it before deciding: semli.app/get?r=HANDLE
 
-Pay on publish. Two in November, two the week of Jan 5.
+Live-store version, Oct 28, 2026. Replace HANDLE with the creator's handle, so `beta_clicks` says which video sent people. Send it by email when the bio lists one (most creators read email, not message requests), otherwise by DM on the platform where they post most. Pay on publish. Two in November, two the week of Jan 5.
 
 ## 5. Friday build-in-public post (brand account, text only)
 

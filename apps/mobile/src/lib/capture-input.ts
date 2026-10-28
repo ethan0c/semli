@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 
 import { useStore } from '@/store';
+import { devImportFile } from '@/lib/dev';
 import { realRecords } from '@/lib/planner-preview';
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'] as const;
@@ -96,6 +97,11 @@ export async function pickImageInput(fromCamera: boolean): Promise<Picked | null
 
 /** Files app → PDF input, or null if cancelled. */
 export async function pickPdfInput(): Promise<Picked | null> {
+  if (__DEV__) {
+    // A recording (design/clips) names its syllabus instead of opening the Files sheet.
+    const fake = devImportFile();
+    if (fake) return fake;
+  }
   const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true });
   if (result.canceled) return null;
   const asset = result.assets[0];

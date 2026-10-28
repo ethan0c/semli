@@ -95,18 +95,20 @@ Raw capture name, caption on the image, and the subline. Since Oct 21, 2026 ever
 | 1 | `today` | Classes, shifts, and deadlines | The next thing, the day as a bar, and your list under it. | `sample`, Today in list view |
 | 2 | `review-syllabus` | Your syllabus, in your planner | Drop in a syllabus. Check the exams and due dates Semli finds. | `review-syllabus` |
 | 3 | `review-update` | See what changed in your shifts | New, moved, and dropped shifts, before anything is saved. | `review-update` |
-| 4 | `plan` | School and work, one calendar | Every class in its own color, overlaps in red, exams ringed. | `sample`, `semli://plan` |
-| 5 | `spread` | Plan ahead for busy weeks | Semli finds the light days before each deadline. One tap to plan them. | `spread` on an empty plan (it loads its test fortnight only then), launched twice so the welcome cover is gone |
-| 6 | `today-hours` | Your day, hour by hour | Classes, shifts, and the gaps between them on one timeline. | `hours` |
-| 7 | `school` | Keep your course dates together | Courses, due dates, and the weeks left in the term. | `sample`, `semli://school` |
-| 8 | `item` | Choose your reminders | A reminder before class, or before the things you can't miss. | `item` (turns class reminders on, 30 min) |
-| 9 | `canvas` | Bring Canvas into your plan | Import your Canvas calendar. With Plus, Semli checks for updates when you open the app. | `sample`, `semli://settings/canvas` |
+| 4 | `plan` | School and work, one calendar | Every class in its own color, overlaps in red, exams ringed. | `sample`, `semli://plan` (Oct 28, 2026: a capture by hand) |
+| 5 | `share` | Share your week with a link | Anyone with the link sees your next two weeks in a browser. Stop it any time. | `share` (a signed-in person with two links, seeded; no account needed) |
+| 6 | `spread` | Plan ahead for busy weeks | Semli finds the light days before each deadline. One tap to plan them. | `spread` on an empty plan (it loads its test fortnight only then), launched twice so the welcome cover is gone |
+| 7 | `today-hours` | Catch overlaps in advance | A shift that lands on a class shows in red, days before it happens. | `hours` (Oct 28, 2026: by hand, scrolled to the shift over the study group) |
+| 8 | `overlap-fix` | Then move it to a free time | The overlap is named, and Semli suggests a time that's clear on your calendar. | by hand: open the event that overlaps a shift (Oct 28, 2026) |
+| 9 | `course` | Everything for one course | Lectures, office hours, the next exam, and the weeks left in the term. | `sample`, School → a course (Oct 28, 2026: by hand; `school` stays in `raw/` to swap back) |
+| 10 | `canvas` | Bring in your class calendar | Import your class calendar. With Plus, Semli checks for updates when you open the app. | `sample`, `semli://settings/canvas` |
 
-Render with `python3 design/render-screenshots.py` (all nine, sky and serif by default); a shot without its raw capture is skipped. No paywall shot: prices, trials and "free" are not allowed in store screenshots (guideline 2.3.7), and 1.0 was rejected for it on Oct 23, 2026. `raw/paywall.png` stays for the website only.
+Render with `python3 design/render-screenshots.py` (all ten, sky and serif by default); a shot without its raw capture is skipped. No paywall shot: prices, trials and "free" are not allowed in store screenshots (guideline 2.3.7), and 1.0 was rejected for it on Oct 23, 2026. `raw/paywall.png` stays for the website only.
 
 The captions live in `design/render-screenshots.py` (`SHOTS`). Listing text: [app-store-connect.md](app-store-connect.md). The earlier six-image set (`design/screenshots/out/`) and the foldable 2007 × 2853 set were removed Oct 21, 2026; Apple scales the 6.9-inch set.
 
 ### 2.3 How to produce them
+`design/capture-screenshots.sh [names]` runs steps 1 to 3 for every shot (Oct 28, 2026); look at each capture afterwards, since the quirks below still apply. By hand:
 1. On the booted **iPhone 17 Pro Max** simulator with the dev client and Metro running, write the dev files into the app's Documents folder (`C=$(xcrun simctl get_app_container booted app.semli.mobile data)`): `dev-clock.txt` holds `09:41`, or `2026-10-19 09:41` to also fix the day (Monday has the overlap, the due reading and the lecture); `dev-command.txt` holds `sample`, `hours`, `list`, `review`, `review-update`, `item`, `plus`, `moment` or `spread`. `list` and `hours` show Today's everyday header with the sky even when the sample week has a heavy-week moment; `spread` opens that moment with its list. Then relaunch: `xcrun simctl terminate booted app.semli.mobile; xcrun simctl openurl booted "semli://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"` and wait 16–20 s.
 2. Light mode, 9:41 status bar: `xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100 --cellularBars 4`.
 3. Open a screen by deep link (`xcrun simctl openurl booted semli://plan`, `semli://school`, `semli://add`, `semli://paywall`) and capture with `xcrun simctl io booted screenshot design/screenshots/raw/<name>.png` (1320 × 2868). Look at every capture: the first launch after an install opens Expo's dev menu (launch once more), the dev build often restores the previous screen on relaunch, a deep link right after launch can leave a grey overlay on the status bar, and switching the Today view on launch leaves a ghost of the old view (relaunch once more).

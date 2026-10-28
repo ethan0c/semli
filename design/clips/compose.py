@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Faceless marketing clips: a simulator recording inside the site's iPhone frame, a caption on
-paper above it, an end card with the beta link. 1080x1920 for TikTok, Reels and Shorts.
+paper above it, an end card with the site and the bio link. 1080x1920 for TikTok, Reels and Shorts.
 
     python3 design/clips/compose.py raw/ out/            # every clip in CLIPS with a raw file
     python3 design/clips/compose.py raw/ out/ shifts     # one clip
@@ -67,8 +67,10 @@ CLIPS = [
     Clip('ask', 'Anything unclear gets a question, not a guess.', 'Friday’s shift had no time, so Semli asks. Nothing is saved until you confirm.', raw='shifts', start=31.5, end=38.5, hold=3),
     Clip('switch', 'Set up a semester in two minutes.', 'Not two hours. Calendar, to-dos and reminders stay free, for everyone.', raw='syllabus', start=7, speed=1.25),
     Clip('free', 'Calendar, to-dos, reminders: always free.', 'Plus is unlimited imports and Canvas sync. Student pricing, no proof needed.', raw='free', start=27, hold=5),
+    # Recorded by hand (Oct 28, 2026): a shift lands on a class, the row turns red, the shift gets swapped.
+    Clip('overlap', 'The shift that overlaps your lab, caught before you save it.', 'Work and classes on one week. Overlaps turn red, so you swap the shift, not the exam.', raw='overlap', start=3, hold=4),
 ]
-END_TEXT = ('semli.app/beta', '200 beta spots on iPhone. Link in bio.')
+END_TEXT = ('semli.app', 'Free on iPhone. Link in bio.')
 
 
 def font(name: str, size: int) -> ImageFont.FreeTypeFont:

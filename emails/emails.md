@@ -19,7 +19,7 @@ How this file works:
 - Link to the app with `https://www.semli.app/get?r=email-<name>`, never the App Store directly. The site counts the click under that tag and passes it on to the App Store as a campaign, so App Store Connect counts installs per email too.
 - The send command fills in `{about}` and `{reply}` in `feedback-thank-you`.
 
-Write like the founder talking to one person, and sign off as Semli. Use everyday words, short sentences, and sentence case. Skip all caps and em or en dashes. Keep group emails under 80 words from greeting to sign-off, with one main thing to do. Say what the person can do next without promising that a backup, import, or reminder has already worked.
+Follow the shared [writing rules](../AGENTS.md#writing-for-people), including the final editing pass, whenever drafting or changing an email. Write like the founder talking to one person, and sign off as Semli for these branded templates. A personal email uses the sender and sign-off the user asks for. Use everyday words, short sentences, and sentence case. Skip all caps and em or en dashes. Keep group emails under 80 words from greeting to sign-off, with one main thing to do. Say what the person can do next without promising that a backup, import, or reminder has already worked.
 
 ## survey-invite
 
