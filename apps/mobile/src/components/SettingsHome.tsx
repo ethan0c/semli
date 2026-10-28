@@ -28,6 +28,7 @@ import { useNotificationsAllowed } from '@/lib/notifications';
 import { freeImportAllowance } from '@/lib/plans';
 import { PHONE_CALENDAR_AVAILABLE, usePhoneCalendar } from '@/lib/phone-calendar';
 import { PLUS_ENTITLEMENT } from '@/lib/revenuecat';
+import { useShares } from '@/lib/shares';
 import { usePurchases } from '@/providers/PurchasesProvider';
 import { useOpenSetting } from '@/lib/settings-pane';
 import { SYSTEM_NAME } from '@/lib/web';
@@ -51,6 +52,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
   const notificationsOn = useNotificationsAllowed();
   const openSetting = useOpenSetting();
   const phoneCalendarOn = usePhoneCalendar((s) => s.on && !s.denied);
+  const shareCount = useShares((s) => s.links.length);
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const [openedAt] = useState(() => Date.now());
   const open = async (url: string, fallback: string) => {
@@ -121,7 +123,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
           {email !== null
             ? <ListRow leading={<Icon name="lock" size={20} color={c.inkPrimary} />} title={email || t`Your account`} sub={t`Account settings · ${backupStatus}`} onPress={() => router.push('/account')} last={!SHARING_ENABLED} />
             : <ListRow leading={<Icon name="lock" size={20} color={c.inkPrimary} />} title={t`Back up your plan`} sub={t`Create a free account to back up your plan`} onPress={() => router.push('/account')} last={!SHARING_ENABLED} />}
-          {SHARING_ENABLED ? <Row label={t`Share your schedule`} icon="share" value={t`Preview`} onPress={() => router.push('/share-schedule')} last /> : null}
+          {SHARING_ENABLED ? <Row label={t`Share your schedule`} icon="share" value={shareCount ? `${shareCount} ${shareCount === 1 ? 'link' : 'links'}` : undefined} onPress={() => router.push('/share-schedule')} last /> : null}
         </Group> : null}
 
         <Group label={<T token="overline" color={c.inkSecondary} style={styles.groupLabel}>Semli <T token="overline" color={c.accentInk}>Plus</T></T>}>

@@ -112,6 +112,13 @@ export default function PrivacyPage() {
             sends the audio to Google, Edge to Microsoft, and Safari to Apple. Semli receives only the text, never the audio. We read that
             text to build your plan, just as we would a message you typed.
           </p>
+          <h3>2.9 Share links</h3>
+          <p>
+            If you make a share link, Semli keeps with it the dates and times of the school and work plans you chose for about the next
+            three weeks, and their titles unless you hid them, so the page can show them. Your first name is the page&apos;s title.
+            Personal plans, notes, files and your iPhone calendar are never included. Anyone with the link can see that page until you
+            stop the link; stopping it deletes what it showed, and deleting your account deletes all your links.
+          </p>
         </section>
 
         <section>

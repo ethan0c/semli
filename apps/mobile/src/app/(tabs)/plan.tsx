@@ -259,7 +259,7 @@ function PlanScreen() {
           options={[{ key: 'week', label: 'Week' }, { key: 'board', label: 'Board' }]} /></View> : null}
         {!thisWeek
           ? <Animated.View entering={enter.fade} exiting={exit.fade}><TodayPill onPress={() => setSelected(now.date)} /></Animated.View>
-          : SHARING_ENABLED ? <IconButton icon="share" label="Preview schedule sharing" tone="glass" onPress={() => router.push({ pathname: '/share-schedule', params: { date: selected } })} /> : null}
+          : SHARING_ENABLED ? <IconButton icon="share" label="Share your schedule" tone="glass" onPress={() => router.push('/share-schedule')} /> : null}
       </View>}
       details={!calendarOpen && starting
         ? <T token="callout" color={c.inkSecondary}>Add events or tasks to see them here. Review imports before saving.</T>

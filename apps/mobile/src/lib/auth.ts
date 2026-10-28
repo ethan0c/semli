@@ -20,7 +20,7 @@ export function validateAuthForm(mode: AuthMode, fields: AuthFields): AuthFieldE
  */
 export const ACCOUNTS_ENABLED = !!(process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_KEY);
 /** Live share links need their own backend work; the preview stays hidden until then. */
-export const SHARING_ENABLED = false;
+export const SHARING_ENABLED = true;
 
 /** No provider is configured. Never manufacture sessions, reset emails or account deletion. */
 export class AuthUnavailableError extends Error {}
