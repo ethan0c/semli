@@ -72,3 +72,35 @@ Questions: the only decision worth a call is the 6-month semester term. If we pr
 > 3. Test Store: mirror both offerings so dev builds show real prices.
 >
 > IDs are read by the app character for character. Don't make a lifetime product or a default offering. Ping me when the products show "Ready to Submit" and I'll do a sandbox purchase.
+
+## 4. Web (RevenueCat Billing), added Oct 28, 2026
+
+The web planner at app.semli.app sells the same Plus through RevenueCat Billing (Stripe). Ethan has created the billing configuration (Stripe, USD, Stripe Tax with code `txcd_10103000`, SaaS personal use) and keeps the keys. What's left is the catalog, the same shape as the App Store one:
+
+1. In the **RevenueCat Billing** app, create six products. Same prices and terms as the App Store, so nobody pays more on one than the other:
+
+| Product ID | Title | Duration | Price (USD) | Free trial |
+|---|---|---|---|---|
+| `semli_plus_monthly_student_web` | Semli Plus (Monthly) | 1 month | 4.99 | 7 days |
+| `semli_plus_semester_student_web` | Semli Plus (6 months) | 6 months | 14.99 | 7 days |
+| `semli_plus_yearly_student_web` | Semli Plus (Yearly) | 1 year | 24.99 | 7 days |
+| `semli_plus_monthly_regular_web` | Semli Plus (Monthly) | 1 month | 7.99 | 7 days |
+| `semli_plus_semester_regular_web` | Semli Plus (6 months) | 6 months | 24.99 | 7 days |
+| `semli_plus_yearly_regular_web` | Semli Plus (Yearly) | 1 year | 44.99 | 7 days |
+
+   Description on each: "Unlimited AI imports of syllabi, schedules, and messages." The title is what checkout and receipts show, so it says "6 months", never "Semester" (App Review 3.1.2 wording, kept the same on the web).
+2. **Entitlement**: attach all six to the existing `semli_plus`. No new entitlement; a web purchase has to unlock the iPhone and the other way round.
+3. **Offerings**: add each web product to the existing packages, not new ones. `student`: `$rc_monthly` → `semli_plus_monthly_student_web`, `$rc_six_month` → `semli_plus_semester_student_web`, `$rc_annual` → `semli_plus_yearly_student_web`. `regular`: the same with the `_regular_web` products. Each package then holds one App Store product and one web product. `student` stays current. No lifetime product, no `default` offering.
+4. Leave the billing configuration, tax, and the hosted paywall and purchase links alone; the paywall is built into the app.
+
+How Ethan verifies: with the sandbox key (`rcb_sb_…`) in the web build, the web paywall shows the six prices with the trial, a Stripe test card buys `semli_plus_semester_student_web`, and the same account then shows Plus on the iPhone.
+
+### Message for Oct 28
+
+> Rico, the web planner is live at app.semli.app and sells Plus through RevenueCat Billing (Stripe). I've done the billing configuration and tax. Your part, also in docs/revenuecat-offerings-brief.md section 4:
+>
+> 1. RevenueCat → the RevenueCat Billing app → Products: six products, same prices as the App Store, 7-day free trial on each. IDs are the App Store ones with `_web` on the end (`semli_plus_monthly_student_web`, `semli_plus_semester_student_web`, `semli_plus_yearly_student_web`, and the same three with `_regular_web`). Titles "Semli Plus (Monthly)", "Semli Plus (6 months)", "Semli Plus (Yearly)"; never "Semester".
+> 2. Attach all six to the existing `semli_plus` entitlement.
+> 3. Add them to the existing packages in `student` and `regular` (monthly, six month, annual), next to the App Store products. Don't make new offerings or packages.
+>
+> Leave the billing config, tax and hosted paywalls as they are. Ping me when it's done and I'll run a test purchase.

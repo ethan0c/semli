@@ -1,10 +1,21 @@
+import Constants from 'expo-constants';
 import { PostHog } from 'posthog-react-native';
+import { Platform } from 'react-native';
 
 /**
  * Product analytics. Events carry counts and kinds, never titles or content.
  * Expo embeds EXPO_PUBLIC_ variables at build time.
  */
 const projectToken = process.env.EXPO_PUBLIC_POSTHOG_KEY;
+
+/**
+ * Which Semli sent it. The iPhone app and the web planner share one PostHog project and one Sentry
+ * project, and Safari on an iPhone reports the same OS and device type as the app, so every event and
+ * error carries this instead.
+ */
+export const SURFACE = Platform.OS === 'web' ? 'web' : Platform.OS;
+/** The web has no native version: the app version plus the deployed commit, which vercel.json passes in. */
+export const WEB_VERSION = `${Constants.expoConfig?.version ?? 'unknown'}+${(process.env.EXPO_PUBLIC_COMMIT_SHA || 'local').slice(0, 7)}`;
 const host = process.env.EXPO_PUBLIC_POSTHOG_HOST;
 
 if (!projectToken && __DEV__) {
@@ -20,7 +31,7 @@ export const posthog: PostHog | null = projectToken && host
     host,
     captureAppLifecycleEvents: true,
     logs: {
-      serviceName: 'dayli-mobile',
+      serviceName: Platform.OS === 'web' ? 'semli-web' : 'dayli-mobile',
       environment: __DEV__ ? 'development' : 'production',
     },
     // Crashes go to Sentry through the sanitizer in lib/errors.ts. PostHog's own capture sent raw
@@ -33,6 +44,9 @@ export const posthog: PostHog | null = projectToken && host
     },
   })
   : null;
+
+// Super properties ride on every event; the native SDK fills in the app version on the phone.
+void posthog?.register({ platform: SURFACE, ...(Platform.OS === 'web' ? { app_version: WEB_VERSION } : null) });
 
 export type AnalyticsEvent =
   | 'onboarding_step'

@@ -43,7 +43,7 @@ import { navigationButtonOptions } from '@/components/NavButtons';
 import { preloadSounds } from '@/lib/feedback';
 import { useStore } from '@/store';
 import { useTheme, headerTitle } from '@/theme';
-import { posthog, posthogLogs } from '@/lib/analytics';
+import { SURFACE, WEB_VERSION, posthog, posthogLogs } from '@/lib/analytics';
 
 // NativeTabs sends PRELOAD and ROUTE_NAMES_CHANGED actions the stack has no handler for; the
 // warnings are noise (nothing is lost) and their toast sits at the bottom of every dev recording.
@@ -63,9 +63,14 @@ Sentry.init({
   dsn: SENTRY_DSN,
   enabled: !!SENTRY_DSN,
   environment: __DEV__ ? 'development' : 'production',
-  // Matches the name the Expo plugin uploads source maps and dSYMs under, so frames resolve.
-  release: `${Application.applicationId}@${Application.nativeApplicationVersion}+${Application.nativeBuildVersion}`,
-  dist: Application.nativeBuildVersion ?? undefined,
+  // Matches the name the Expo plugin uploads source maps and dSYMs under, so frames resolve. The web
+  // has no native version, so each deploy is its own release.
+  release: Platform.OS === 'web'
+    ? `app.semli.web@${WEB_VERSION}`
+    : `${Application.applicationId}@${Application.nativeApplicationVersion}+${Application.nativeBuildVersion}`,
+  dist: Platform.OS === 'web' ? undefined : Application.nativeBuildVersion ?? undefined,
+  // One project for the app and the web planner; filter on `platform`.
+  initialScope: { tags: { platform: SURFACE } },
   tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   sendDefaultPii: false,
   // Trace headers go only to Semli's own API, not to schools' calendar servers or Supabase.
