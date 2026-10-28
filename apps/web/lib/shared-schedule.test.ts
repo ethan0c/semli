@@ -66,7 +66,7 @@ describe('shared schedule page', () => {
   });
 
   it('names the grid’s ends and reads the owner’s clock', () => {
-    expect([hourLabel(480), hourLabel(720), hourLabel(1440)]).toEqual(['8 am', 'Noon', 'Midnight']);
+    expect([hourLabel(0), hourLabel(480), hourLabel(720), hourLabel(1440)]).toEqual(['12 am', '8 am', 'Noon', 'Midnight']);
     expect(nowIn('America/Los_Angeles', new Date('2026-10-29T03:05:00Z'))).toEqual({ date: '2026-10-28', time: '20:05' });
   });
 });

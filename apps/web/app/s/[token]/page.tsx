@@ -5,6 +5,7 @@ import { cache } from 'react';
 
 import { hourLabel, loadSharedSchedule, nowIn, sharedDays, todayIn, updatedLine, weekGrid, type GridDay, type SharedDay } from '@/lib/shared-schedule';
 import { TAGLINE } from '@/lib/site';
+import { ShareViews } from './ShareViews';
 import styles from './share.module.css';
 
 /*
@@ -60,16 +61,16 @@ export default async function SharedSchedulePage({ params }: Props) {
   if (shared === undefined) {
     return (
       <main className={`page ${styles.page}`}>
-        <h1 className={styles.title}>This schedule didn’t load.</h1>
-        <p className={styles.meta}>Try again in a minute.</p>
+        <h1 className={styles.title}>We couldn’t load this schedule.</h1>
+        <p className={styles.meta}>Refresh the page to try again.</p>
       </main>
     );
   }
   if (!shared) {
     return (
       <main className={`page ${styles.page}`}>
-        <h1 className={styles.title}>This link has stopped working.</h1>
-        <p className={styles.meta}>The person who shared it turned it off. Ask them to send a new one.</p>
+        <h1 className={styles.title}>This link is no longer available.</h1>
+        <p className={styles.meta}>It may have expired or been turned off. Ask the person who shared it for a new link.</p>
       </main>
     );
   }
@@ -77,46 +78,50 @@ export default async function SharedSchedulePage({ params }: Props) {
   const grid = weekGrid(shared.entries, from, to, nowIn(shared.options.timezone));
   const has = (kind: 'work' | 'school') => grid.weeks.some((w) => w.some((d) => d.blocks.some((b) => b.kind === kind)));
   const hasDue = grid.weeks.some((w) => w.some((d) => d.dues.length));
-  const ends = shared.expiresAt ? ` · Until ${monthDay(todayIn(shared.options.timezone, shared.expiresAt))}` : '';
+  const ends = shared.expiresAt ? ` · Link expires ${monthDay(todayIn(shared.options.timezone, shared.expiresAt))}` : '';
   return (
     <main className={`page ${styles.page}`}>
-      <header className={styles.head}>
-        <h1 className={styles.title}>{shared.title}</h1>
-        <p className={styles.meta}>{range(from, to)} · Read-only{ends} · {updatedLine(shared.updatedAt)}</p>
-      </header>
-      {days.length ? (
-        // The two weeks at a glance, for "when is she free?"; the list below has every plan in words.
-        <figure className={styles.grid} aria-label="The next two weeks at a glance. Every plan is listed below.">
-          {grid.weeks.map((week) => (
-            <div key={week[0]!.date} className={styles.week}>
-              <div className={styles.axis} aria-hidden>
-                <span>{hourLabel(grid.range[0])}</span>
-                <span>{hourLabel(grid.range[1])}</span>
+      <ShareViews
+        head={(
+          <header className={styles.head}>
+            <h1 className={styles.title}>{shared.title}</h1>
+            <p className={styles.meta}>{range(from, to)} · Read-only{ends} · {updatedLine(shared.updatedAt)}</p>
+          </header>
+        )}
+        list={days.length ? <div className={styles.days}>{days.map((day) => (
+          <section key={day.date} className={styles.day} aria-label={`${weekdayLong(day.date)}, ${monthDay(day.date)}`}>
+            <h2 className={styles.date}>{weekdayLong(day.date)}, {monthDay(day.date)}</h2>
+            <ul className={styles.list}>
+              {day.entries.map((entry, i) => (
+                <li key={i} className={styles.row}>
+                  <span className={styles.what}>{entry.title}</span>
+                  <span className={styles.when}>{when(entry)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}</div> : <p className={styles.meta}>No plans have been shared for the next two weeks.</p>}
+        // The two weeks by the hour, for "when is she free?"; the list has every plan in words.
+        week={days.length ? (
+          <figure className={styles.grid} aria-label="Schedule for the next two weeks. Switch to list view for event names and times.">
+            {grid.weeks.map((week) => (
+              <div key={week[0]!.date} className={styles.week}>
+                <div className={styles.axis} aria-hidden>
+                  <span>{hourLabel(grid.range[0])}</span>
+                  <span>{hourLabel(grid.range[1])}</span>
+                </div>
+                {week.map((day) => <DayColumn key={day.date} day={day} />)}
               </div>
-              {week.map((day) => <DayColumn key={day.date} day={day} />)}
-            </div>
-          ))}
-          <figcaption className={styles.key}>
-            {has('work') ? <span><i className={`${styles.swatch} ${styles.work}`} />Work</span> : null}
-            {has('school') ? <span><i className={`${styles.swatch} ${styles.school}`} />School</span> : null}
-            {hasDue ? <span><i className={styles.keyDot} />Due</span> : null}
-            <span><i className={styles.keyNow} />Now</span>
-          </figcaption>
-        </figure>
-      ) : null}
-      {days.length ? days.map((day) => (
-        <section key={day.date} className={styles.day} aria-label={`${weekdayLong(day.date)}, ${monthDay(day.date)}`}>
-          <h2 className={styles.date}>{weekdayLong(day.date)}, {monthDay(day.date)}</h2>
-          <ul className={styles.list}>
-            {day.entries.map((entry, i) => (
-              <li key={i} className={styles.row}>
-                <span className={styles.what}>{entry.title}</span>
-                <span className={styles.when}>{when(entry)}</span>
-              </li>
             ))}
-          </ul>
-        </section>
-      )) : <p className={styles.meta}>Nothing planned in the next two weeks.</p>}
+            <figcaption className={styles.key}>
+              {has('work') ? <span><i className={`${styles.swatch} ${styles.work}`} />Work</span> : null}
+              {has('school') ? <span><i className={`${styles.swatch} ${styles.school}`} />School</span> : null}
+              {hasDue ? <span><i className={styles.keyDot} />Due</span> : null}
+              <span><i className={styles.keyNow} />Now</span>
+            </figcaption>
+          </figure>
+        ) : null}
+      />
       <footer className={styles.foot}>
         <p>Shared from Semli, {TAGLINE.charAt(0).toLowerCase() + TAGLINE.slice(1)}</p>
         <Link className="btn" href="/get?ref=share">Get Semli</Link>

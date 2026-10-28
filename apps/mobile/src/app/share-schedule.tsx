@@ -80,7 +80,7 @@ function ShareSchedule() {
       const url = await createShare(categories, showTitles, end);
       feedback('success');
       const note = await send(url, 'My schedule');
-      showToast(note ?? 'Your link is ready. It stays current while you use Semli.');
+      showToast(note ?? 'Your link is ready. It updates as you use Semli.');
     } catch (e) {
       reportError('shares.create', e);
       setError(/Too many/.test(String((e as { message?: unknown })?.message)) ? 'You have 20 links already. Stop one you no longer need first.' : 'Semli couldn’t make the link. Check your connection and try again.');
@@ -99,8 +99,8 @@ function ShareSchedule() {
           <T token="display" accessibilityRole="header">Your next two weeks, shared.</T>
           <T token="body" color={c.inkSecondary}>
             {signedIn
-              ? 'A read-only link a parent or friend opens in their browser, no app needed. It updates while you use Semli, and you can stop it any time.'
-              : 'Share links live with your account, so a link keeps working when you switch phones. Make a free account to share.'}
+              ? 'Anyone with the link can view your schedule in a browser. They don’t need the app. It updates as you use Semli, and you can stop sharing at any time.'
+              : 'Create a free account or sign in to share your schedule and manage your links.'}
           </T>
         </View>
 
@@ -125,21 +125,21 @@ function ShareSchedule() {
           </View>
           <View style={[styles.toggle, { borderBottomColor: c.line }]}>
             <View style={{ flex: 1, gap: space.xxs }}>
-              <T token="body">Show what each plan is</T>
-              <T token="caption" color={c.inkSecondary}>Switch off to show “Busy” and “To-do” instead.</T>
+              <T token="body">Show event and task names</T>
+              <T token="caption" color={c.inkSecondary}>Turn off to show “Busy” and “To-do” instead.</T>
             </View>
-            <NativeToggle label="Show what each plan is" value={showTitles} onChange={setShowTitles} />
+            <NativeToggle label="Show event and task names" value={showTitles} onChange={setShowTitles} />
           </View>
           <View style={{ gap: space.xs }}>
-            <T token="body">Stop sharing</T>
-            <Segmented label="When the link stops" value={end} onChange={setEnd} options={[
+            <T token="body">When sharing ends</T>
+            <Segmented label="When sharing ends" value={end} onChange={setEnd} options={[
               { key: 'never', label: 'When I stop it' },
               { key: 'week', label: 'In a week' },
               { key: 'term', label: 'End of term' },
             ]} />
             <T token="caption" color={c.inkSecondary}>
-              {end === 'never' ? 'For a parent: it keeps showing your next two weeks until you stop it.'
-                : `It stops on its own on ${monthDay(localParts(new Date(shareEndsAt(end)!)).date)}. You can stop it sooner.`}
+              {end === 'never' ? 'The link stays active until you stop sharing.'
+                : `Expires on ${monthDay(localParts(new Date(shareEndsAt(end)!)).date)}${end === 'term' ? ', based on your estimated term end' : ''}. You can stop sharing sooner.`}
             </T>
           </View>
         </View>
@@ -162,10 +162,10 @@ function ShareSchedule() {
               ))}
             </View>
           )) : (
-            <T token="callout" color={c.inkSecondary}>{categories.length ? 'Nothing planned in the next two weeks.' : 'Choose school, work or both.'}</T>
+            <T token="callout" color={c.inkSecondary}>{categories.length ? 'No plans to share in the next two weeks.' : 'Choose school, work or both.'}</T>
           )}
           <T token="caption" color={c.inkSecondary} style={{ paddingTop: space.sm }}>
-            Personal plans, notes, files, your iPhone calendar and your account details are never shared.
+            The page title uses your first name, if you’ve added one. Personal plans, notes, files, your iPhone calendar and sign-in details aren’t included.
           </T>
         </View>
       </ScrollView>
@@ -178,7 +178,7 @@ function LinkRow({ link }: { link: ShareLink }) {
   const { c } = useTheme();
   const showToast = useStore((s) => s.showToast);
   const [confirming, setConfirming] = useState(false);
-  const shows = `${link.options.categories.map((k) => CATEGORY_LABELS[k]).join(' and ')}${link.options.showTitles ? '' : ', as busy times'}`;
+  const shows = `${link.options.categories.map((k) => CATEGORY_LABELS[k]).join(' and ')}${link.options.showTitles ? '' : ', names hidden'}`;
   const resend = async () => {
     try {
       const note = await send(shareUrl(link.token), link.title);
@@ -192,7 +192,7 @@ function LinkRow({ link }: { link: ShareLink }) {
     try {
       await stopShare(link.id);
       feedback('remove');
-      showToast('Link stopped. Anyone who opens it now sees that it stopped.');
+      showToast('Sharing stopped. This link no longer opens your schedule.');
     } catch (e) {
       reportError('shares.stop', e);
       showToast('Semli couldn’t stop the link. Check your connection and try again.');
@@ -202,14 +202,14 @@ function LinkRow({ link }: { link: ShareLink }) {
     <View style={[styles.link, { borderBottomColor: c.line }]}>
       <View style={{ gap: space.xxs }}>
         <T token="body">{shows}</T>
-        <T token="caption" color={c.inkSecondary}>{link.expiresAt ? `Stops ${monthDay(localParts(new Date(link.expiresAt)).date)}` : 'Until you stop it'} · Updated {ago(link.updatedAt)}</T>
+        <T token="caption" color={c.inkSecondary}>{link.expiresAt ? `Expires ${monthDay(localParts(new Date(link.expiresAt)).date)}` : 'Until you stop sharing'} · Updated {ago(link.updatedAt)}</T>
       </View>
       {confirming ? (
         <View style={{ gap: space.xs }}>
-          <T token="caption" color={c.inkSecondary}>Stop this link? It stops working for everyone who has it, and can’t be turned back on.</T>
+          <T token="caption" color={c.inkSecondary}>Stop sharing with this link? It will stop working for everyone and can’t be used again. You can create a new link later.</T>
           <View style={styles.actions}>
             <TextButton label="Stop sharing" tone="danger" onPress={() => void stop()} />
-            <TextButton label="Keep it" tone="muted" onPress={() => setConfirming(false)} />
+            <TextButton label="Keep sharing" tone="muted" onPress={() => setConfirming(false)} />
           </View>
         </View>
       ) : (

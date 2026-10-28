@@ -114,10 +114,11 @@ export default function PrivacyPage() {
           </p>
           <h3>2.9 Share links</h3>
           <p>
-            If you make a share link, Semli keeps with it the dates and times of the school and work plans you chose for about the next
-            three weeks, and their titles unless you hid them, so the page can show them. Your first name is the page&apos;s title.
-            Personal plans, notes, files and your iPhone calendar are never included. Anyone with the link can see that page until you
-            stop the link; stopping it deletes what it showed, and deleting your account deletes all your links.
+            When you create a share link, Semli saves the dates and times of the school and work plans you choose for about the next
+            three weeks. It also saves their titles unless you choose to hide them. The shared page shows the next two weeks and uses
+            your first name in its title, if you&apos;ve added one. Personal plans, notes, files and your iPhone calendar aren&apos;t included.
+            Anyone with the link can view the page until you stop sharing or the link expires. Stopping a link deletes the schedule
+            details saved with it. Deleting your account deletes all your share links.
           </p>
         </section>
 

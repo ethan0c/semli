@@ -246,7 +246,7 @@ export default function ReviewScreen() {
   const askOf = (d: Draft): string | null => {
     if (!d.needsInput || !d.include) return null;
     if (d.question && !HANDLED.has(d.question)) return d.question;
-    return d.question ? null : 'We couldn’t read this clearly. Please check the date and time.';
+    return d.question ? null : 'We’re not sure about this one. Check the date and time before adding it.';
   };
   const leaveOut = (keys: string[]) => {
     feedback('select');

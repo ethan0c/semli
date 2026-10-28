@@ -21,7 +21,7 @@ export default function PhoneCalendarScreen() {
   };
   return (
     <ScrollView contentContainerStyle={styles.body} contentInsetAdjustmentBehavior="automatic">
-      <Group footer="See events from your iPhone's calendars, including Outlook, Google and iCloud, in Today and Plan. Semli shows when they overlap with your plans. These events stay on this iPhone and aren't saved to your Semli account.">
+      <Group footer="Show events from the calendars on your iPhone, including Outlook, Google and iCloud, alongside your plans in Today and Plan. You can see where they overlap. These events stay on this iPhone and aren’t saved to your Semli account.">
         <ToggleRow label="Show my iPhone calendar" value={showing} onChange={toggle} last />
       </Group>
       {denied ? (

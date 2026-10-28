@@ -91,8 +91,8 @@ export type GridDay = {
   now: number | null;
 };
 
-/** The hours the grid's ends name: "8 am" at the top, "Midnight" at the bottom. */
-export const hourLabel = (minutes: number) => (minutes % 1440 === 0 ? 'Midnight' : minutes === 720 ? 'Noon' : formatHour(minutes / 60));
+/** The hours the grid's ends name: "8 am" or "12 am" at the top, "Midnight" only at the bottom, so a full day isn't "Midnight" twice. */
+export const hourLabel = (minutes: number) => (minutes === 1440 ? 'Midnight' : minutes === 720 ? 'Noon' : formatHour(minutes / 60));
 
 /**
  * The two weeks as Monday-to-Sunday weeks of day columns, the way Plan's week chart stands the day
