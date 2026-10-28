@@ -22,7 +22,7 @@ import { LaunchUpdate } from '@/components/LaunchUpdate';
 import { CloudBackup } from '@/lib/cloud';
 import { accountOf, useSession } from '@/lib/supabase';
 import { ACCOUNT_REQUIRED } from '@/lib/web';
-import { COLUMN, frameStyle, useWebLayout } from '@/lib/layout';
+import { frameStyle, useWebLayout } from '@/lib/layout';
 import { columnHeader } from '@/components/ColumnHeader';
 import { Sidebar } from '@/components/DesktopTabs';
 import { PlanChoice } from '@/components/PlanChoice';
@@ -112,7 +112,6 @@ function RootLayout() {
   // its header included; the tab shell, the welcome and the photo paywall set their own.
   const { sidebar, twoPane } = useWebLayout();
   const column = sidebar ? frameStyle(twoPane) : null;
-  const centred = { width: '100%' as const, maxWidth: COLUMN, alignSelf: 'center' as const };
   // Small forms open as dialogs over the screen they came from (see Sheet's `dialog`).
   const dialogScreen = { presentation: 'transparentModal' as const, headerShown: false, animation: 'fade' as const, contentStyle: { backgroundColor: 'transparent' } };
   const appearance = useStore((s) => s.settings.appearance);
@@ -276,8 +275,8 @@ function RootLayout() {
           <Stack.Screen name="paywall" options={{ presentation: 'fullScreenModal', headerShown: true, headerTransparent: true, headerStyle: { backgroundColor: 'transparent' }, contentStyle: { backgroundColor: palettes.dark.canvas, width: '100%' }, title: '', headerTintColor: palettes.dark.inkPrimary, ...navigationButtonOptions('close') }} />
           <Stack.Screen name="account" dangerouslySingular={() => 'account'} options={sidebar ? dialogScreen : { presentation: 'fullScreenModal', headerShown: true, ...navigationButtonOptions('close') }} />
           <Stack.Protected guard={!onboarded && !webGuest}>
-            {/* No sidebar here, so the steps sit in a centred column rather than the app's frame. */}
-            <Stack.Screen name="onboarding" options={{ animation: 'fade', contentStyle: { backgroundColor: c.canvas, ...(sidebar ? centred : null) } }} />
+            {/* No sidebar here; onboarding centres its own steps so the Plus photo can take the width. */}
+            <Stack.Screen name="onboarding" options={{ animation: 'fade', contentStyle: { backgroundColor: c.canvas } }} />
           </Stack.Protected>
           {/* Signed in on the web but not set up yet: / goes on to onboarding. Without this the
               router falls back to its first open route, /auth, and the welcome asks to sign in again. */}

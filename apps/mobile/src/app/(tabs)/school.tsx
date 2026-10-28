@@ -51,7 +51,9 @@ function SchoolScreen() {
   const { c } = useTheme();
   const now = useNow();
   // A wide web window opens a course beside the list instead of on its own screen.
-  const { twoPane } = useWebLayout();
+  const { sidebar, twoPane } = useWebLayout();
+  // A laptop has room for the whole course code beside each strip; a phone keeps the strips long.
+  const labelWidth = sidebar ? 88 : 56;
   const [openId, setOpenId] = useState<string | null>(null);
   useScreenShortcuts({ Escape: () => setOpenId(null) }, !!openId);
   const withPane = (list: ReactNode) => !twoPane ? list : (
@@ -147,7 +149,7 @@ function SchoolScreen() {
           return `${k.code ?? k.title}: ${due.length ? due.map((i) => `${i.title} ${monthDay(i.date)}`).join(', ') : 'nothing due'}.`;
         }).join(' ')}`}>
           <View style={styles.mapRow}>
-            <View style={{ width: 56 }} />
+            <View style={{ width: labelWidth }} />
             <View style={{ flex: 1, flexDirection: 'row' }}>
               {labels.map((l, i) => <T key={i} token="axis" color={c.inkSecondary} tabular style={styles.weekLabel}>{l}</T>)}
             </View>
@@ -156,7 +158,7 @@ function SchoolScreen() {
             const marks = marksFor(course.id);
             return (
               <View key={course.id} style={[styles.mapRow, { height: 28 }]}>
-                <View style={styles.mapLabel}>
+                <View style={[styles.mapLabel, { width: labelWidth }]}>
                   <CategoryDot color={tintOf(course)} />
                   <T token="subhead" numberOfLines={1} style={{ fontSize: 12, lineHeight: 16, flexShrink: 1 }}>{course.code ?? course.title}</T>
                 </View>
@@ -167,7 +169,7 @@ function SchoolScreen() {
               </View>
             );
           })}
-          <ChartKey entries={markKey(courses.flatMap((k) => marksFor(k.id)), c)} style={{ paddingLeft: 66, paddingTop: space.xxs }} />
+          <ChartKey entries={markKey(courses.flatMap((k) => marksFor(k.id)), c)} style={{ paddingLeft: labelWidth + 10, paddingTop: space.xxs }} />
         </View>
         {/* What a tapped mark is, or everything due when "N due" is open. */}
         {shown.map((it, i) => (
@@ -215,7 +217,7 @@ const styles = StyleSheet.create({
   mapHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
   map: { paddingTop: space.sm, paddingBottom: space.snug, gap: space.sm },
   mapRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  mapLabel: { width: 56, flexDirection: 'row', alignItems: 'center', gap: space.snug },
+  mapLabel: { flexDirection: 'row', alignItems: 'center', gap: space.snug },
   weekLabel: { flex: 1 },
   track: { flex: 1, justifyContent: 'center' },
   dotWell: { width: 22, alignItems: 'center' },

@@ -32,6 +32,7 @@ import { ACCOUNT_REQUIRED } from "@/lib/web";
 import { accountOf, useSession } from "@/lib/supabase";
 import { feedback } from "@/lib/feedback";
 import { reportError } from "@/lib/errors";
+import { COLUMN, useWebLayout } from "@/lib/layout";
 import { enter, exit, layout, springs } from "@/lib/motion";
 import { requestNotifications, syncReminders } from "@/lib/notifications";
 import { usePlusAccess } from "@/lib/plus-access";
@@ -82,6 +83,9 @@ const SOURCES: { id: DeadlineSource; label: string; hint: string }[] = [
 export default function OnboardingScreen() {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  // No sidebar here: a wide window centres the steps, while the Plus photo behind them takes the width.
+  const { sidebar } = useWebLayout();
+  const column = sidebar ? styles.column : null;
   const settings = useStore((s) => s.settings);
   const setSettings = useStore((s) => s.setSettings);
   const applyPlan = useStore((s) => s.applyPlan);
@@ -229,7 +233,7 @@ export default function OnboardingScreen() {
   return (
     <View style={[styles.root, { backgroundColor: bg, paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 24) }]}>
       {step === "plus" ? <PaywallBackdrop /> : null}
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         {canGoBack ? (
           <Animated.View entering={enter.fade} exiting={exit.fade}>
             <Press accessibilityRole="button" accessibilityLabel="Back" hitSlop={8} scale={motion.press.iconScale} onPress={back} style={styles.back}>
@@ -244,7 +248,7 @@ export default function OnboardingScreen() {
         </View>
       </View>
 
-      <Animated.View key={step} entering={enter.fromRight} style={{ flex: 1 }}>
+      <Animated.View key={step} entering={enter.fromRight} style={[{ flex: 1 }, column]}>
       {step === "plate" && (
         <ScrollView contentContainerStyle={styles.page}>
           <View style={styles.titleBlock}>
@@ -926,6 +930,7 @@ function PlusStep({ onFinish }: { onFinish: () => void }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: SCREEN_GUTTER },
+  column: { width: "100%", maxWidth: COLUMN - SCREEN_GUTTER * 2, alignSelf: "center" },
   header: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingBottom: space.xl, minHeight: 36 },
   back: { marginLeft: -space.xs, alignItems: "center", justifyContent: "center" },
   progress: { flex: 1, flexDirection: "row", gap: 5 },
