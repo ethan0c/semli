@@ -19,7 +19,7 @@ account holders.
   line, Today shows the hours beside the list, and Plan opens an item in a pane beside the day.
   Today has no sky on a wide window.
 - **Keyboard** (`lib/shortcuts.ts`, `?` lists them): N new to-do or event, 1–4 the tabs, ← → days and
-  ⇧← ⇧→ weeks on Plan, T today, Esc closes the item. Shortcuts never fire while typing.
+  ⇧← ⇧→ weeks on Plan, J K the next or previous item in Plan's pane (the open row is highlighted), T today, Esc closes the item. Shortcuts never fire while typing.
 - **Pointer.** Rows highlight under the pointer and show Delete in place of the pill (a mouse can't
   swipe). A file dropped anywhere, or an image pasted with ⌘V, opens Add and imports it
   (`lib/web-drop.ts`).
@@ -30,7 +30,7 @@ account holders.
   event and Sentry error carries `platform` (`ios` or `web`); filter on it, not on OS or device type,
   which Safari on an iPhone shares with the app. Web events add `app_version` (version + commit) and
   web errors use the release `app.semli.web@<version>+<commit>`; `vercel.json` passes the commit in.
-  Web stack traces stay minified until source maps are uploaded (not set up).
+  Web stack traces read as source once `SENTRY_AUTH_TOKEN` is set in Vercel (step 6).
 - **Dates and times** use the browser's own pickers.
 - **Reminders and ringing alarms** ring on the iPhone. The web edits their settings and says so.
 - **Canvas** feeds can't be read from another site's page, so the web fetches them through
@@ -84,7 +84,9 @@ Without the key the paywall says Plus on the web is on its way. Prices match the
    - `EXPO_PUBLIC_REVENUECAT_WEB_API_KEY=rcb_…` once step 5 is done; until then the paywall says Plus
      on the web is on its way
    - `EXPO_PUBLIC_APPLE_WEB_SIGNIN=true` only after step 4
-   - Not needed: the iOS and Android RevenueCat keys, `SENTRY_AUTH_TOKEN` (the build deletes source maps).
+   - `SENTRY_AUTH_TOKEN`: the build uploads the web source maps to Sentry (matched by debug ID), then
+     deletes them so they're never served. Without it the build still deploys and web stack traces stay minified.
+   - Not needed: the iOS and Android RevenueCat keys.
 7. **Site.** Flip `WEB_APP_LIVE` in `apps/web/lib/site.ts` to show "Open Semli" in the site header.
 8. **Legal.** Privacy already covers Canvas feeds fetched by the server (§2.2) and speech on the web
    (§2.8, Oct 28). Still to write, once web billing is on: privacy §1 names only the iPhone app and the
@@ -99,4 +101,3 @@ Without the key the paywall says Plus on the web is on its way. Prices match the
 
 - Browser notifications for reminders.
 - Linking out from the iPhone paywall to web checkout (US only; see the plan for the court's pending rate).
-- J/K row navigation; a highlighted row for the item open in Plan's pane.
