@@ -1,5 +1,5 @@
 import { SHARE_SNAPSHOT_DAYS, addDays, localParts, shareEntries, type SharedEntry } from '@dayli/core';
-import type { Category } from '@dayli/schema';
+import type { Category, Item } from '@dayli/schema';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { create } from 'zustand';
@@ -42,10 +42,16 @@ export const useShares = create<{ links: ShareLink[]; loaded: boolean; pushedAt:
 
 const signedIn = () => SHARING_ENABLED && !!supabase && !!accountOf(useSession.getState().session);
 
+/** The person's own plans: never the onboarding sample week, which only looks like a plan. */
+export function shareable(items: Item[], sampleBatchId: string | null): Item[] {
+  return realRecords(items).filter((i) => !sampleBatchId || i.batchId !== sampleBatchId);
+}
+
 /** What a link with these options shows right now, from yesterday to three weeks out. */
 export function snapshot(options: Pick<ShareLink['options'], 'categories' | 'showTitles'>): SharedEntry[] {
   const today = localParts(new Date()).date;
-  const items = realRecords(Object.values(useStore.getState().items));
+  const { items: all, settings } = useStore.getState();
+  const items = shareable(Object.values(all), settings.sampleBatchId);
   const categories = options.categories.filter((c) => SHARE_CATEGORIES.includes(c));
   return shareEntries(items, addDays(today, -1), addDays(today, SHARE_SNAPSHOT_DAYS - 1), categories, options.showTitles);
 }

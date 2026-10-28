@@ -19,8 +19,8 @@ export function validateAuthForm(mode: AuthMode, fields: AuthFields): AuthFieldE
  * welcome is one "Get started" and You shows no account rows. Guests never need an account.
  */
 export const ACCOUNTS_ENABLED = !!(process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_KEY);
-/** Live share links need their own backend work; the preview stays hidden until then. */
-export const SHARING_ENABLED = true;
+/** Share links live with the account (table `schedule_shares`, Oct 28, 2026), so they need accounts. */
+export const SHARING_ENABLED = ACCOUNTS_ENABLED;
 
 /** No provider is configured. Never manufacture sessions, reset emails or account deletion. */
 export class AuthUnavailableError extends Error {}

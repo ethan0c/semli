@@ -65,7 +65,7 @@ Sources: `pricing-and-positioning.md` (the survey, n = 66), `onboarding-research
 
 | Item | What | Why | Size | Waits on | Metric |
 |---|---|---|---|---|---|
-| **Schedule share links** | A named, private, read-only link a parent or friend opens in a browser: owner and date range in the message preview, titles hideable, school/work only, revocable, "updated 2 h ago". | `share-schedule.tsx` is built behind `SHARING_ENABLED = false`; the screen says links are coming. Every shared link is marketing; this stays free (`pricing-and-positioning.md`). | A week (a public route on the site, a token table, the allowlisted payload that already exists) | Accounts in production | Links created per user; installs from link views. |
+| **Schedule share links** (built Oct 28, 2026 for 1.2: table `schedule_shares`, `lib/shares.ts`, `semli.app/s/<token>`; the next two weeks, rolling, school and work only, the phone sends the projection on every change; needs `supabase db push`) | A named, private, read-only link a parent or friend opens in a browser: owner and date range in the message preview, titles hideable, school/work only, revocable, "updated 2 h ago". | `share-schedule.tsx` is built behind `SHARING_ENABLED = false`; the screen says links are coming. Every shared link is marketing; this stays free (`pricing-and-positioning.md`). | A week (a public route on the site, a token table, the allowlisted payload that already exists) | Accounts in production | Links created per user; installs from link views. |
 | **Referral on the share link** | The viewer's page ends with "Plan your week like this" → the store. | Free distribution on a surface that already exists. | Hours | Share links | Installs attributed to links. |
 
 ## 5. Widgets

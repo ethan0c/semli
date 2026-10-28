@@ -15,8 +15,7 @@ import { SHARING_ENABLED } from '@/lib/auth';
 import { reportError } from '@/lib/errors';
 import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
-import { realRecords } from '@/lib/planner-preview';
-import { SHARE_CATEGORIES, createShare, loadShares, shareUrl, stopShare, useShares, type ShareLink } from '@/lib/shares';
+import { SHARE_CATEGORIES, createShare, shareable, loadShares, shareUrl, stopShare, useShares, type ShareLink } from '@/lib/shares';
 import { accountOf, useSession } from '@/lib/supabase';
 import { useStore } from '@/store';
 import { SCREEN_GUTTER, corner, radius, useTheme, space, size } from '@/theme';
@@ -24,7 +23,8 @@ import { SCREEN_GUTTER, corner, radius, useTheme, space, size } from '@/theme';
 const CATEGORY_LABELS: Record<Category, string> = { school: 'School', work: 'Work', personal: 'Personal' };
 
 function entryTime(entry: SharedEntry): string {
-  if (!entry.start) return entry.kind === 'event' ? 'All day' : 'Any time';
+  if (!entry.start) return entry.isDeadline ? 'Due' : entry.kind === 'event' ? 'All day' : 'Any time';
+  if (entry.isDeadline && entry.kind === 'task') return `Due ${formatTime(entry.start, true)}`;
   if (!entry.end || entry.kind === 'task') return formatTime(entry.start, true);
   return `${formatRange(entry.start, entry.end)}${entry.end <= entry.start ? ' · next day' : ''}`;
 }
@@ -67,7 +67,8 @@ function ShareSchedule() {
 
   const today = localParts(new Date()).date;
   const to = addDays(today, SHARE_DAYS - 1);
-  const preview = shareEntries(realRecords(Object.values(items)), today, to, categories, showTitles);
+  const sampleBatchId = useStore((s) => s.settings.sampleBatchId);
+  const preview = shareEntries(shareable(Object.values(items), sampleBatchId), today, to, categories, showTitles);
   const dates = [...new Set(preview.map((e) => (e.date < today ? today : e.date)))];
 
   const create = async () => {
@@ -142,7 +143,7 @@ function ShareSchedule() {
               {preview.filter((e) => (e.date < today ? today : e.date) === day).map((entry, i) => (
                 <View key={i} style={[styles.entry, { borderBottomColor: c.line }]}>
                   <T token="body" style={{ flex: 1 }}>{entry.title}</T>
-                  <T token="subhead" tabular color={c.inkSecondary}>{entry.isDeadline ? `Due ${entryTime(entry)}` : entryTime(entry)}</T>
+                  <T token="subhead" tabular color={c.inkSecondary}>{entryTime(entry)}</T>
                 </View>
               ))}
             </View>
