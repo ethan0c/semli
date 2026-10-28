@@ -56,13 +56,13 @@ const LEVEL_GAIN = 8;
 const STOP_GRACE_MS = 1500;
 
 export const VOICE_ERRORS = {
-  denied: 'Allow microphone access for this site in your browser, then click the microphone again.',
-  deniedManual: 'Allow microphone access for this site in your browser, then click the microphone again.',
-  offline: 'Voice input needs an internet connection. You can type your plans instead.',
-  unavailable: 'Voice input isn’t available in this browser. You can type your plans instead.',
-  noMic: 'No microphone was found. Connect one, or type your plans instead.',
-  failed: 'Voice input stopped. Your text is still here. Click the microphone to continue.',
-  long: 'This message has reached the voice input limit. Review it, then add the rest in a new message.',
+  denied: 'To speak your plans, allow microphone access in your browser’s settings for this site. Then click the microphone again.',
+  deniedManual: 'To speak your plans, allow microphone access in your browser’s settings for this site. Then click the microphone again.',
+  offline: 'You need an internet connection to speak your plans. You can still type them.',
+  unavailable: 'This browser can’t turn speech into text. You can still type your plans.',
+  noMic: 'We couldn’t find a microphone. Connect one or type your plans.',
+  failed: 'The microphone stopped listening. Your text is still here. Click the microphone to try again.',
+  long: 'This message is getting too long. Review what you’ve said, then add the rest in a new message.',
 } as const;
 
 /** The whole session so far: settled pieces, then the ones still changing. */

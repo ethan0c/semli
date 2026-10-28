@@ -101,16 +101,16 @@ export default function PrivacyPage() {
             controls. Camera access lets you photograph a printed schedule. Only the image you choose to import is sent for reading.
           </p>
           <p>
-            Calendar access, if you turn on your iPhone calendar in Semli, lets Semli show the events on the calendars you choose beside
-            your plan and warn you when they overlap. They are read on your iPhone each time Semli opens, and are never sent to us or saved
-            to your account; Semli on the web doesn&apos;t see them.
+            If you choose to show your iPhone calendar in Semli, calendar access lets you see events from the calendars you select
+            alongside your plan. Semli shows when they overlap with your plans. Semli reads these events on your iPhone each time the app
+            opens. They stay on your iPhone and are never sent to us or saved to your account. They don&apos;t appear in Semli on the web.
           </p>
           <h3>2.8 Speaking instead of typing</h3>
           <p>
-            Microphone access lets you say your plans instead of typing them. On iPhone, Apple&apos;s speech recognition turns your voice
-            into text, on the phone when it can and otherwise on Apple&apos;s servers. On the web, your browser&apos;s speech recognition does
-            it: Chrome sends the audio to Google, Edge to Microsoft, and Safari to Apple. Semli never receives the audio, only the text,
-            which is sent for reading like a typed message.
+            Microphone access lets you speak your plans instead of typing them. On iPhone, Apple turns your speech into text on your
+            phone when possible. Otherwise, Apple processes it on its servers. On the web, your browser turns speech into text. Chrome
+            sends the audio to Google, Edge to Microsoft, and Safari to Apple. Semli receives only the text, never the audio. We read that
+            text to build your plan, just as we would a message you typed.
           </p>
         </section>
 

@@ -580,7 +580,7 @@ export default function ReviewScreen() {
               ? <ReviewPill label={monthDay(end.date)} selected open={picker === `${s.id}:end`} onPress={() => togglePicker(`${s.id}:end`)} />
               : <ReviewPill label="Pick a date" onPress={() => { setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date: end?.date ?? suggested.date } })); setPicker(`${s.id}:end`); }} />}
           </ReviewPillRow>
-          {offerQuarters && suggested.date === s.first.seriesUntil ? <TextButton label="On quarters?" accessibilityLabel="My school is on quarters" onPress={switchToQuarters} style={{ alignSelf: 'flex-start' }} /> : null}
+          {offerQuarters && suggested.date === s.first.seriesUntil ? <TextButton label="My school uses quarters" accessibilityLabel="My school uses quarters. Use quarter end dates." onPress={switchToQuarters} style={{ alignSelf: 'flex-start' }} /> : null}
           {end?.mode === 'pick' && picker === `${s.id}:end`
             ? opened(<InlinePicker mode="date" date={end.date} time={null} onChange={(date) => { if (isLocalDate(date)) setSeriesEnd((prev) => ({ ...prev, [s.id]: { mode: 'pick', date } })); }} />)
             : null}

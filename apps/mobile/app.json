@@ -54,7 +54,7 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "Semli shows the events on your calendars beside your classes and shifts, so you can see what overlaps. They stay on your iPhone.",
+          "calendarPermission": "See your calendar events alongside your classes and shifts, so you can spot overlaps. Your calendar events stay on your iPhone.",
           "remindersPermission": false
         }
       ],

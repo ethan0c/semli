@@ -342,7 +342,7 @@ function PlanScreen() {
             days.some((d) => d.unknown) && { glyph: 'outline', color: c.changed, label: 'Needs a time' },
             thisWeek && { glyph: 'now', color: c.inkPrimary, label: 'Now' },
           ])} />
-          {legendSeen ? null : <T token="caption" color={c.inkSecondary}>{sidebar ? '⇧→ for next week.' : 'Swipe for next week.'}</T>}
+          {legendSeen ? null : <T token="caption" color={c.inkSecondary}>{sidebar ? 'Press Shift + → to see next week.' : 'Swipe to see next week.'}</T>}
         </View>
 
         <Animated.View layout={layout} style={styles.section}>

@@ -479,10 +479,10 @@ function TermOverRow({ term, onDone }: { term: TermOver; onDone: () => void }) {
   const act = (action: 'import' | 'remove' | 'dismiss') => { track('term_over_action', { action, courses: old }); onDone(); };
   return (
     <Animated.View layout={layout} entering={enter.fade} exiting={exit.fade} style={styles.section}>
-      <ListRow leading={<Icon name="school" size={20} color={c.inkPrimary} />} title={`Your ${term.name} is over`} sub="Add next term's syllabi" last
+      <ListRow leading={<Icon name="school" size={20} color={c.inkPrimary} />} title={`Your ${term.name} has ended`} sub="Ready for next term? Add your syllabi." last
         onPress={() => { act('import'); router.navigate({ pathname: '/add', params: { source: 'file', at: String(Date.now()) } }); }} />
       <View style={[styles.inlineAction, styles.actions]}>
-        {old ? <TextButton label={`Remove ${count(old, 'old course')}`} onPress={() => { removeCourses(term.oldCourses); act('remove'); }} /> : null}
+        {old ? <TextButton label={`Remove ${count(old, 'finished course')}`} onPress={() => { removeCourses(term.oldCourses); act('remove'); }} /> : null}
         <TextButton label="Not now" tone="muted" onPress={() => act('dismiss')} />
       </View>
     </Animated.View>

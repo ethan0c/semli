@@ -21,11 +21,11 @@ export default function PhoneCalendarScreen() {
   };
   return (
     <ScrollView contentContainerStyle={styles.body} contentInsetAdjustmentBehavior="automatic">
-      <Group footer="Events from the calendars on this iPhone, including Outlook, Google and iCloud, show in Today and Plan and count for overlaps. They stay on this iPhone: Semli doesn't add them to your plan or send them anywhere.">
+      <Group footer="See events from your iPhone's calendars, including Outlook, Google and iCloud, in Today and Plan. Semli shows when they overlap with your plans. These events stay on this iPhone and aren't saved to your Semli account.">
         <ToggleRow label="Show my iPhone calendar" value={showing} onChange={toggle} last />
       </Group>
       {denied ? (
-        <Group footer="Semli can't read your calendar. In Settings, open Privacy & Security, then Calendars, and choose Full Access for Semli.">
+        <Group footer="To show your events, Semli needs calendar access. Open Settings, go to Privacy & Security, then Calendars, and choose Full Access for Semli.">
           <Row label="Open Settings" onPress={() => void openSystemSettings()} last />
         </Group>
       ) : null}

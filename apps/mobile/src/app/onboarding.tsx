@@ -490,9 +490,9 @@ function PhoneCalendarOffer() {
   const { c } = useTheme();
   const on = usePhoneCalendar((s) => s.on && !s.denied);
   if (!PHONE_CALENDAR_AVAILABLE) return null;
-  if (on) return <T token="subhead" color={c.inkSecondary}>Your iPhone calendar shows in Today and Plan.</T>;
+  if (on) return <T token="subhead" color={c.inkSecondary}>Your calendar events now appear in Today and Plan.</T>;
   return (
-    <Press haptic="select" accessibilityRole="button" accessibilityHint="Shows events from Outlook, Google and iCloud beside your plan"
+    <Press haptic="select" accessibilityRole="button" accessibilityHint="Shows events from your iPhone's calendars, including Outlook, Google and iCloud, alongside your plan"
       onPress={() => void turnOnPhoneCalendar("onboarding")} scale={1} style={{ minHeight: size.target, justifyContent: "center", alignSelf: "flex-start" }}>
       <T token="subhead" color={c.accentInk}>Show your iPhone calendar too</T>
     </Press>
