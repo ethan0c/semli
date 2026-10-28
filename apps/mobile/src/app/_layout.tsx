@@ -18,6 +18,7 @@ import { StorageWarning } from '@/components/StorageWarning';
 import { reportError, scrubUrl, scrubUrls } from '@/lib/errors';
 import { useStorageStatus } from '@/lib/storage';
 import { CanvasAutoSync } from '@/lib/canvas-sync';
+import { LaunchUpdate } from '@/components/LaunchUpdate';
 import { CloudBackup } from '@/lib/cloud';
 import { accountOf, useSession } from '@/lib/supabase';
 import { ACCOUNT_REQUIRED } from '@/lib/web';
@@ -245,6 +246,7 @@ function RootLayout() {
     <I18nProvider i18n={i18n}>
     <AnalyticsRoot>
     <PurchasesProvider>
+      <LaunchUpdate />
       <CanvasAutoSync />
       <CloudBackup />
       <ThemeProvider value={{ ...theme, colors: { ...theme.colors, background: c.canvas } }}>
