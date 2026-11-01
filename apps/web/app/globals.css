@@ -1422,13 +1422,15 @@ textarea {
     letter-spacing: -1.6px;
   }
 }
+/* Under 540 the whole nav no longer fits the bar, so it keeps Pricing and the one action. Contact is in the footer, and a phone wants the iPhone app, not the web planner. */
+@media (max-width: 539px) {
+  .nav-wide {
+    display: none;
+  }
+}
 @media (max-width: 480px) {
   .cmp tbody th {
     width: 44%;
-  }
-  /* On a phone the bar keeps Pricing and the one action; Contact is in the footer, and a phone wants the iPhone app, not the web planner. */
-  .nav-wide {
-    display: none;
   }
   .nav {
     gap: 16px;
