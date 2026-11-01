@@ -40,9 +40,26 @@ describe('meme screenshot schedules', () => {
     expect(items.every((item, i) => i === 0 || item.start === items[i - 1]!.end)).toBe(true);
   });
 
-  it('recognizes only the three explicit screenshot commands', () => {
+  it('recognizes only registered screenshot commands', () => {
     expect(MEME_VERSIONS.map((version) => memeVersion(`meme-${version}`))).toEqual(MEME_VERSIONS);
     expect(memeVersion('sample')).toBeNull();
     expect(memeVersion('meme-unknown')).toBeNull();
+    expect(memeVersion('meme-batch-unknown')).toBeNull();
+    expect(new Set(MEME_VERSIONS).size).toBe(MEME_VERSIONS.length);
+  });
+
+  it('gives each batch schedule a readable day and keeps work/class overlaps real', () => {
+    for (const version of MEME_VERSIONS.filter((version) => version.startsWith('batch-'))) {
+      const { items } = memeDemo(version, '2026-11-02');
+      expect(items.length).toBeGreaterThanOrEqual(5);
+      expect(items.length).toBeLessThanOrEqual(6);
+      expect(todayItems(items, '2026-11-02')).toHaveLength(items.length);
+    }
+    for (const version of ['batch-alibis', 'batch-availability'] as const) {
+      const { items } = memeDemo(version, '2026-11-02');
+      const overlaps = conflictIds(items);
+      expect(items.some((item) => item.category === 'work' && overlaps.has(item.id))).toBe(true);
+      expect(items.some((item) => item.category === 'school' && overlaps.has(item.id))).toBe(true);
+    }
   });
 });

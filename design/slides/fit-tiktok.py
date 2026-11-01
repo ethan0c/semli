@@ -7,7 +7,7 @@ to sit inside those margins on a blurred copy of itself, with the status bar cro
   python3 design/slides/fit-tiktok.py ~/Desktop/essay.png ...   # writes ~/Desktop/tiktok/<name>.png
   python3 design/slides/fit-tiktok.py --zones ...               # also draws TikTok's overlays, to check
 """
-import sys
+import argparse
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -17,13 +17,16 @@ SIDE = 110  # centred, so the right edge stays clear of the ~130 px button rail 
 TOP = 150  # under the Following / For You tabs
 CROP_TOP = 200  # status bar off (on a 2868-tall screenshot)
 RADIUS = 44
+BOTTOM = 270
 
 
 def fit(src: Path, zones: bool) -> Image.Image:
     shot = Image.open(src).convert('RGB')
     shot = shot.crop((0, round(CROP_TOP * shot.height / 2868), shot.width, shot.height))
-    width = W - 2 * SIDE
+    # Fit vertically too: the old fixed width left the last rows under the caption.
+    width = min(W - 2 * SIDE, int((H - TOP - BOTTOM) * shot.width / shot.height))
     shot = shot.resize((width, round(shot.height * width / shot.width)), Image.LANCZOS)
+    left = (W - width) // 2
 
     # The screen's empty left margin (sky into paper), stretched across, so nothing in the list tints it.
     edge = shot.crop((0, 0, 12, shot.height)).resize((1, shot.height), Image.BOX)
@@ -34,9 +37,9 @@ def fit(src: Path, zones: bool) -> Image.Image:
     mask = Image.new('L', shot.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, *shot.size), RADIUS, fill=255)
     shadow = Image.new('L', (W, H), 0)
-    ImageDraw.Draw(shadow).rounded_rectangle((SIDE, TOP + 12, SIDE + shot.width, TOP + 12 + shot.height), RADIUS, fill=70)
+    ImageDraw.Draw(shadow).rounded_rectangle((left, TOP + 12, left + shot.width, TOP + 12 + shot.height), RADIUS, fill=70)
     canvas.paste((0, 0, 0), (0, 0), shadow.filter(ImageFilter.GaussianBlur(24)))
-    canvas.paste(shot, (SIDE, TOP), mask)
+    canvas.paste(shot, (left, TOP), mask)
 
     if zones:
         d = ImageDraw.Draw(canvas, 'RGBA')
@@ -47,11 +50,14 @@ def fit(src: Path, zones: bool) -> Image.Image:
 
 
 if __name__ == '__main__':
-    args = sys.argv[1:]
-    zones = '--zones' in args
-    out = Path.home() / 'Desktop' / ('tiktok-zones' if zones else 'tiktok')
-    out.mkdir(exist_ok=True)
-    for a in (a for a in args if a != '--zones'):
-        src = Path(a).expanduser()
-        fit(src, zones).save(out / src.name)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--zones', action='store_true')
+    parser.add_argument('--out', type=Path, help='Output folder (defaults to Desktop/tiktok)')
+    parser.add_argument('screenshots', nargs='+', type=Path)
+    args = parser.parse_args()
+    out = (args.out or Path.home() / 'Desktop' / ('tiktok-zones' if args.zones else 'tiktok')).expanduser()
+    out.mkdir(parents=True, exist_ok=True)
+    for a in args.screenshots:
+        src = a.expanduser()
+        fit(src, args.zones).save(out / src.name)
         print(out / src.name)

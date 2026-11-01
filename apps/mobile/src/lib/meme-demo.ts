@@ -1,9 +1,17 @@
 import { addDays } from '@dayli/core';
 import type { Item } from '@dayli/schema';
+import presets from './meme-presets.json';
 
-export const MEME_VERSIONS = ['cooked', 'comeback', 'busy'] as const;
+const BUILTIN_VERSIONS = ['cooked', 'comeback', 'busy'] as const;
+export const MEME_VERSIONS = [...BUILTIN_VERSIONS, ...presets.map((preset) => preset.id as `batch-${string}`)] as const;
 export type MemeVersion = (typeof MEME_VERSIONS)[number];
 export type MemeDemo = { version: MemeVersion; today: string; selectedDate: string; items: Item[] };
+
+export function memeLabel(version: MemeVersion): string {
+  return presets.find((preset) => preset.id === version)?.label
+    ?? ({ cooked: 'Am I cooked?', comeback: 'Academic comeback tomorrow', busy: 'Told everyone I was busy' } as Record<string, string>)[version]
+    ?? version;
+}
 
 /** Screenshot props only. These items never enter the saved planner or its sync/reminder hooks. */
 export function memeDemo(version: MemeVersion, today: string): MemeDemo {
@@ -17,7 +25,17 @@ export function memeDemo(version: MemeVersion, today: string): MemeDemo {
     });
   };
 
-  if (version === 'cooked') {
+  const preset = presets.find((preset) => preset.id === version);
+  if (preset) {
+    for (const item of preset.items) {
+      const task = item.kind === 'task';
+      const category = item.category === 'school' ? 'school' : item.category === 'work' ? 'work' : 'personal';
+      add(item.title, item.start, item.end ?? null, {
+        category, kind: task ? 'task' : 'event', isDeadline: task,
+        icon: category === 'school' ? 'book' : category === 'work' ? 'work' : 'calendar',
+      });
+    }
+  } else if (version === 'cooked') {
     const urgent = { urgent: true };
     add('meeting with john pork', '08:00', '09:00', urgent);
     add('conflict resolution with tim cheese', '08:00', '09:00', urgent);
@@ -40,7 +58,7 @@ export function memeDemo(version: MemeVersion, today: string): MemeDemo {
     deadlines.forEach((title, i) => add(title, `${String(8 + Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`, null, {
       date: addDays(today, 1), kind: 'task', category: 'school', icon: 'book', isDeadline: true, urgent: true,
     }));
-  } else {
+  } else if (version === 'busy') {
     add('think about starting assignment', '08:00', '09:00');
     add('recover from thinking about it', '09:00', '10:00');
     add('make a playlist for the assignment', '10:00', '11:00');

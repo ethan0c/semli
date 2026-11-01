@@ -1,0 +1,281 @@
+{
+  "name": "2026-11",
+  "timezone": "America/New_York",
+  "status": "draft",
+  "posts": [
+    {
+      "date": "2026-11-02",
+      "time": "11:00",
+      "preset": "batch-closing",
+      "pillar": "work-school",
+      "hook": "closing shift at 11pm. exam at 8am.",
+      "caption": "closing shift at 11pm. exam at 8am.",
+      "scheduled_at": "2026-11-02T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-02T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-closing/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-04",
+      "time": "19:00",
+      "preset": "batch-alibis",
+      "pillar": "work-school",
+      "hook": "when your shift and exam both start at 2",
+      "caption": "when your shift and exam both start at 2",
+      "scheduled_at": "2026-11-04T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-05T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-alibis/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-06",
+      "time": "11:00",
+      "preset": "batch-email",
+      "pillar": "college",
+      "hook": "six days to send a three-sentence email",
+      "caption": "six days to send a three-sentence email",
+      "scheduled_at": "2026-11-06T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-06T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-email/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-08",
+      "time": "19:00",
+      "preset": "batch-twenty",
+      "pillar": "college",
+      "hook": "getting ready to study counts as studying",
+      "caption": "getting ready to study counts as studying",
+      "scheduled_at": "2026-11-08T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-09T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-twenty/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-09",
+      "time": "19:00",
+      "preset": "batch-clinical",
+      "pillar": "work-school",
+      "hook": "clinicals at 6am, care plan due at 11:59pm",
+      "caption": "clinicals at 6am, care plan due at 11:59pm",
+      "scheduled_at": "2026-11-09T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-10T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-clinical/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-11",
+      "time": "11:00",
+      "preset": "batch-swap",
+      "pillar": "work-school",
+      "hook": "swapping a shift to study for 20 minutes",
+      "caption": "swapping a shift to study for 20 minutes",
+      "scheduled_at": "2026-11-11T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-11T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-swap/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-13",
+      "time": "19:00",
+      "preset": "batch-group",
+      "pillar": "college",
+      "hook": "“we all worked really hard on this”",
+      "caption": "“we all worked really hard on this”",
+      "scheduled_at": "2026-11-13T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-14T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-group/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-15",
+      "time": "11:00",
+      "preset": "batch-eightam",
+      "pillar": "college",
+      "hook": "all that for a zoom lecture",
+      "caption": "all that for a zoom lecture",
+      "scheduled_at": "2026-11-15T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-15T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-eightam/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-16",
+      "time": "19:00",
+      "preset": "batch-availability",
+      "pillar": "work-school",
+      "hook": "“did you send us your class schedule?”",
+      "caption": "“did you send us your class schedule?”",
+      "scheduled_at": "2026-11-16T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-17T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-availability/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-18",
+      "screen_date": "2026-11-21",
+      "time": "11:00",
+      "preset": "batch-weekend",
+      "pillar": "work-school",
+      "hook": "“you don’t have class on weekends though”",
+      "caption": "“you don’t have class on weekends though”",
+      "scheduled_at": "2026-11-18T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-18T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-weekend/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-20",
+      "time": "19:00",
+      "preset": "batch-readings",
+      "pillar": "college",
+      "hook": "when the syllabus says “a little reading”",
+      "caption": "when the syllabus says “a little reading”",
+      "scheduled_at": "2026-11-20T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-21T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-readings/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-22",
+      "time": "11:00",
+      "preset": "batch-comeback",
+      "pillar": "college",
+      "hook": "planning the academic comeback instead of doing the assignment",
+      "caption": "planning the academic comeback instead of doing the assignment",
+      "scheduled_at": "2026-11-22T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-22T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-comeback/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-23",
+      "time": "11:00",
+      "preset": "batch-breakshift",
+      "pillar": "work-school",
+      "hook": "“enjoy your week off”",
+      "caption": "“enjoy your week off”",
+      "scheduled_at": "2026-11-23T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-23T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-breakshift/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-25",
+      "screen_date": "2026-11-27",
+      "time": "19:00",
+      "preset": "batch-blackfriday",
+      "pillar": "work-school",
+      "hook": "black friday shift at 5am. paper due at midnight.",
+      "caption": "black friday shift at 5am. paper due at midnight.",
+      "scheduled_at": "2026-11-25T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-26T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-blackfriday/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-27",
+      "time": "11:00",
+      "preset": "batch-discussion",
+      "pillar": "college",
+      "hook": "trying to turn “i agree” into 100 words",
+      "caption": "trying to turn “i agree” into 100 words",
+      "scheduled_at": "2026-11-27T11:00:00-05:00",
+      "scheduled_at_utc": "2026-11-27T16:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-discussion/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    },
+    {
+      "date": "2026-11-29",
+      "time": "19:00",
+      "preset": "batch-finals",
+      "pillar": "college",
+      "hook": "checking the grade calculator like the answer’s going to change",
+      "caption": "checking the grade calculator like the answer’s going to change",
+      "scheduled_at": "2026-11-29T19:00:00-05:00",
+      "scheduled_at_utc": "2026-11-30T00:00:00+00:00",
+      "status": "needs_human_review",
+      "asset": "batch-finals/tiktok.png",
+      "platforms": [
+        "tiktok"
+      ],
+      "format": "photo",
+      "published_post_id": null
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
 import { useNow } from '@/lib/now';
 import { setDevMeme, setDevMemeDate, useDevToday } from '@/lib/dev';
-import { MEME_VERSIONS } from '@/lib/meme-demo';
+import { memeLabel, MEME_VERSIONS } from '@/lib/meme-demo';
 import { accountOf, useSession } from '@/lib/supabase';
 import { useCourseList, useItemList, useScheduleList, useStore, type Batch } from '@/store';
 import { THIS_DEVICE } from '@/lib/web';
@@ -158,7 +158,7 @@ export default function DataScreen() {
       {__DEV__ ? (
         <Group title="Meme screenshots" footer="Temporary data for Today and Plan. Your saved plan stays as it is. You can scroll the lists to capture every row.">
           {MEME_VERSIONS.map((version) => (
-            <Row key={version} label={{ cooked: 'Am I cooked?', comeback: 'Academic comeback tomorrow', busy: 'Told everyone I was busy' }[version]}
+            <Row key={version} label={memeLabel(version)}
               onPress={() => { setDevMeme(version, now.date); feedback('select'); router.dismissTo('/'); }} />
           ))}
           {meme?.version === 'comeback' ? <Row label="Show tomorrow’s 23 deadlines" onPress={() => {

@@ -2,7 +2,7 @@
 
 Status: Oct 20, 2026. Replaces the $2,000 budget in [launch-guide.md](launch-guide.md) §4.4 for the beta. Positioning, channels and rules stay as written there. Numbers to watch are in §4.5 of the launch guide.
 
-Since Nov 1, 2026, posting on the brand accounts follows [tiktok-plan.md](tiktok-plan.md), which replaces the weekly clips and allows 4 to 5 posts a week.
+Since Nov 1, 2026, active posting is TikTok-only. Instagram is deferred for a separate plan. TikTok posting follows [tiktok-plan.md](tiktok-plan.md), which replaces the weekly clips and allows 4 to 5 posts a week.
 
 ## 1. The constraints this plan is built for
 
