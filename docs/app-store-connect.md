@@ -1,6 +1,6 @@
 # App Store Connect: every field, ready to paste
 
-October 20, 2026. App record **Semli: AI Student Planner**, Apple ID `6824600264`, bundle id `app.semli.mobile`. Character counts are in brackets where Apple has a limit. Where a field needs something only you have (a phone number, a demo account), it says **you**. Finished screenshots: `design/screenshots/` (6.9-inch), `design/screenshots/6.3-inch/` and the header and search card in `design/screenshots/header/`, all made by `design/render-screenshots.py`. Sidebar order follows App Store Connect: General → App Store → Trust & Safety → Growth & Marketing → Monetization.
+Updated November 1, 2026 for app version **1.2.0**. App record **Semli: AI Student Planner**, Apple ID `6824600264`, bundle id `app.semli.mobile`. Character counts are in brackets where Apple has a limit. Where a field needs something only you have (a phone number, a demo account), it says **you**. Finished screenshots: `design/screenshots/` (6.9-inch), `design/screenshots/6.3-inch/` and the header and search card in `design/screenshots/header/`, all made by `design/render-screenshots.py`. Sidebar order follows App Store Connect: General → App Store → Trust & Safety → Growth & Marketing → Monetization.
 
 ## 1. General → App Information
 
@@ -9,7 +9,7 @@ The page as App Store Connect shows it, top to bottom.
 | Field | Value |
 |---|---|
 | Name [30] | `Semli: AI Student Planner` (25) |
-| Subtitle [30] | `Syllabus, shifts & deadlines` (28) |
+| Subtitle [30] | `Syllabus, shifts & deadlines` (27) |
 | Apple ID | `6824600264` (read-only) |
 | Bundle ID | `app.semli.mobile` (read-only once a build is uploaded) |
 | SKU | `semli-ios` (any unique string; never shown to customers) |
@@ -19,14 +19,14 @@ The page as App Store Connect shows it, top to bottom.
 | Content Rights | **Set Up** → "Does not contain, show, or access third-party content". The bundled showcase photos are licensed to us, not third-party content in Apple's sense. |
 | License Agreement | Apple's Standard License Agreement. Do not upload a custom EULA; the subscription terms on the paywall and `semli.app/terms` are enough. |
 
-**Age Ratings → Set Up.** Answer the questionnaire like this; the result is 4+ everywhere.
+**Age Ratings → Set Up.** Review the questionnaire for 1.2.0, including schedule sharing. Use the rating App Store Connect calculates; the old private-plans-only answers no longer describe the app.
 
 | Section | Question | Answer |
 |---|---|---|
 | In-App Controls | Parental controls | No |
 | In-App Controls | Age assurance | No |
-| Capabilities | Unrestricted web access | **No** (the app opens only our own links and the Canvas feed the user pastes; no browser) |
-| Capabilities | User-generated content | **No** (plans are private to the device or the account; nothing is shared with other users; `SHARING_ENABLED` is off) |
+| Capabilities | Unrestricted web access | **No** (no general-purpose browser; opens Semli links and the calendar feed the user supplies) |
+| Capabilities | User-generated content | **Yes** (account holders can share school and work plans through a link anyone with the link can view; no public directory, comments or chat) |
 | Capabilities | Social media | No |
 | Capabilities | Messaging and chat | No |
 | Capabilities | Advertising | No |
@@ -61,49 +61,55 @@ If the questionnaire asks about "frequent or intense" anything, every answer is 
 
 **Additional Information.** View on App Store (inactive until live); Edit User Access: add Rico as App Manager if he configures products; Remove App: no.
 
-**Draft Submissions (1).** The 1.0 version page. It submits when sections 2 to 6 below are complete and a build is attached.
+**Version submission.** Use the 1.2.0 version page and attach a matching build after checking sections 2 to 6 below. This guide describes repository metadata; check submission status in App Store Connect.
 
 ## 2. Pricing and Availability
 - Price: **Free** (Plus is sold inside the app).
-- Availability: United States only for the beta; all territories at public launch.
+- Availability: confirm the enabled territories in App Store Connect. The repository includes en-US, en-GB, en-AU and en-CA listings.
 - Pre-orders: off. App distribution: public.
 
-## 3. Version information (the 1.0 page)
+## 3. Version information (1.2.0)
+
+`apps/mobile/store.config.json` is the source of truth for all four English listings. The en-US fields below match it. Run `npm run store:check` before pushing metadata.
 
 **Promotional text** [170], editable without a new build (162 characters):
 ```
 Registered for spring? Add your classes now. Import a syllabus, a schedule screenshot, or your Canvas or Brightspace calendar, and see the whole term in one plan.
 ```
 
-**Description** [4000] (1,844 characters):
+**Description** [4000] (2,554 characters):
 ```
 Keep classes, work shifts, and assignment deadlines in one student planner.
 
-Upload a syllabus PDF, a screenshot of your shifts, or a message from class. Semli finds dates and times for you to review before adding them to your plan. You can correct the details or undo an import later.
+Upload a syllabus PDF, a screenshot of your shifts, or a message from class. You can also type or speak your plans. Semli finds dates and times for you to review before adding them. Check uncertain details, leave items out, or return to an unfinished review later.
 
 See what’s next
 Check today’s plans, view your week, and spot overlaps between work and school.
 
 Bring your course dates together
-Add exams and assignments from a syllabus, or import assignments from your Canvas or Brightspace calendar feed.
+Add exams and assignments from a syllabus, or import your Canvas or Brightspace calendar feed, including eLC. The first feed import is free; Plus keeps it in sync. Set repeating classes and edit one event or the upcoming series.
+
+See your iPhone calendar alongside your plan
+Choose which calendars to show, including iCloud, Google and Outlook calendars already on your iPhone. See where their events overlap with your plans. These events stay on your iPhone.
 
 Choose your reminders
 Set reminders for events and deadlines, with an optional daily summary. Choose reminder times and quiet hours.
 
+Share your next two weeks
+With an account, create a link to the school and work plans you choose. Anyone with the link can view them in a browser. Hide titles, choose when the link expires, or stop sharing at any time. Personal plans and iPhone calendar events aren’t included.
+
 Start with the free plan
-Use the calendar, to-dos, reminders, and five AI imports to start, then three a month. No account is required.
+Use the calendar, to-dos, reminders, and five AI imports in your first 30 days, then three a month. No account is required on iPhone.
 
 Add more with Semli Plus
-Import as often as you need with Plus. Compare a new work schedule with your existing shifts and choose which changes to keep. Get suggested times for overlaps. Plus also checks Canvas or Brightspace for updates when you open the app or tap Sync now.
+Import as often as you need. Compare a new work schedule with your existing shifts and choose which changes to keep. Get suggested times for overlaps. Plus checks Canvas or Brightspace for updates when you open the app or tap Sync now.
 
 With Plus, add a time to an urgent item to have it ring like an alarm. You’ll need iOS 26 or later and alarm permission.
 
 Choose monthly, six-month, or yearly billing. Student pricing is on the honor system. Eligible new subscribers can try Plus for seven days.
 
-Private by default
-Your plan stays on your phone, with optional account backup. Semli’s servers don’t save your original uploads; our privacy policy explains how the AI provider handles requests.
-
-Built for students who mix lectures, labs, clinicals, and part-time work. iPhone only for now.
+Keep your plan on iPhone or use an account
+An optional account backs up your plan and lets you use Semli in a browser at app.semli.app. Reminders and ringing alarms work on iPhone. Semli’s servers don’t save your original uploads; our privacy policy explains how speech recognition and AI requests are handled.
 
 Subscriptions renew automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel in your Apple ID settings. Terms: https://semli.app/terms. Privacy: https://semli.app/privacy.
 ```
@@ -124,9 +130,9 @@ college,schedule,assignment,tracker,class,work,semester,homework,calendar,nursin
 ```
 (98 characters.)
 
-**What’s New in This Version** [4000], for 1.0:
+**What’s New in This Version** [4000], for 1.2.0 (352 characters):
 ```
-First release. Syllabus and work-schedule import, Canvas import, reminders, and the week as a chart.
+Show iPhone calendar events beside your plan and spot overlaps. Share a link to your next two weeks, with control over what it shows and when it stops. Edit one repeating class or the upcoming series. Connect Brightspace, including eLC, as well as Canvas, and review imports as dates appear, with uncertain details flagged and unfinished reviews saved.
 ```
 
 | Field | Value |
@@ -134,7 +140,7 @@ First release. Syllabus and work-schedule import, Canvas import, reminders, and 
 | Support URL | `https://semli.app/contact` |
 | Marketing URL | `https://semli.app` |
 | Copyright | `2026 Chibudom Onyejesi` (**you**: or your company name once there is one) |
-| Version | Must match `expo.version` in `apps/mobile/app.json` (`1.1.2` since Oct 23, 2026). If the App Store Connect version page says anything else, rename it to 1.1.2 before attaching the build; an unreleased version can be renamed. |
+| Version | Must match `expo.version` in `apps/mobile/app.json` and `apple.version` in `apps/mobile/store.config.json` (both `1.2.0`). Attach a 1.2.0 build to the 1.2.0 version page. |
 | Build | Uploaded by `eas submit`; pick the latest |
 | App Clip, Game Center | none |
 
@@ -146,15 +152,16 @@ First release. Syllabus and work-schedule import, Canvas import, reminders, and 
 | 2 | `02-review-syllabus.png` | Your syllabus, in your planner |
 | 3 | `03-review-update.png` | See what changed in your shifts |
 | 4 | `04-plan.png` | School and work, one calendar |
-| 5 | `05-spread.png` | Plan ahead for busy weeks |
-| 6 | `06-today-hours.png` | Your day, hour by hour |
-| 7 | `07-school.png` | Keep your course dates together |
-| 8 | `08-item.png` | Choose your reminders |
-| 9 | `09-canvas.png` | Bring Canvas into your plan |
+| 5 | `05-share.png` | Share your week with a link |
+| 6 | `06-spread.png` | Plan ahead for busy weeks |
+| 7 | `07-today-hours.png` | Catch overlaps in advance |
+| 8 | `08-overlap-fix.png` | Then move it to a free time |
+| 9 | `09-course.png` | Everything for one course |
+| 10 | `10-canvas.png` | Bring in your class calendar |
 
 **No prices, trials or "free" in any screenshot, the name, subtitle, keywords or promotional text** (guideline 2.3.7; 1.0 was rejected for the paywall shot on Oct 23, 2026). Prices belong only on the paywall in the app, which shows the live store price; keep them out of the description too (Apple advises against specific prices there), and say "eligible new subscribers" rather than promising every reader a trial. Delete `10-paywall.png` from App Store Connect if it is still uploaded.
 
-The set was rerendered Oct 21, 2026: shots on the morning sky with the wordmark and an EB Garamond caption each, no sublines, one accent phrase in lavender italic, captured with the new main-tab headers; the header and search card moved to the same sky and faces. Recaptured Oct 23, 2026 with the course dot in place of the gutter bar, nine shots, no paywall; later that day the captions were rewritten after the copy audit (`docs/copy-audit-2026-10-23.md`) so each one matches its screen, and shot 2 became a real syllabus review (`02-review-syllabus.png`, which replaces `02-review.png`: delete the old one in App Store Connect). Re-upload all nine, the 6.3-inch copies and the search card (the header has no phone and did not change). Apple scales the 6.9-inch set to every other iPhone size. The 6.1"/6.3" slot (1206 × 2622) is optional; downscaled copies are in `design/screenshots/6.3-inch/`. The foldable set was dropped. No iPad set (`supportsTablet: false`). App previews (video): none for 1.0.
+The current ten-shot set includes sharing, overlap suggestions and the course screen. Upload the numbered files above in order, replacing older screenshots in App Store Connect. `design/render-screenshots.py` defines the set and storefront captions. Extra screenshots in `design/screenshots/extra/` include the paywall and are for the website and social posts, not the store listing. Apple scales the 6.9-inch set to other iPhone sizes. The optional 6.1"/6.3" slot (1206 × 2622) has matching copies in `design/screenshots/6.3-inch/`. No iPad set (`supportsTablet: false`). No app preview video is supplied.
 
 **Growth & Marketing → Custom Product Pages / Asset Library** (optional, iOS 27): Header `design/screenshots/header/header-3840x1646.png` (wordmark and tagline centered); Search Results `design/screenshots/header/search-3840x2560.png` (tagline and the Today phone). Check both in the Preview tool; the crop differs per device.
 
@@ -162,24 +169,30 @@ The set was rerendered Oct 21, 2026: shots on the morning sky with the wordmark 
 
 | Field | Value |
 |---|---|
-| Sign-in required | **Yes** (the app has optional accounts; reviewers need a way in). Reviewer account `review@semli.app` exists, email confirmed (created Oct 20, 2026 via the Supabase admin API). The password is `REVIEW_PASSWORD` in the repo-root `.env`; paste both into Sign-in Information. Notes: "Tap I have an account on the welcome screen and sign in with email and password. An account is optional; every feature also works signed out." |
+| Sign-in required | **Yes** (the app has optional accounts; reviewers need a way in). Reviewer account `review@semli.app` exists, email confirmed (created Oct 20, 2026 via the Supabase admin API). The password is `REVIEW_PASSWORD` in the repo-root `.env`; paste both into Sign-in Information. Notes: "Tap I have an account on the welcome screen and sign in with email and password. An account is optional for the iPhone planner; backup, the web planner and schedule sharing require an account." |
 | Contact first/last name, phone, email | **you** |
 | Notes | see below |
 | Attachment | none |
 
 Notes for the reviewer:
 ```
-No account is needed to use the app; the reviewer account is only for testing login and backup.
+No account is needed to use the iPhone planner. Use the reviewer account to test login, backup, the web planner and schedule sharing.
 
 To see a populated planner: in onboarding, pick Student, any major, then tap "Explore my preview first".
 
 To test an import: on the Add tab, type "I work Fri 4-10 and Sat 11-5 at the campus café, exam Monday at 9" and send. The review screen shows what was found; tap Add to confirm.
 
-To test Canvas sync: You → Canvas, paste any Canvas calendar feed link (webcal://…/feeds/calendars/….ics). A test feed: [you: paste a feed URL from a Canvas test account, or remove this line].
+To test a class calendar: You → Class calendar, paste a Canvas or Brightspace calendar feed link (including eLC). The first feed import is available without Plus; Plus checks for updates when the app opens or you tap Sync now. A test feed: [you: paste a feed URL from a test account, or remove this sentence].
 
-Subscriptions use StoreKit through RevenueCat. Each product has a 7-day free trial. Price, period, renewal terms and Restore purchases are on the paywall (You → Your plan).
+To test iPhone calendar events: You → iPhone calendar, allow calendar access and choose calendars to show. Their events appear alongside the plan in Today and Plan, stay on the iPhone and are not included in backup or share links.
 
-Photos permission is used only to show recent screenshots on the Add tab. Notifications are local reminders. AlarmKit (iOS 26) is used for items the user marks urgent.
+To test sharing: sign in, then You → Share your schedule. Choose School and/or Work, whether to show titles, and when sharing stops. Create a link and open it in a browser. Anyone with that link can view the next two weeks without an account. Stop the link from the same screen; personal plans and iPhone calendar events are excluded.
+
+To test repeating events: open a repeating class and change its time for one occurrence or every upcoming occurrence. The Repeat screen edits the repeating days and end date.
+
+Subscriptions use StoreKit through RevenueCat. Eligible new subscribers are offered a 7-day free trial; eligibility and localized prices come from the store. Price, period, renewal terms and Restore purchases are on the paywall (You → Your plan).
+
+Photo access shows recent screenshots on Add; camera access lets the user photograph a printed schedule. Microphone and speech recognition access allow dictation; Apple transcribes on the device when available, otherwise on its servers. Semli receives only the transcript. Calendar access reads the selected iPhone calendars on the device. Notifications are local reminders. With Plus and alarm permission, AlarmKit (iOS 26 or later) rings for timed items marked urgent.
 ```
 
 ## 5. App Privacy (the nutrition label)
@@ -192,15 +205,15 @@ Data collected, with purpose. Nothing is used for tracking; do not check "Tracki
 | Contact Info → Email Address | Linked | App Functionality (account), Developer's Advertising or Marketing | Supabase, only when they sign up; account holders get the welcome email and the semester broadcasts (Resend "App users" group) |
 | Identifiers → User ID | Linked | App Functionality | Supabase user id, RevenueCat app user id |
 | Purchases → Purchase History | Linked | App Functionality | RevenueCat |
-| User Content → Other User Content | Not linked | App Functionality | Messages, screenshots and PDFs sent for extraction; not stored |
-| User Content → Photos or Videos | Not linked | App Functionality | Same, when the import is an image |
+| User Content → Other User Content | Linked for account-backed plans and share links; extraction inputs are not linked | App Functionality | Optional account backup stores plan content. Share links store selected school/work dates, times and optional titles, plus the first name if supplied; anyone with the link can view the next two weeks. Personal plans, notes, files and iPhone calendar events are excluded from links. Original extraction uploads are not stored by Semli |
+| User Content → Photos or Videos | Not linked | App Functionality | Images selected for extraction; original uploads are not stored by Semli |
 | Usage Data → Product Interaction | Not linked | Analytics | PostHog (no content, no titles) |
 | Diagnostics → Crash Data, Performance Data | Not linked | App Functionality | Sentry |
 | Identifiers → Device ID | Not linked | Analytics | PostHog anonymous id |
 
-Not collected: name (optional, stays on the phone unless they sign up with it; if you keep it in the Supabase user metadata, add Contact Info → Name, linked), location, contacts, health, financial info, browsing history, search history.
+Not collected: location, contacts, health, payment card details, browsing history or search history. A name entered only on the phone stays there unless included in account metadata or a share-link title. iPhone calendar events stay on the device. Semli receives dictated text, never microphone audio; Apple may process speech on its servers when on-device recognition is unavailable. Review the complete label in App Store Connect before submission.
 
-Privacy policy (`apps/web/app/privacy/page.tsx`, rewritten Oct 20, 2026) covers all ten declared types and names providers only by role (AI model, hosting, database and authentication, subscriptions, product analytics, error monitoring), never by company. Keep it that way. Phone Number is not collected. Turn on "Prevent storing of IP addresses" in the Sentry project so no location is collected.
+Privacy policy (`apps/web/app/privacy/page.tsx`, updated Oct 28, 2026) covers account backup, share links, iPhone calendar access and speech recognition, alongside imports, subscriptions, analytics and diagnostics. It names speech-recognition providers where needed to explain who processes audio. Phone Number is not collected. Turn on "Prevent storing of IP addresses" in the Sentry project so no location is collected.
 
 ## 5b. Trust & Safety → App Accessibility (Accessibility Nutrition Label)
 
@@ -219,16 +232,16 @@ Declare only what is true on a device; Apple can check. Current state of the cod
 
 ## 5c. Everything else in the sidebar
 
-| Page | 1.0 answer |
+| Page | Current guidance |
 |---|---|
 | Growth & Marketing → In-App Events | None. |
-| Growth & Marketing → Custom Product Pages | None for 1.0; later one per intent page (nursing, shifts, syllabus). |
+| Growth & Marketing → Custom Product Pages | None supplied in the repository; consider one per intent page (nursing, shifts, syllabus). |
 | Growth & Marketing → Asset Library | Upload the header and search card from `design/screenshots/header/`. |
 | Growth & Marketing → Product Page Optimization | Nothing until there is traffic; first test: screenshot 1 with and without the wordmark. |
-| Growth & Marketing → Promo Codes | Generate 20 for beta students once approved; they unlock a subscription for free. |
+| Growth & Marketing → Promo Codes | Generate 20 for beta students if needed; verify eligibility and redemption behavior in App Store Connect. |
 | Game Center | Off. |
-| Monetization → Featuring / Nominations | Nominate for the back-to-school window (early January 2027) after launch. |
-| Ratings and Reviews | Nothing to set; respond to every review once live. |
+| Monetization → Featuring / Nominations | Nominate for the back-to-school window (early January 2027) when ready. |
+| Ratings and Reviews | Nothing to set; respond to every review as reviews arrive. |
 
 ## 6. In-App Purchases
 
@@ -236,14 +249,14 @@ Subscription group **Semli Plus** (group display name shown to customers: `Semli
 
 | Product ID | Display name [30] | Description [45] | Duration | Price | Intro offer |
 |---|---|---|---|---|---|
-| `semli_plus_monthly_student` | Plus Monthly, student | Unlimited imports and Canvas sync | 1 month | $4.99 | Free, 1 week |
-| `semli_plus_semester_student` | Plus Semester, student | Unlimited imports and Canvas sync | 6 months | $14.99 | Free, 1 week |
-| `semli_plus_yearly_student` | Plus Yearly, student | Unlimited imports and Canvas sync | 1 year | $24.99 | Free, 1 week |
-| `semli_plus_monthly_regular` | Plus Monthly | Unlimited imports and Canvas sync | 1 month | $7.99 | Free, 1 week |
-| `semli_plus_semester_regular` | Plus Semester | Unlimited imports and Canvas sync | 6 months | $24.99 | Free, 1 week |
-| `semli_plus_yearly_regular` | Plus Yearly | Unlimited imports and Canvas sync | 1 year | $44.99 | Free, 1 week |
+| `semli_plus_monthly_student` | Plus Monthly, student | Unlimited imports and class calendar sync | 1 month | $4.99 | Free, 1 week |
+| `semli_plus_semester_student` | Plus Semester, student | Unlimited imports and class calendar sync | 6 months | $14.99 | Free, 1 week |
+| `semli_plus_yearly_student` | Plus Yearly, student | Unlimited imports and class calendar sync | 1 year | $24.99 | Free, 1 week |
+| `semli_plus_monthly_regular` | Plus Monthly | Unlimited imports and class calendar sync | 1 month | $7.99 | Free, 1 week |
+| `semli_plus_semester_regular` | Plus Semester | Unlimited imports and class calendar sync | 6 months | $24.99 | Free, 1 week |
+| `semli_plus_yearly_regular` | Plus Yearly | Unlimited imports and class calendar sync | 1 year | $44.99 | Free, 1 week |
 
-Each product also needs: availability (all territories or US), a **review screenshot** (use `6-paywall.png`), and review notes ("Student pricing is on the honor system; nothing is verified."). Subscription levels in the group: yearly = level 1, semester = level 2, monthly = level 3, student and regular at the same level, so upgrades and downgrades behave.
+Each product also needs: availability (all territories or US), a **review screenshot** (use `design/screenshots/extra/05-paywall.png` (review only; never upload it as a public listing screenshot)), and review notes ("Student pricing is on the honor system; nothing is verified."). Subscription levels in the group: yearly = level 1, semester = level 2, monthly = level 3, student and regular at the same level, so upgrades and downgrades behave.
 
 Agreements: the **Paid Applications** agreement must be signed (Business → Agreements) with banking and tax forms done, or the products stay "Missing Metadata".
 
@@ -254,19 +267,22 @@ Agreements: the **Paid Applications** agreement must be signed (Business → Agr
 | Beta App Description | `Keep classes, shifts, and deadlines in one place. Add a syllabus or a screenshot of your work schedule, check the dates Semli finds, and save them to your calendar.` |
 | Feedback email | `hello@semli.app` |
 | Marketing URL / Privacy Policy URL | `https://semli.app`, `https://semli.app/privacy` |
-| What to Test | `Try adding one of your own syllabi or work schedules. Check the dates Semli finds before saving, then open Today to see your plan. If your school uses Canvas, try connecting it under You → Canvas. Set a reminder and see whether it arrives when you expect. You can also try Plus and restore purchases; TestFlight purchases won't charge you. You don't need an account to get started, but signing up lets you back up your plan. If a date is wrong, something breaks, or you're unsure what to do next, please send feedback through TestFlight or email hello@semli.app.` |
+| What to Test | `Try adding one of your own syllabi or work schedules. Check the dates Semli finds before saving, then open Today to see your plan. Try Canvas or Brightspace under You → Class calendar. You can also show your iPhone calendar, edit a repeating class and create a schedule link under You → Share your schedule (an account is required for sharing). Set a reminder and see whether it arrives when you expect. You can also try Plus and restore purchases; TestFlight purchases won't charge you. You don't need an account to get started, but signing up lets you back up your plan. If a date is wrong, something breaks, or you're unsure what to do next, please send feedback through TestFlight or email hello@semli.app.` |
 | Beta App Review contact | **you** |
 | Export compliance | "No" to non-exempt encryption; `ITSAppUsesNonExemptEncryption = false` is in `app.json` |
 | Groups | Internal: "Team" (you and Rico). External: "Survey", [survey invite](https://testflight.apple.com/join/vG3RD6EJ), cap 60 for 58 survey respondents; "Beta", [public beta invite](https://testflight.apple.com/join/j15Rp5m4), cap 200. Separate links and caps; `semli.app/beta` routes public outreach to Beta. |
 
 ## 8. Before you press Submit
 
-- [ ] `expo.version` bumped to `1.0.0`; build number set by EAS (`autoIncrement` in `eas.json`).
+- [x] `expo.version` and store `apple.version` both set to `1.2.0`; build number set by EAS (`autoIncrement` in `eas.json`).
+- [ ] Run `npm run store:check`, upload the current ten screenshots, and review age-rating and privacy answers for sharing and account backup.
 - [x] Production keys in EAS env (pushed Oct 20, 2026 to `production` and `preview`): every `EXPO_PUBLIC_*` value from `apps/mobile/.env` with `EXPO_PUBLIC_API_URL=https://semli.app`, plus `SENTRY_AUTH_TOKEN` so EAS uploads source maps and dSYMs to the `semli-mobile` Sentry project. Re-push after a key changes: `npx eas-cli env:push --environment production --environment preview --path <file>`.
 - [ ] Web host env: `SUPABASE_URL`, `SUPABASE_KEY`, `REVENUECAT_SECRET_KEY`, `ANTHROPIC_API_KEY`.
 - [ ] Supabase: anonymous sign-ins on (off as of Oct 20), all three migrations run. Done Oct 20: Resend SMTP on (dashboard), code email templates pushed from `supabase/config.toml`, Site URL `https://semli.app`. See `supabase/templates/README.md`.
 - [ ] One sandbox purchase per term works, Restore works, the trial shows as a trial in RevenueCat.
-- [ ] A reminder fired on a real phone; a Canvas feed synced on a real phone.
-- [ ] `APP_STORE_LIVE = true` in `apps/web/lib/site.ts` once approved, so the site's "Get the app" links to the store.
+- [ ] A reminder fired on a real phone; Canvas and Brightspace feeds synced on a real phone.
+- [ ] iPhone calendar events stay local; sharing includes only the selected school/work plans, hides titles when requested, expires as chosen and stops when revoked.
+- [ ] Voice input keeps the transcript after stopping; repeat edits apply to the chosen occurrence or upcoming series.
+- [ ] Check the live App Store listing and the site's "Get the app" destination before announcing this version. `WEB_APP_LIVE` is true and `APP_URL` is `https://app.semli.app`; test sign-in and plan sync in the browser.
 
 **Sign in with Apple (Oct 20).** Native Apple sign-in is implemented alongside Google on welcome, login and signup. Before submission, enable the App ID capability and Supabase Apple provider (`app.semli.mobile`), build a new binary, and verify a real-device sign-in with Hide My Email. The remaining account-deletion revocation check is in [todo.md](todo.md) and the [launch checklist](launch-checklist.md).
