@@ -29,7 +29,8 @@ import { columnHeader } from '@/components/ColumnHeader';
 import { Sidebar } from '@/components/DesktopTabs';
 import { PlanChoice } from '@/components/PlanChoice';
 import { Toast } from '@/components/Overlay';
-import { devAppearance, devClock, devCommand, devImport, setDevImport, setDevToday } from '@/lib/dev';
+import { devAppearance, devClock, devCommand, devImport, setDevImport, setDevMeme, setDevMemeDate, setDevToday, useDevToday } from '@/lib/dev';
+import { memeVersion } from '@/lib/meme-demo';
 import { i18n } from '@/lib/i18n';
 import { SHOWCASE, SKY, preloadPhotos } from '@/lib/images';
 import { skySlot } from '@/lib/sky';
@@ -111,7 +112,9 @@ function RootLayout() {
   });
   const hydrated = useStore((s) => s.hydrated);
   const loadFailed = useStorageStatus((s) => s.loadFailed);
-  const onboarded = useStore((s) => s.settings.onboarded);
+  const savedOnboarded = useStore((s) => s.settings.onboarded);
+  const meme = useDevToday().meme;
+  const onboarded = savedOnboarded || !!meme;
   // The web plans only for a signed-in account: without one, only the auth screens are open.
   const sessionReady = useSession((s) => s.ready);
   const signedIn = useSession((s) => !!accountOf(s.session));
@@ -181,6 +184,15 @@ function RootLayout() {
       if (appearance) useStore.getState().setSettings({ appearance });
       // A clock with a day ("2026-10-19 09:41") seeds the week around that day.
       const today = /^\d{4}-\d{2}-\d{2}/.exec(clock ?? '')?.[0] ?? localParts(new Date()).date;
+      const memeTomorrow = cmd === 'meme-comeback-tomorrow';
+      const version = memeVersion(memeTomorrow ? 'meme-comeback' : cmd);
+      if (__DEV__ && version) {
+        setDevImport(null, today);
+        setDevMeme(version, today);
+        if (memeTomorrow) setDevMemeDate(addDays(today, 1));
+        setTimeout(() => router.navigate(memeTomorrow ? '/plan' : '/'), 400);
+        return;
+      }
       setDevImport(imp, today);
       if (!cmd) return;
       const store = useStore.getState();

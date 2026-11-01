@@ -11,7 +11,7 @@ import { durations, ease, enter, springs } from '@/lib/motion';
 import { axisHour, clampY, Mark, NowLine, type MarkShape } from '@/components/ChartMark';
 import { Press } from '@/components/Press';
 import { T } from '@/components/Text';
-import { textStyle, useTheme } from '@/theme';
+import { MAX_TEXT_SCALE, textStyle, useTheme } from '@/theme';
 
 export type WeekBlock = {
   id: string;
@@ -171,7 +171,7 @@ const DayColumn = memo(function DayColumn({ day, index, x, shown, selected, toda
     <>
       <T token="axis" color={today ? c.accentInk : c.inkSecondary}>{weekdayShort(day.date)}</T>
       <View style={styles.num} onLayout={measureNum}>
-        <AnimatedText style={[textStyle('subhead', c.inkPrimary), { fontSize: 13, fontVariant: ['tabular-nums'] }, number]}>{String(Number(day.date.slice(-2)))}</AnimatedText>
+        <AnimatedText maxFontSizeMultiplier={MAX_TEXT_SCALE} style={[textStyle('subhead', c.inkPrimary), { fontSize: 13, fontVariant: ['tabular-nums'] }, number]}>{String(Number(day.date.slice(-2)))}</AnimatedText>
       </View>
       <View onLayout={measureTrack} style={[styles.track, { height, backgroundColor: day.unknown ? c.changedBg : c.row, borderWidth: day.unknown ? 1.5 : 0, borderColor: c.changed }]}>
         {day.unknown ? <T token="subhead" color={c.changed} style={{ alignSelf: 'center', marginTop: height / 2 - 9 }}>?</T> : null}

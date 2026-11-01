@@ -2,11 +2,11 @@ import { chartRange, dayNumber, eventInterval, findConflicts, intervalOf, toMinu
 import type { Item } from '@dayli/schema';
 import { chart } from '@dayli/tokens';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { axisHour, bookedColors, NowLine } from '@/components/ChartMark';
 import { T } from '@/components/Text';
-import { useTheme } from '@/theme';
+import { MAX_TEXT_SCALE, useTheme } from '@/theme';
 
 /** The empty track: 14% of the ink, as hex alpha. */
 const TRACK_ALPHA = '24';
@@ -82,6 +82,7 @@ export function DayBar({ items, now, conflicts, highlight, labels = true }: {
  */
 function Axis({ from, to }: { from: number; to: number }) {
   const { c } = useTheme();
+  const { fontScale } = useWindowDimensions();
   const [width, setWidth] = useState(0);
   const [sizes, setSizes] = useState<Record<string, number>>({});
   const step = (to - from) / 60 <= 12 ? 3 * 60 : 6 * 60;
@@ -104,7 +105,7 @@ function Axis({ from, to }: { from: number; to: number }) {
     }
   }
   return (
-    <View style={styles.labels} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+    <View style={[styles.labels, { height: LABEL_HEIGHT * Math.min(fontScale, MAX_TEXT_SCALE) }]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {/* Each label measured once, off screen, so the spacing rule uses real widths. */}
       {all.filter((l) => sizes[l] === undefined).map((l) => (
         <T key={`m${l}`} token="axis" tabular style={styles.measure}
@@ -120,11 +121,13 @@ function Axis({ from, to }: { from: number; to: number }) {
   );
 }
 
+const LABEL_HEIGHT = 14;
+
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
   track: { height: chart.track, borderRadius: chart.track / 2, position: 'relative' },
   block: { position: 'absolute', top: 0, height: chart.track, borderRadius: chart.track / 2 },
-  labels: { position: 'relative', height: 14 },
+  labels: { position: 'relative' },
   label: { position: 'absolute' },
   measure: { position: 'absolute', opacity: 0 },
 });

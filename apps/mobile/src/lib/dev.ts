@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
 import { sampleScheduleExtraction, sampleScheduleUpdate, sampleSyllabusExtraction } from '@/store/sample';
+import { memeDemo, type MemeDemo, type MemeVersion } from './meme-demo';
 
 /** On the web there is no Documents folder: the same commands come from the URL (`?dev=sample&clock=09:41`). */
 function webParam(name: string): string | null {
@@ -130,8 +131,8 @@ export function setDevAutoConfirm(ms: number) {
  * everyday header with the sky, whatever the sample data. Reactive, because the command runs after
  * Today has mounted.
  */
-type DevToday = { spreadOpen: boolean; noMoment: boolean };
-let devToday: DevToday = { spreadOpen: false, noMoment: false };
+type DevToday = { spreadOpen: boolean; noMoment: boolean; meme: MemeDemo | null };
+let devToday: DevToday = { spreadOpen: false, noMoment: false, meme: null };
 const devTodayListeners = new Set<() => void>();
 export function setDevToday(next: Partial<DevToday>) {
   if (!__DEV__) return;
@@ -140,4 +141,13 @@ export function setDevToday(next: Partial<DevToday>) {
 }
 export function useDevToday(): DevToday {
   return useSyncExternalStore((l) => { devTodayListeners.add(l); return () => { devTodayListeners.delete(l); }; }, () => devToday);
+}
+
+/** Switch screenshot schedules without writing dummy records to the person's plan. */
+export function setDevMeme(version: MemeVersion | null, today: string) {
+  setDevToday({ meme: version ? memeDemo(version, today) : null, noMoment: version !== null, spreadOpen: false });
+}
+
+export function setDevMemeDate(date: string) {
+  if (devToday.meme) setDevToday({ meme: { ...devToday.meme, selectedDate: date } });
 }

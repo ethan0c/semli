@@ -60,7 +60,7 @@ export function PlanMonthCalendar({ selected, today, onSelect }: { selected: str
         <IconButton icon="chevronRight" label="Next month" tone="glass" size={44} haptic="select" onPress={() => setMonth((m) => moveCalendarMonth(m, 1))} />
       </View>
       <View style={styles.weekdays} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, i) => <T key={i} token="caption" color={c.inkSecondary} style={styles.weekday}>{label}</T>)}
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, i) => <T key={i} token="caption" color={c.inkSecondary} maxFontSizeMultiplier={MAX_TEXT_SCALE} style={styles.weekday}>{label}</T>)}
       </View>
       <View>
         {weeks.map((week) => (
@@ -77,7 +77,7 @@ export function PlanMonthCalendar({ selected, today, onSelect }: { selected: str
                     backgroundColor: on ? c.controlFill : 'transparent',
                     borderColor: isToday && !on ? c.accent : 'transparent',
                   }]}>
-                    <T token="subhead" tabular color={on ? c.controlInk : inMonth ? c.inkPrimary : c.inkSecondary}>{Number(date.slice(8))}</T>
+                    <T token="subhead" tabular maxFontSizeMultiplier={MAX_TEXT_SCALE} color={on ? c.controlInk : inMonth ? c.inkPrimary : c.inkSecondary}>{Number(date.slice(8))}</T>
                   </View>
                 </Press>
               );

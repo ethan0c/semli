@@ -20,6 +20,22 @@ For subsequent sessions, `npm run dev:mobile` starts Metro for the installed dev
 
 The iOS command uses macOS `lockf` to allow only one local build command per checkout, including native regeneration. If it reports `.expo/ios-build.lock: already locked`, stop the earlier `npm run ios` session first (it may still be serving Metro). The lock releases automatically when that command exits; leave the lock file in place. Builds started directly in Xcode or with `npx expo run:ios` bypass this guard: stop or finish those before running the npm command. If Xcode reports `build.db: database is locked`, stop the overlapping builds and retry a single build. The Sentry and Expo Dev Launcher script dependency warnings are separate from this error.
 
+## Meme screenshot presets
+
+In a development build, open **You → Your data → Meme screenshots** to switch between **Am I cooked?**, **Academic comeback tomorrow**, and **Told everyone I was busy**. These are temporary, read-only schedules in Today and Plan; they never enter your saved records, account sync, reminders, or alarms. Use **Show my saved plan** to leave the preview for this session.
+
+For simulator captures, keep Metro running and use these commands from the repository root:
+
+```bash
+zsh design/load-meme.sh cooked
+zsh design/load-meme.sh comeback          # Today is empty
+zsh design/load-meme.sh comeback tomorrow # Plan shows tomorrow’s 23 deadlines
+zsh design/load-meme.sh busy
+zsh design/load-meme.sh off               # Restore the previous capture setup
+```
+
+The loader freezes the clock at 9:41 and backs up the previous development command and clock before changing them. It does not clear app storage. Scroll Today or Plan to capture the rest of a long list. In the comeback preview, **Show tomorrow’s 23 deadlines** in the same settings group opens its second screenshot.
+
 ## EAS development builds
 
 Run these commands from `apps/mobile`. EAS requires an Expo account and access to this app's EAS project. Physical-device builds also need Apple signing and device provisioning.

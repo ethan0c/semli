@@ -1,11 +1,11 @@
 import { monthDay, weekdayLong } from '@dayli/core';
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { Icon } from '@/components/Icon';
 import { T } from '@/components/Text';
 import { Press } from '@/components/Press';
-import { SCREEN_GUTTER, useTheme, useTopInset, fade, iconSize, space, size } from '@/theme';
+import { MAX_TEXT_SCALE, SCREEN_GUTTER, useTheme, useTopInset, fade, iconSize, space, size } from '@/theme';
 
 /**
  * The top of every main tab: at most one small line above the big value, and the meaning under
@@ -28,9 +28,11 @@ export function TabHeader({ date, context, title, size = 'number', value, detail
 }) {
   const { c } = useTheme();
   const top = useTopInset();
+  const { width, fontScale } = useWindowDimensions();
+  const fitsXl = Math.min(FITS_XL, (width - BESIDE_TITLE) / (XL_CHAR * Math.min(fontScale, MAX_TEXT_SCALE)));
   const dateLabel = date ? `${weekdayLong(date)}, ${monthDay(date)}` : null;
-  const line = context ?? (dateLabel ? <T token="callout" color={onPhoto ? c.inkPrimary : c.inkSecondary} numberOfLines={1}>{dateLabel}</T> : null);
-  const big = value ?? <T token={size === 'number' && (title?.length ?? 0) <= FITS_XL ? 'displayXl' : 'display'} accessibilityRole="header" numberOfLines={1}>{title}</T>;
+  const line = context ?? (dateLabel ? <T token="callout" color={onPhoto ? c.inkPrimary : c.inkSecondary} numberOfLines={2}>{dateLabel}</T> : null);
+  const big = value ?? <T token={size === 'number' && (title?.length ?? 0) <= fitsXl ? 'displayXl' : 'display'} accessibilityRole="header" numberOfLines={1}>{title}</T>;
   const content = (
     <>
       {line ? <View style={styles.line}>{line}</View> : null}
@@ -58,8 +60,11 @@ export function TabHeader({ date, context, title, size = 'number', value, detail
   );
 }
 
-/** The longest title that fits at 56 beside a trailing button on the narrowest phone ("Tomorrow", "12 days"). */
+/** The longest title that fits at 56 beside a trailing button on a 375-wide phone ("Tomorrow", "12 days"). */
 const FITS_XL = 9;
+/** About how wide one character is at 56, and the width a title can't use: the gutters and that button. */
+const XL_CHAR = 30;
+const BESIDE_TITLE = SCREEN_GUTTER * 2 + size.target + space.sm;
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: SCREEN_GUTTER, flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
