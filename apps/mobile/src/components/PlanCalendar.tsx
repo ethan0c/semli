@@ -40,7 +40,7 @@ export function TodayPill({ onPress }: { onPress: () => void }) {
   return (
     <Press accessibilityRole="button" accessibilityLabel="Go to today" haptic="select" onPress={onPress}
       style={[styles.pill, { backgroundColor: c.row }]}>
-      <T token="subhead">Today</T>
+      <T token="subhead" maxFontSizeMultiplier={MAX_TEXT_SCALE}>Today</T>
     </Press>
   );
 }
