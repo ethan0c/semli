@@ -19,14 +19,14 @@ The page as App Store Connect shows it, top to bottom.
 | Content Rights | **Set Up** → "Does not contain, show, or access third-party content". The bundled showcase photos are licensed to us, not third-party content in Apple's sense. |
 | License Agreement | Apple's Standard License Agreement. Do not upload a custom EULA; the subscription terms on the paywall and `semli.app/terms` are enough. |
 
-**Age Ratings → Set Up.** Review the questionnaire for 1.2.0, including schedule sharing. Use the rating App Store Connect calculates; the old private-plans-only answers no longer describe the app.
+**Age Ratings → Set Up.** Review the questionnaire for 1.2.0, including schedule sharing. Use the rating App Store Connect calculates; the old private-plans-only answers no longer describe the app. [Apple’s age-rating definitions](https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions/) distinguish broadly distributed user content from social feeds and messaging; the schedule-link row below needs review against that definition.
 
 | Section | Question | Answer |
 |---|---|---|
 | In-App Controls | Parental controls | No |
 | In-App Controls | Age assurance | No |
 | Capabilities | Unrestricted web access | **No** (no general-purpose browser; opens Semli links and the calendar feed the user supplies) |
-| Capabilities | User-generated content | **Yes** (account holders can share school and work plans through a link anyone with the link can view; no public directory, comments or chat) |
+| Capabilities | User-generated content | **Review for schedule links**: account holders can share school and work plans with anyone who has the link. There is no public directory, feed, comments or chat. Check this against Apple’s definition of broad distribution before submitting. |
 | Capabilities | Social media | No |
 | Capabilities | Messaging and chat | No |
 | Capabilities | Advertising | No |
@@ -59,7 +59,7 @@ If the questionnaire asks about "frequent or intense" anything, every answer is 
 
 **App-Specific Shared Secret.** Manage → Generate. Copy it once into RevenueCat → Semli (App Store) → App-Specific Shared Secret. It is not needed in the app or the repo.
 
-**Additional Information.** View on App Store (inactive until live); Edit User Access: add Rico as App Manager if he configures products; Remove App: no.
+**Additional Information.** View on App Store: check the current public listing; Edit User Access: add Rico as App Manager if he configures products; Remove App: no.
 
 **Version submission.** Use the 1.2.0 version page and attach a matching build after checking sections 2 to 6 below. This guide describes repository metadata; check submission status in App Store Connect.
 
@@ -77,11 +77,11 @@ If the questionnaire asks about "frequent or intense" anything, every answer is 
 Registered for spring? Add your classes now. Import a syllabus, a schedule screenshot, or your Canvas or Brightspace calendar, and see the whole term in one plan.
 ```
 
-**Description** [4000] (2,554 characters):
+**Description** [4000] (2,614 characters):
 ```
 Keep classes, work shifts, and assignment deadlines in one student planner.
 
-Upload a syllabus PDF, a screenshot of your shifts, or a message from class. You can also type or speak your plans. Semli finds dates and times for you to review before adding them. Check uncertain details, leave items out, or return to an unfinished review later.
+Upload a syllabus PDF, a screenshot of your shifts, or a message from class. You can also type or speak your plans. Semli finds dates and times for you to review before adding them. Check uncertain details, leave items out, or return to an unfinished review later. You can correct the details or undo an import after saving.
 
 See what’s next
 Check today’s plans, view your week, and spot overlaps between work and school.
@@ -197,7 +197,7 @@ Photo access shows recent screenshots on Add; camera access lets the user photog
 
 ## 5. App Privacy (the nutrition label)
 
-Data collected, with purpose. Nothing is used for tracking; do not check "Tracking". Oct 27, 2026: Name and Email Address gained "Developer's Advertising or Marketing" when account holders joined the email list. Update the label in App Store Connect (no new build needed).
+Data collected, with purpose. Account backups and share-link snapshots persist off the device and need to be covered by the label under [Apple’s data-collection definition](https://developer.apple.com/app-store/app-privacy-details/). Nothing is used for tracking; do not check "Tracking". Oct 27, 2026: Name and Email Address gained "Developer's Advertising or Marketing" when account holders joined the email list. Update the label in App Store Connect (no new build needed).
 
 | Data type | Linked to you? | Purpose | Source |
 |---|---|---|---|
@@ -256,7 +256,7 @@ Subscription group **Semli Plus** (group display name shown to customers: `Semli
 | `semli_plus_semester_regular` | Plus Semester | Unlimited imports and class calendar sync | 6 months | $24.99 | Free, 1 week |
 | `semli_plus_yearly_regular` | Plus Yearly | Unlimited imports and class calendar sync | 1 year | $44.99 | Free, 1 week |
 
-Each product also needs: availability (all territories or US), a **review screenshot** (use `design/screenshots/extra/05-paywall.png` (review only; never upload it as a public listing screenshot)), and review notes ("Student pricing is on the honor system; nothing is verified."). Subscription levels in the group: yearly = level 1, semester = level 2, monthly = level 3, student and regular at the same level, so upgrades and downgrades behave.
+Each product also needs: availability (all territories or US), a **review screenshot** (`design/screenshots/extra/05-paywall.png`, review only; never upload it as a public listing screenshot), and review notes ("Student pricing is on the honor system; nothing is verified."). Subscription levels in the group: yearly = level 1, semester = level 2, monthly = level 3, student and regular at the same level, so upgrades and downgrades behave.
 
 Agreements: the **Paid Applications** agreement must be signed (Business → Agreements) with banking and tax forms done, or the products stay "Missing Metadata".
 
@@ -278,7 +278,7 @@ Agreements: the **Paid Applications** agreement must be signed (Business → Agr
 - [ ] Run `npm run store:check`, upload the current ten screenshots, and review age-rating and privacy answers for sharing and account backup.
 - [x] Production keys in EAS env (pushed Oct 20, 2026 to `production` and `preview`): every `EXPO_PUBLIC_*` value from `apps/mobile/.env` with `EXPO_PUBLIC_API_URL=https://semli.app`, plus `SENTRY_AUTH_TOKEN` so EAS uploads source maps and dSYMs to the `semli-mobile` Sentry project. Re-push after a key changes: `npx eas-cli env:push --environment production --environment preview --path <file>`.
 - [ ] Web host env: `SUPABASE_URL`, `SUPABASE_KEY`, `REVENUECAT_SECRET_KEY`, `ANTHROPIC_API_KEY`.
-- [ ] Supabase: anonymous sign-ins on (off as of Oct 20), all three migrations run. Done Oct 20: Resend SMTP on (dashboard), code email templates pushed from `supabase/config.toml`, Site URL `https://semli.app`. See `supabase/templates/README.md`.
+- [ ] Supabase: anonymous sign-ins on (off as of Oct 20), all current migrations applied, including import allowances, plan records and schedule sharing. Done Oct 20: Resend SMTP on (dashboard), code email templates pushed from `supabase/config.toml`, Site URL `https://semli.app`. See `supabase/templates/README.md`.
 - [ ] One sandbox purchase per term works, Restore works, the trial shows as a trial in RevenueCat.
 - [ ] A reminder fired on a real phone; Canvas and Brightspace feeds synced on a real phone.
 - [ ] iPhone calendar events stay local; sharing includes only the selected school/work plans, hides titles when requested, expires as chosen and stops when revoked.
