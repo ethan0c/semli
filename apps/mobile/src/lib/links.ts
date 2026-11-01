@@ -9,6 +9,7 @@ export const LINKS = {
   privacy: `${SITE_URL}/privacy`,
   terms: `${SITE_URL}/terms`,
   support: `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Semli feedback')}`,
+  appStore: `https://apps.apple.com/app/id${APP_STORE_ID}`,
   review: `https://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`,
 } as const;
 

@@ -29,6 +29,7 @@ import { columnHeader } from '@/components/ColumnHeader';
 import { Sidebar } from '@/components/DesktopTabs';
 import { PlanChoice } from '@/components/PlanChoice';
 import { Toast } from '@/components/Overlay';
+import { UpdateRequired, useUpdateRequired } from '@/components/UpdateRequired';
 import { devAppearance, devClock, devCommand, devImport, setDevImport, setDevMeme, setDevMemeDate, setDevToday, useDevToday } from '@/lib/dev';
 import { memeVersion } from '@/lib/meme-demo';
 import { i18n } from '@/lib/i18n';
@@ -110,6 +111,7 @@ function RootLayout() {
     'Geist-SemiBold': require('../../assets/fonts/Geist-SemiBold.ttf'),
     'EBGaramond-Regular': require('../../assets/fonts/EBGaramond-Regular.ttf'),
   });
+  const updateRequired = useUpdateRequired();
   const hydrated = useStore((s) => s.hydrated);
   const loadFailed = useStorageStatus((s) => s.loadFailed);
   const savedOnboarded = useStore((s) => s.settings.onboarded);
@@ -258,6 +260,7 @@ function RootLayout() {
 
   if (loadFailed) return <RecoveryScreen title="We couldn’t open your saved plan." message="Please try again. If this keeps happening, close and reopen Semli. Your saved data hasn’t been replaced." onRetry={() => useStore.persist.rehydrate()} />;
   if (!ready) return null;
+  if (updateRequired) return <UpdateRequired />;
 
   const theme = dark ? DarkTheme : DefaultTheme;
   return (

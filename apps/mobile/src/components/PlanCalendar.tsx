@@ -9,7 +9,7 @@ import { T } from '@/components/Text';
 import { Ticker, useDateDirection } from '@/components/Ticker';
 import { calendarDays, calendarMonthLabel, moveCalendarMonth } from '@/lib/calendar';
 import { feedback } from '@/lib/feedback';
-import { useTheme, radius, size, fade, iconSize, space } from '@/theme';
+import { MAX_TEXT_SCALE, useTheme, radius, size, fade, iconSize, space } from '@/theme';
 
 /** "October", or "January 2027" when the selected month is not in this year. */
 function monthTitle(selected: string, today: string): string {

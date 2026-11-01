@@ -36,6 +36,15 @@ zsh design/load-meme.sh off               # Restore the previous capture setup
 
 The loader freezes the clock at 9:41 and backs up the previous development command and clock before changing them. It does not clear app storage. Scroll Today or Plan to capture the rest of a long list. In the comeback preview, **Show tomorrow’s 23 deadlines** in the same settings group opens its second screenshot.
 
+## Forcing an update
+
+To stop older versions opening, set `MIN_IOS_VERSION` in `apps/web/lib/site.ts` to the oldest version you still support and deploy the site. Anything older shows a full-screen **Update Semli to keep going** with a button to the App Store; there is no way past it. Set it back to `null` to lift it.
+
+- Only raise it once that version is **live on the App Store**, or people are sent to an update they can't get.
+- Phones check at launch and at most hourly after that. A failed check (offline, server down) never blocks, so a phone that can't reach the site keeps working.
+- The check itself reaches a build only through an over-the-air update or a new store build. Builds older than that can't be blocked.
+- For a fix that doesn't need a new build, use `eas update`: `LaunchUpdate` applies it within 8 seconds of launch, or on the next launch.
+
 ## EAS development builds
 
 Run these commands from `apps/mobile`. EAS requires an Expo account and access to this app's EAS project. Physical-device builds also need Apple signing and device provisioning.

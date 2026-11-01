@@ -3,8 +3,8 @@ import type { Item } from '@dayli/schema';
 import { reportError } from './errors';
 
 /*
- * Canvas sync through the calendar feed: the .ics link every student can copy from
- * Canvas → Calendar → Calendar feed. No token, no OAuth, no developer key, no server.
+ * Canvas sync through the calendar feed: the .ics link every student can copy from the Canvas app's
+ * Settings → Subscribe to Calendar Feed, or Calendar → Calendar feed in a browser. No token, no OAuth, no developer key, no server.
  * Read-only; each event keeps its Canvas UID so a resync moves dates instead of duplicating.
  *
  * Brightspace (D2L) feeds go the same way since Oct 27, 2026: UGA, one of the three January
@@ -15,12 +15,16 @@ import { reportError } from './errors';
 export type FeedSystem = 'canvas' | 'brightspace';
 
 /**
- * Where each system keeps its link, as the numbered steps on the connect screens. Brightspace's
- * menu names are from D2L's student guides (Oct 27, 2026), not yet checked against a live eLC
+ * Where each system keeps its link, as the numbered steps on the connect screens. Canvas leads with
+ * its app, where students already are (a tester's path, Nov 1, 2026). Brightspace's menu names are from D2L's student guides (Oct 27, 2026), not yet checked against a live eLC
  * account; schools that turn feeds off have no Subscribe at all.
  */
 export const FEED_STEPS: Record<FeedSystem, string[]> = {
-  canvas: ['Open Canvas in your browser.', 'Open Calendar, then choose Calendar feed in the sidebar.', 'Copy the link and paste it here.'],
+  canvas: [
+    'In the Canvas app, open Settings.',
+    'Tap Subscribe to Calendar Feed and copy the link.',
+    'Paste it here. In a browser, the link is in Calendar, under Calendar feed.',
+  ],
   brightspace: [
     'Open eLC or Brightspace in your browser and go to Calendar.',
     'Open Calendar Settings, select Enable Calendar Feeds, then Save.',
@@ -68,6 +72,12 @@ export interface CanvasEntry {
 export function normalizeFeedUrl(input: string): string | null {
   const raw = input.trim().replace(/^webcals?:\/\//i, 'https://');
   return feedSystem(raw) ? raw : null;
+}
+
+/** Which system a typed or pasted link is from, so the screen follows the link instead of asking. */
+export function pastedSystem(input: string): FeedSystem | null {
+  const url = normalizeFeedUrl(input);
+  return url ? feedSystem(url) : null;
 }
 
 interface IcsEvent {

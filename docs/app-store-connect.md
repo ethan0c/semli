@@ -210,7 +210,7 @@ Declare only what is true on a device; Apple can check. Current state of the cod
 |---|---|---|
 | VoiceOver | Yes, **verify** | Rows, pills, toggles and charts carry `accessibilityLabel`/`accessibilityRole`; the review chart has per-day labels. Walk Today, Plan, Review and the paywall with VoiceOver on before declaring. |
 | Voice Control | Yes, **verify** | Follows from labelled controls; check that pill buttons are reachable by name. |
-| Larger Text | **Verify** | Text tokens are fixed sizes (Geist 12–56). If Dynamic Type is not honored, do not declare it. |
+| Larger Text | **Verify** | Text follows the phone's text size. The 56 and 34 display type and chart labels stop at 1.35x (`MAX_TEXT_SCALE`), the largest standard size. Walk every tab at the largest accessibility size before declaring. |
 | Dark Interface | Yes | Appearance: Match iPhone / Light / Dark, full dark palette. |
 | Differentiate Without Color Alone | Yes | Status pills carry words ("Due today", "Moved", "Dropped"); overlaps say "Overlaps"; charts have legends. |
 | Reduced Motion | Yes | Reduce Motion suppresses the purchase confetti and the motion tokens respect it. |

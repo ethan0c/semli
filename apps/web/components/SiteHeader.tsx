@@ -19,10 +19,10 @@ export function SiteHeader() {
           <Link href="/pricing" aria-current={path === '/pricing' ? 'page' : undefined}>
             Pricing
           </Link>
-          <Link href="/contact" className="nav-contact" aria-current={path === '/contact' ? 'page' : undefined}>
+          <Link href="/contact" className="nav-wide" aria-current={path === '/contact' ? 'page' : undefined}>
             Contact
           </Link>
-          {WEB_APP_LIVE ? <a href={APP_URL}>Open Semli</a> : null}
+          {WEB_APP_LIVE ? <a className="nav-wide" href={APP_URL}>Open Semli</a> : null}
           <a className="btn" href={APP_STORE_URL}>
             Get the app
           </a>
