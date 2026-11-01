@@ -39,6 +39,7 @@ Start with the [repository README](../README.md) for the current implementation 
 | [Milestones](milestones.md) | Business targets and timeline assumptions |
 | [Launch guide](launch-guide.md) | Apple setup and marketing guidance |
 | [Marketing budget](marketing-500.md) | Acquisition experiments and budget |
+| [TikTok and Instagram plan](tiktok-plan.md) | What to post, how often, and the checks through the January push |
 | [Survey follow-up emails](emails/survey-follow-up.txt) | Gift-card winner and participant email drafts |
 | [Email templates](beta-copy.md#other-email-templates) | Branded beta invite, feedback reply, App Store launch, spring schedule and semester reminder; the welcome email; groups, HTML, plain text, and sending notes |
 

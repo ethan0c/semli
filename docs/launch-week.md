@@ -2,6 +2,8 @@
 
 Status: Oct 27, 2026. The App Store listing went public today, ten weeks before the Jan 5 date in [launch-checklist.md](launch-checklist.md). This page re-dates that checklist to the real release and says what to do in the next two weeks, then until Jan 11. The checklist and [marketing-500.md](marketing-500.md) still explain how; this page says when, and in what order. Tick here.
 
+Since Nov 1, 2026, [tiktok-plan.md](tiktok-plan.md) replaces the clip scheduling and Friday build-in-public posts below. Everything else here stands.
+
 ## What changed, honestly
 
 - **There is no beta any more; there is a public app.** The purchase test (50 engaged users, real price, 10 or more subscribe, [strategy.md](strategy.md) §2) now runs in production from today to Dec 15. The TestFlight groups are history. The one link is `semli.app/get?r=<tag>` (`/beta` still works for anything already posted or printed); it goes to the store and the `r` tag rides on it as `ct=`.
