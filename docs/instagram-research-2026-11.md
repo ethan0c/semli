@@ -4,7 +4,11 @@ Researched Nov 1, 2026. Research and a proposed test only; Instagram posting rem
 
 ## Recommendation
 
-When there is time to test Instagram, start with **three feed posts a week**, alternating original Reels and useful carousels. Prepare four weeks of evergreen material on a Sunday, then use later Sundays to review results and replace weak ideas. Stories can support the posts on two days a week. Daily Stories are not a requirement for this small team.
+Updated Nov 1 after the user questioned the faceless direction: **hold the twelve-post batch and start with a small creative pilot**. The references are creator-led; they do not establish that removing the student and retaining only desk footage or app screens will perform similarly. They also do not isolate whether showing a face caused the results.
+
+Proposed first pilot: two real-student creator Reels showing genuine Semli use, plus two useful carousels. The founder stays off camera. Use the existing November creator budget only if those deliverables are still available within it; this proposal does not add spending or assume Instagram usage rights. Establish permission for the intended Instagram publication before using creator material. If suitable creator material is unavailable, keep Instagram deferred while the scheduled TikToks run.
+
+The four-week, three-post cadence below is an earlier scale-up proposal to revisit after this pilot. It is not the next production commitment.
 
 Make an Instagram version of the underlying student problem: a short demonstration, a checklist someone could use, or a joke someone would send to a classmate. A TikTok image resized for the feed does not establish that any of these formats will work.
 
@@ -53,9 +57,9 @@ For an account-level comparison, collect the latest 12 non-pinned posts across a
 
 The useful distinction for batching is between a repeatable structure and a particular trending sound. Keep original footage and captions reusable; pick topical music only after a fresh check. None of these candidates is a reason to schedule the same trend four weeks ahead.
 
-## Proposed content test
+## Earlier scale-up proposal — on hold
 
-Start with **six Reels and six carousels over four weeks**. These are creative hypotheses, not completed assets or approved captions.
+After the smaller pilot, consider **six Reels and six carousels over four weeks**. These are creative hypotheses, not completed assets or approved captions.
 
 | Topic | Reel version | Carousel version |
 |---|---|---|
@@ -74,7 +78,7 @@ One complete caption per post. A joke can have one line. A tutorial can include 
 
 ## Posting cadence and times
 
-Keep this as a proposed Instagram pilot until there is capacity to run it. Producing three additional weekly posts competes with the existing marketing time budget; it is not free because some source footage already exists.
+The cadence in this section applies only if the smaller creative pilot justifies a larger batch and there is capacity to run it. Producing three additional weekly posts competes with the existing marketing time budget; it is not free because some source footage already exists.
 
 [Buffer's September 2026 timing study](https://buffer.com/resources/when-is-the-best-time-to-post-on-instagram/) analyzed 9.6 million posts, with data from Jan 2024–Dec 2025, and highlighted Thursday 9 am and Wednesday noon/6 pm. [Sprout's March 2026 study](https://sproutsocial.com/insights/best-times-to-post-on-instagram/) recommends broader windows including Tuesday 1–7 pm and Thursday noon–2 pm. Its research base of nearly 2 billion engagements and 307,000 profiles is cross-network, not Instagram-only.
 

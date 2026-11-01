@@ -45,7 +45,7 @@ Set the schedule after Jan 24 from January's numbers.
 
 The "Finals: no posts" row in the launch-week table applies to Reddit and email. Memes keep going, because finals are the joke, and the Sunday batch means they take no time during finals.
 
-Monitor the scheduled November TikToks and prepare December from their results. The next production task is a separate Instagram batch based on its own research: six Reels and six carousels for a proposed four-week test. Its launch date is still unset.
+Monitor the scheduled November TikToks and prepare December from their results. The next Instagram proposal is a small creative pilot: two real-student creator Reels and two useful carousels, subject to available creator material and usage permission. The larger twelve-post batch is on hold after the user questioned the faceless direction. Its launch date is still unset.
 
 ## 4. The first four weeks
 
@@ -72,7 +72,7 @@ All 16 have presets in `apps/mobile/src/lib/meme-presets.json`. Captions and pro
 
 ## 5. Each week
 
-For the already-scheduled November batch, Sunday work is checking publication, recording results, and preparing later content. Replenish TikTok drafts for December and build the separate Instagram batch. The production and scheduling routine below applies to future batches.
+For the already-scheduled November batch, Sunday work is checking publication, recording results, and preparing later content. Replenish TikTok drafts for December and prepare the smaller Instagram creative pilot if suitable creator material is available. The production and scheduling routine below applies to future batches.
 
 | When | Minutes | What |
 |---|---|---|
