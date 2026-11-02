@@ -39,6 +39,8 @@ import { requestNotifications, syncReminders } from "@/lib/notifications";
 import { usePlusAccess } from "@/lib/plus-access";
 import { purchaseErrorMessage } from "@/lib/revenuecat";
 import { syncCanvas } from "@/lib/canvas-sync";
+import { WORK_STEPS, WORK_SYSTEMS, normalizeWorkFeedUrl, type WorkSystem } from "@/lib/work-feed";
+import { WORK_FEED_AVAILABLE, syncWorkFeed } from "@/lib/work-feed-sync";
 import { normalizeFeedUrl, CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, type FeedSystem } from "@/lib/canvas";
 import { useCourseList, useItemList, useStore, type DeadlineSource, type Pending, type Plate } from "@/store";
 import { sampleWeek } from "@/store/sample";
@@ -52,7 +54,7 @@ import { SCREEN_GUTTER, corner, radius, textStyle, useTheme, size, iconSize, spa
  * questions that each change something, their own import (or a real sample), the facts of their
  * term, a reminder they choose, then the paywall. No slideshows, no fake loaders, account later.
  */
-const STEPS = ["plate", "deadlines", "own", "canvas", "result", "remind", "plus", "term", "phone"] as const;
+const STEPS = ["plate", "deadlines", "own", "canvas", "work", "result", "remind", "plus", "term", "phone"] as const;
 type Step = (typeof STEPS)[number];
 /**
  * The web starts with the import itself (docs/web.md): a laptop is where the syllabi are, and
@@ -63,7 +65,7 @@ const WEB = Platform.OS === "web";
 /** Read once: onboarding is short, and a window crossing 768 midway keeps the layout it started with. */
 const WIDE = WEB && Dimensions.get("window").width >= 768;
 const FIRST: Step = WEB ? "term" : "plate";
-/** The progress bar: Canvas connect takes the own-import slot, so both paths fill the same bars. */
+/** The progress bar: a Canvas or work schedule link takes the own-import slot, so every path fills the same bars. */
 const BARS: Step[] = WEB ? ["term", "result", "phone", "plus"] : ["plate", "deadlines", "own", "result", "remind", "plus"];
 
 type Picked = { input: Parameters<typeof requestExtraction>[1]["input"]; source: string } | null;
@@ -156,7 +158,7 @@ export default function OnboardingScreen() {
       setSettings({ onboardingImportDone: false });
       useStore.getState().setPending(next!);
       setTimeout(() => router.push("/review"), 0);
-    } else if (importDone && (step === "own" || step === "canvas" || step === "term")) {
+    } else if (importDone && (step === "own" || step === "canvas" || step === "work" || step === "term")) {
       setHistory((h) => [...h, step]);
       setStep("result");
     }
@@ -222,7 +224,7 @@ export default function OnboardingScreen() {
     router.replace("/");
   };
 
-  const progress = BARS.indexOf(step === "canvas" || step === "own" ? (WEB ? "term" : "own") : step);
+  const progress = BARS.indexOf(step === "canvas" || step === "work" || step === "own" ? (WEB ? "term" : "own") : step);
   // Only the paywall is a dark showcase now; every other step is the plain paper canvas.
   const showcase = step === "plus";
   const bg = showcase ? palettes.dark.canvas : c.canvas;
@@ -275,7 +277,8 @@ export default function OnboardingScreen() {
         </OneTapStep>
       )}
       {step === "canvas" && <CanvasStep onConnected={() => go("result")} onInstead={() => go("own", { source: "canvas-instead" })} />}
-      {step === "own" && <OwnStep source={source ?? "nowhere"} job={job} onSample={loadSample} />}
+      {step === "work" && <WorkStep onConnected={() => go("result")} onInstead={() => go("own", { source: "work-instead" })} />}
+      {step === "own" && <OwnStep source={source ?? "nowhere"} job={job} onSample={loadSample} onWork={() => go("work", { source: "work" })} />}
       {/* Reminders ring on the iPhone, so the web skips the question of when. */}
       {step === "term" && <TermStep plate={plate} onPlate={(next) => { setPlate(next); setSettings({ plate: next, isStudent: next.includes("classes") || next.includes("clubs") || next.length === 0 }); }}
         onReview={reviewAll} onCanvas={() => go("canvas", { source: "canvas" })} onType={() => go("own", { source: "typed" })} onSample={loadSample} />}
@@ -357,7 +360,7 @@ const OWN_COPY: Record<DeadlineSource, { title: string; sub: string; primary?: "
 /** What "a sample week" is, said where the button is: the label alone read as a mystery. */
 const SAMPLE_HINT = "A made-up syllabus and work schedule. Removed when you add your own.";
 
-function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boolean; onSample: () => void }) {
+function OwnStep({ source, job, onSample, onWork }: { source: DeadlineSource; job: boolean; onSample: () => void; onWork: () => void }) {
   const { c } = useTheme();
   const copy = OWN_COPY[source];
   const { requireImportAccess, requirePlus } = usePlusAccess();
@@ -474,6 +477,12 @@ function OwnStep({ source, job, onSample }: { source: DeadlineSource; job: boole
         </View>
       ) : null}
       {!busy ? <RecentShots onPick={(uri) => void openShot(uri)} /> : null}
+      {!busy && job && WORK_FEED_AVAILABLE ? (
+        <Press haptic="select" accessibilityRole="button" accessibilityHint="Connects the calendar link from When I Work, 7shifts, When to Work or a similar app"
+          onPress={onWork} scale={1} style={{ minHeight: size.target, justifyContent: "center", alignSelf: "flex-start" }}>
+          <T token="subhead" color={c.accentInk}>Job uses When I Work, 7shifts or When to Work? Link it</T>
+        </Press>
+      ) : null}
       {!busy ? <PhoneCalendarOffer /> : null}
       <View style={[styles.footer, { alignItems: "center" }]}>
         <Press haptic="select" accessibilityRole="button" accessibilityHint={SAMPLE_HINT} disabled={!!busy} onPress={onSample} style={{ minHeight: size.target, justifyContent: "center", alignItems: "center", gap: space.hair }}>
@@ -495,6 +504,7 @@ function PhoneCalendarOffer() {
     <Press haptic="select" accessibilityRole="button" accessibilityHint="Shows events from your iPhone's calendars, including Outlook, Google and iCloud, alongside your plan"
       onPress={() => void turnOnPhoneCalendar("onboarding")} scale={1} style={{ minHeight: size.target, justifyContent: "center", alignSelf: "flex-start" }}>
       <T token="subhead" color={c.accentInk}>Show your iPhone calendar too</T>
+      <T token="caption" color={c.inkTertiary}>Includes Outlook and Google accounts added to your iPhone</T>
     </Press>
   );
 }
@@ -655,6 +665,98 @@ function PhoneStep({ onDone }: { onDone: (scanned: boolean) => void }) {
           <T token="subhead" color={c.inkSecondary}>Not now</T>
         </Press>
         <Button label="I’ve got it" onPress={() => onDone(true)} />
+      </View>
+    </ScrollView>
+  );
+}
+
+/* ---------- A job's schedule link: their shifts as the first real import ---------- */
+
+function WorkStep({ onConnected, onInstead }: { onConnected: () => void; onInstead: () => void }) {
+  const { c } = useTheme();
+  const [link, setLink] = useState("");
+  const [employer, setEmployer] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState<number | null>(null);
+  const [system, setSystem] = useState<WorkSystem>("wheniwork");
+  const { requirePlus } = usePlusAccess();
+
+  const connect = async () => {
+    const parsed = normalizeWorkFeedUrl(link);
+    if (!parsed.ok) {
+      feedback("error");
+      setError(parsed.error);
+      return;
+    }
+    setError(null);
+    // The first sync is free once, as in Settings; replaying the intro doesn't hand out another.
+    if (useStore.getState().settings.workFeed.lastSyncedAt && !(await requirePlus("work_feed", { onError: setError }))) return;
+    setBusy(true);
+    const res = await syncWorkFeed({ url: parsed.url, employer: employer.trim() });
+    setBusy(false);
+    if (!res.ok) {
+      feedback("error");
+      setError(res.error);
+      track("onboarding_step", { step: "work-failed" });
+      return;
+    }
+    feedback("success");
+    track("onboarding_step", { step: "work-connected", items: res.total, system });
+    setAdded(res.total);
+  };
+
+  if (added !== null) {
+    const name = employer.trim();
+    return (
+      <View style={styles.page}>
+        <Animated.View entering={enter.rise} style={styles.titleBlock}>
+          <T token="callout" color={c.inkSecondary}>{`From ${name}`}</T>
+          <T token="displayXl" tabular>{`${added} ${added === 1 ? "shift" : "shifts"}`}</T>
+          <T token="callout" color={c.inkSecondary}>
+            {added > 0 ? `Your ${name} shifts are in your plan. With Plus, Semli checks for schedule changes when you open the app.` : `Your ${name} schedule is connected, but it has no shifts yet. With Plus, Semli checks for new ones when you open the app.`}
+          </T>
+        </Animated.View>
+        <View style={styles.footer}>
+          <Button label="Next" onPress={onConnected} />
+        </View>
+      </View>
+    );
+  }
+
+  const input = [styles.input, textStyle("body", c.inkPrimary), { backgroundColor: c.row }];
+  return (
+    <ScrollView contentContainerStyle={[styles.page, { gap: space.lg }]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <View style={styles.titleBlock}>
+        <T token="displaySm" accessibilityRole="header">Link your work schedule.</T>
+        <T token="callout" color={c.inkSecondary}>Many schedule apps give you a calendar link to your own shifts. Semli reads it without changing anything.</T>
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.xs }}>
+        {WORK_SYSTEMS.map((s) => <Chip key={s.id} label={s.label} on={system === s.id} onPress={() => { setSystem(s.id); setError(null); }} />)}
+      </View>
+      <View>
+        {WORK_STEPS[system].map((line, i) => (
+          <View key={line} style={[styles.choice, { minHeight: 52, borderBottomColor: c.line }]}>
+            <T token="headline" tabular style={{ width: 18 }}>{String(i + 1)}</T>
+            <T token="body" style={{ flex: 1 }}>{line}</T>
+          </View>
+        ))}
+      </View>
+      <TextInput value={employer} onChangeText={(v) => { setEmployer(v); setError(null); }} placeholder="Where you work, like Campus Rec"
+        placeholderTextColor={c.inkTertiary} autoCapitalize="words" editable={!busy} style={input} />
+      <TextInput value={link} onChangeText={(v) => { setLink(v); setError(null); }} placeholder="https://… or webcal://…"
+        placeholderTextColor={c.inkTertiary} autoCapitalize="none" autoCorrect={false} keyboardType="url" editable={!busy} style={input} />
+      {error ? (
+        <Animated.View entering={enter.drop} exiting={exit.fade} accessibilityRole="alert" style={styles.status}>
+          <Icon name="alert" size={16} color={c.conflict} />
+          <T token="subhead" color={c.conflict} style={{ flex: 1 }}>{error}</T>
+        </Animated.View>
+      ) : null}
+      <View style={[styles.footer, { alignItems: "center" }]}>
+        <Button label={busy ? "Reading your schedule…" : "Connect schedule"} disabled={busy || !link.trim() || !employer.trim()} onPress={() => void connect()} />
+        <Press haptic="select" accessibilityRole="button" disabled={busy} onPress={onInstead} style={{ minHeight: size.target, justifyContent: "center" }}>
+          <T token="subhead" color={c.inkSecondary}>No link? Use a screenshot</T>
+        </Press>
       </View>
     </ScrollView>
   );

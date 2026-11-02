@@ -18,6 +18,7 @@ import { StorageWarning } from '@/components/StorageWarning';
 import { reportError, scrubUrl, scrubUrls } from '@/lib/errors';
 import { useStorageStatus } from '@/lib/storage';
 import { CanvasAutoSync } from '@/lib/canvas-sync';
+import { WorkFeedAutoSync } from '@/lib/work-feed-sync';
 import { LaunchUpdate } from '@/components/LaunchUpdate';
 import { CloudBackup } from '@/lib/cloud';
 import type { Session } from '@supabase/supabase-js';
@@ -255,6 +256,7 @@ function RootLayout() {
     <PurchasesProvider>
       <LaunchUpdate />
       <CanvasAutoSync />
+      <WorkFeedAutoSync />
       <CloudBackup />
       <ThemeProvider value={{ ...theme, colors: { ...theme.colors, background: c.canvas } }}>
         <StorageWarning />

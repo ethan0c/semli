@@ -111,6 +111,8 @@ interface Settings {
   cloud: { backedUpAt: string | null; error: string | null };
   /** Canvas calendar feed sync. The link is the only credential; it stays on this phone. */
   canvas: CanvasSettings;
+  /** A job's schedule through its calendar link (`lib/work-feed.ts`). Like Canvas's, the link stays on this phone. */
+  workFeed: WorkFeedSettings;
   /**
    * Things Semli explains once, the first time they happen in a person's own plan, instead of
    * in a tour. True once the note was seen; a guest's Clear everything resets them.
@@ -124,6 +126,14 @@ export type FirstKind = 'overlap' | 'urgent' | 'canvas' | 'reimport' | 'hours' |
 export type Lms = 'canvas' | 'blackboard' | 'brightspace' | 'moodle' | 'classroom' | 'other';
 export type Plate = 'classes' | 'job' | 'clubs';
 export type DeadlineSource = 'canvas' | 'syllabus' | 'screenshots' | 'nowhere';
+
+export interface WorkFeedSettings {
+  feedUrl: string | null;
+  /** The job's name, given when connecting; the shifts carry it as their employer. */
+  employer: string | null;
+  lastSyncedAt: string | null;
+  lastError: string | null;
+}
 
 export interface CanvasSettings {
   feedUrl: string | null;
@@ -219,7 +229,7 @@ interface State {
   clearAll: (scope: 'plan' | 'everything') => void;
 }
 
-const DEFAULT_SETTINGS: Settings = { name: '', apiUrl: DEFAULT_API_URL, seeded: false, onboarded: false, isStudent: true, planIntent: null, weekKinds: [], plate: [], deadlineSource: null, sampleBatchId: null, savePlanDismissed: false, appearance: 'system', language: null, cardStyle: 'raised', todayView: 'list', sounds: true, haptics: true, major: null, reminders: DEFAULT_REMINDERS, remindersAsked: false, onboardingImportDone: false, trial: null, region: null, termSystem: 'semester', lms: null, cloud: { backedUpAt: null, error: null }, canvas: { feedUrl: null, lastSyncedAt: null, lastError: null }, firsts: { overlap: false, urgent: false, canvas: false, reimport: false, hours: false, week: false, added: false, plusImport: false } };
+const DEFAULT_SETTINGS: Settings = { name: '', apiUrl: DEFAULT_API_URL, seeded: false, onboarded: false, isStudent: true, planIntent: null, weekKinds: [], plate: [], deadlineSource: null, sampleBatchId: null, savePlanDismissed: false, appearance: 'system', language: null, cardStyle: 'raised', todayView: 'list', sounds: true, haptics: true, major: null, reminders: DEFAULT_REMINDERS, remindersAsked: false, onboardingImportDone: false, trial: null, region: null, termSystem: 'semester', lms: null, cloud: { backedUpAt: null, error: null }, canvas: { feedUrl: null, lastSyncedAt: null, lastError: null }, workFeed: { feedUrl: null, employer: null, lastSyncedAt: null, lastError: null }, firsts: { overlap: false, urgent: false, canvas: false, reimport: false, hours: false, week: false, added: false, plusImport: false } };
 
 export const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 const nowIso = () => new Date().toISOString();

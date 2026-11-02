@@ -73,6 +73,8 @@ export type AnalyticsEvent =
   | 'briefing_changed'
   | 'canvas_synced'
   | 'canvas_sync_failed'
+  | 'work_feed_synced'
+  | 'work_feed_sync_failed'
   | 'manual_item_created'
   | 'item_completion_changed'
   | 'item_deleted'

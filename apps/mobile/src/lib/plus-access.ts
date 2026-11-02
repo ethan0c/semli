@@ -6,7 +6,7 @@ import { setPlusStatus } from './plus-status';
 import { usePurchases } from '../providers/PurchasesProvider';
 import { useStore } from '../store';
 
-type PlusReason = 'quota' | 'schedule_update' | 'canvas' | 'urgent';
+type PlusReason = 'quota' | 'schedule_update' | 'canvas' | 'work_feed' | 'urgent';
 
 /**
  * Every paid entry point checks the store entitlement; trial preferences grant no access.

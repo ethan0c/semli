@@ -162,6 +162,14 @@ export function courseCodeOf(label: string): string | null {
   return m ? `${m[1]} ${m[2]}` : null;
 }
 
+/** Which synced items a feed owns and what it creates: Canvas's school items, or a job's shifts (`work-feed.ts`). */
+export interface FeedTarget {
+  prefix: string;
+  category: Item['category'];
+  employer: string | null;
+}
+const CANVAS_TARGET: FeedTarget = { prefix: 'canvas:', category: 'school', employer: null };
+
 export interface CanvasPlan extends CommitPlan {
   /** Course labels with no stored course yet; the caller creates them before resolving ids. */
   newCourses: string[];
@@ -180,9 +188,10 @@ export function planCanvasSync(
   existing: Item[],
   today: string,
   courseIdByLabel: (label: string | null) => string | null,
+  target: FeedTarget = CANVAS_TARGET,
 ): CanvasPlan {
   const plan: CanvasPlan = { create: [], update: [], remove: [], skipped: 0, newCourses: [], added: 0, moved: 0, dropped: 0 };
-  const stored = new Map(existing.filter((i) => i.externalId?.startsWith('canvas:')).map((i) => [i.externalId!, i]));
+  const stored = new Map(existing.filter((i) => i.externalId?.startsWith(target.prefix)).map((i) => [i.externalId!, i]));
   const seen = new Set<string>();
 
   for (const e of entries) {
@@ -194,8 +203,8 @@ export function planCanvasSync(
       plan.create.push({
         kind: e.kind,
         title: e.title,
-        category: 'school',
-        icon: iconFor({ kind: e.kind, category: 'school', title: e.title, is_deadline: e.isDeadline }),
+        category: target.category,
+        icon: iconFor({ kind: e.kind, category: target.category, title: e.title, is_deadline: e.isDeadline }),
         date: e.date,
         start: e.start,
         end: e.end,
@@ -203,7 +212,7 @@ export function planCanvasSync(
         done: false,
         completedAt: null,
         courseId: courseIdByLabel(e.courseLabel),
-        employer: null,
+        employer: target.employer,
         seriesId: null,
         externalId: e.externalId,
         notes: e.url,
@@ -222,6 +231,7 @@ export function planCanvasSync(
       if (before.end !== e.end) patch.end = e.end;
     }
     if (normalizeTitle(before.title) !== normalizeTitle(e.title)) patch.title = e.title;
+    if (target.employer && before.employer !== target.employer) patch.employer = target.employer;
     if (Object.keys(patch).length === 0) plan.skipped++;
     else {
       plan.update.push({ id: before.id, patch });
@@ -277,8 +287,18 @@ async function sessionExpired(res: Response): Promise<boolean> {
   return body?.reason === 'session';
 }
 
-/** Fetch and parse the feed. Never throws; failures come back as a message to show. */
-export async function fetchCanvasFeed(url: string, timeoutMs = 20_000, load: FeedLoader = direct): Promise<{ ok: true; entries: CanvasEntry[] } | { ok: false; error: string }> {
+/** What a feed's errors say: Canvas's name the class calendar, a job's the work schedule. */
+export type FeedMessages = Record<keyof typeof CANVAS_MESSAGES, string>;
+
+/** Fetch and parse a Canvas or Brightspace feed. Never throws; failures come back as a message to show. */
+export function fetchCanvasFeed(url: string, timeoutMs = 20_000, load: FeedLoader = direct) {
+  return fetchFeed(url, { timeoutMs, load, read: (text) => canvasEntries(parseIcs(text), feedSystem(url) ?? 'canvas'), messages: CANVAS_MESSAGES });
+}
+
+/** Fetch any calendar feed and read it with `read`. Never throws. */
+export async function fetchFeed(url: string, { timeoutMs = 20_000, load = direct, read, messages }: {
+  timeoutMs?: number; load?: FeedLoader; read: (text: string) => CanvasEntry[]; messages: FeedMessages;
+}): Promise<{ ok: true; entries: CanvasEntry[] } | { ok: false; error: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -286,18 +306,18 @@ export async function fetchCanvasFeed(url: string, timeoutMs = 20_000, load: Fee
     if (!res.ok) {
       reportError('canvas.fetch', { code: 'http_error', status: res.status });
       // Semli's own server marks an expired sign-in, so it isn't read as Canvas refusing the link.
-      if (res.status === 401 && (await sessionExpired(res))) return { ok: false, error: CANVAS_MESSAGES.session };
-      return { ok: false, error: [401, 403, 404].includes(res.status) ? CANVAS_MESSAGES.rejected : CANVAS_MESSAGES.connection };
+      if (res.status === 401 && (await sessionExpired(res))) return { ok: false, error: messages.session };
+      return { ok: false, error: [401, 403, 404].includes(res.status) ? messages.rejected : messages.connection };
     }
     const text = await res.text();
     if (!text.includes('BEGIN:VCALENDAR')) {
       reportError('canvas.parse', { code: 'invalid_calendar', message: 'Feed response did not contain VCALENDAR' });
-      return { ok: false, error: CANVAS_MESSAGES.format };
+      return { ok: false, error: messages.format };
     }
-    return { ok: true, entries: canvasEntries(parseIcs(text), feedSystem(url) ?? 'canvas') };
+    return { ok: true, entries: read(text) };
   } catch (error) {
     reportError('canvas.fetch_or_parse', error);
-    return { ok: false, error: controller.signal.aborted ? CANVAS_MESSAGES.timeout : CANVAS_MESSAGES.connection };
+    return { ok: false, error: controller.signal.aborted ? messages.timeout : messages.connection };
   } finally {
     clearTimeout(timer);
   }

@@ -27,6 +27,7 @@ import { useCanDo } from '@/lib/can-do';
 import { useNotificationsAllowed } from '@/lib/notifications';
 import { freeImportAllowance } from '@/lib/plans';
 import { PHONE_CALENDAR_AVAILABLE, usePhoneCalendar } from '@/lib/phone-calendar';
+import { WORK_FEED_AVAILABLE } from '@/lib/work-feed-sync';
 import { PLUS_ENTITLEMENT } from '@/lib/revenuecat';
 import { useShares } from '@/lib/shares';
 import { usePurchases } from '@/providers/PurchasesProvider';
@@ -74,6 +75,9 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
   const canvasStatus = !settings.canvas.feedUrl ? t`Off`
     : settings.canvas.lastError ? t`Sync needs attention`
     : isPlus ? t`Auto-sync on` : t`Imported once`;
+  const workStatus = !settings.workFeed.feedUrl ? t`Off`
+    : settings.workFeed.lastError ? t`Sync needs attention`
+    : isPlus ? t`Auto-sync on` : t`Imported once`;
   // Counts down, so the line reads as what is still yours rather than what is spent.
   const planLabel = isPlus
     ? trialEnds !== null && trialEnds > 0 && entitlement?.periodType === 'TRIAL'
@@ -108,6 +112,7 @@ export function SettingsHome({ inTab = false }: { inTab?: boolean }) {
         <Group title={t`Preferences`}>
           <Row label={t`Reminders`} icon="bell" value={reminderStatus} onPress={() => openSetting('reminders')} />
           <Row label={t`Class calendar`} icon="book" value={canvasStatus} onPress={() => openSetting('canvas')} />
+          {WORK_FEED_AVAILABLE ? <Row label="Work schedule" icon="work" value={workStatus} onPress={() => openSetting('work-schedule')} /> : null}
           {/* Only the iPhone can read its own calendar; the web has no such row. */}
           {PHONE_CALENDAR_AVAILABLE ? <Row label="iPhone calendar" icon="calendar" value={phoneCalendarOn ? t`On` : t`Off`} onPress={() => openSetting('phone-calendar')} /> : null}
           {LANGUAGE_PICKER ? <Row label={t`Language`} icon="globe" value={LANGUAGES.find((l) => l.id === settings.language)?.name ?? (SYSTEM_NAME === 'system' ? t`Match system` : t`Match iPhone`)} onPress={() => openSetting('language')} /> : null}
