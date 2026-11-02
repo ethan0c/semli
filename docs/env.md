@@ -36,7 +36,7 @@ Sentry token is.
 | `EXTRACT_PDF_TEXT` | Optional. `0` reads every PDF whole, as page images. Unset means a PDF with real text on every page is read as its text (more accurate, a third cheaper; `docs/import-speed.md`). |
 | `EXTRACT_FAST` | Optional. `0` turns fast mode off for Plus subscribers' documents (standard speed, half the price). Unset means fast for Plus. Free users always read at standard speed. See `docs/import-speed.md`. |
 | `SUPABASE_URL`, `SUPABASE_KEY` | Import limits and the beta waitlist. Same project as the app. |
-| `REVENUECAT_SECRET_KEY` | Confirms a Plus subscriber before a paid import. Secret. Production only. |
+| `REVENUECAT_SECRET_KEY` | Confirms a Plus subscriber before a paid import. Secret. Production only. A V1 secret key from the app's own RevenueCat project: a missing or wrong key refuses every subscriber with the free-imports message (Nov 2, 2026). Check with `curl -H "Authorization: Bearer <key>" https://api.revenuecat.com/v1/subscribers/<supabase user id>`; the server logs `[import.plus_check]` with the reason. |
 | `APP_STORE_PROVIDER_TOKEN` | The `pt=` number from any App Store Connect campaign link (App Analytics → Campaigns). With it, `semli.app/get?r=<tag>` sends people to the App Store with `ct=<tag>`, so installs are counted per tag. Not secret. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Reads and clears `email_outbox` for transactional email (`app/api/emails`). Secret; never in the app. |
 | `RESEND_API_KEY` | Sends transactional email and keeps Resend's App users group in step with accounts (adds each welcomed address, deletes a deleted account's contact). Needs a full-access key for the group; with a send-only key the emails still go and `npm run email sync` catches the group up. Secret. |
