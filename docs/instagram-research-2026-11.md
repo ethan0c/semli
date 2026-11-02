@@ -14,6 +14,28 @@ Make an Instagram version of the underlying student problem: a short demonstrati
 
 This is a recommendation for a pilot, not a claim that we have found Semli's winning Instagram strategy. There are no Semli Instagram Insights in this research. Full competitor histories were inaccessible, so no account-specific posting cadence or best hour is verified.
 
+## Authenticated DarkUGC findings — Nov 1 update
+
+DarkUGC MCP authentication succeeded. The research tools returned usable Instagram-specific records and video breakdowns. They provide automated analyses and recorded metrics; the descriptions below have not been independently verified by watching the original videos.
+
+The closest newly found reference is **Coursicle**, a college schedule planner:
+
+| Instagram reference | Recorded evidence | Described sequence | Semli relevance |
+|---|---|---|---|
+| [@collegewbrady — fall course load](https://darkugc.com/video/ig-DcDArovuL9L) | Posted Aug 15, 2026; 8 seconds; about 523K recorded views | Student at a desk reacts to the upcoming course load; cut at about 3.7 seconds to the Coursicle schedule | A short student reaction followed by the plan. A real student creator could make an original Semli version about their actual classes and shifts |
+| [@collegewbrady — course registration](https://darkugc.com/video/ig-DXwZSAzOgRN) | Posted Apr 30, 2026; 8 seconds; about 897K recorded views | Student reaction first; course planner appears around 3.4 seconds | The person and screen share one simple situation. This is a closer reference than a multi-scene study vlog |
+| [@ivy_learns — anatomy app](https://darkugc.com/video/ig-Dec88-WS8n_) | Posted Oct 13, 2026; 26 seconds; about 41M recorded views | Creator appears holding the tablet, then close-ups show the anatomy tool; the analysis reports no speech | An on-camera person does not require a spoken testimonial. The visual spectacle of 3D anatomy is not transferable evidence for a planner |
+
+The [creator lookup](https://darkugc.com/@collegewbrady) returned ten selected Instagram videos for Coursicle, with about 6.2M recorded views across them and 80% labeled “Text story → screen proof.” This is a selected library record, not a complete account history, a verified organic result, or a reliable posting-frequency estimate. The library's reported follower count is a snapshot, not the creator's current count.
+
+**Face/faceless comparison is inconclusive.** An education/Instagram query covering Aug 1–Nov 1 returned 842 records in one “face” bucket. An Instagram-wide query with `face: faceless` returned zero records. That is not a usable comparison cohort. It could reflect library selection or labeling; it does not establish that faceless Instagram videos fail. Do not use these counts to justify a causal performance claim.
+
+A narrower recent query for StudyFetch, Gizmo, Tiimo and Structured returned four Instagram records, all for StudyFetch. Tiimo and Structured were not found as brand names in that query. This makes the broad education sample a poor substitute for a complete competitor audit.
+
+The earlier study-vlog reference was also confirmed as creator-led by its breakdown: the student appears at the beginning, there are roughly sixteen cuts over 34 seconds, and the app appears around 11.5 seconds. Removing the student and reducing it to screen footage would be a materially different creative.
+
+**Updated creative direction:** keep the small pilot on real-student reaction followed by app footage, using the two Coursicle posts as structure references. Write original situations and captions. The founder stays off camera. Obtain suitable creator footage and usage permission before production; keep the twelve-post scale-up on hold. Useful carousels remain a separate unvalidated test. No creator was contacted, no spending was committed, and no posts were scheduled by this research.
+
 ## What the evidence actually says
 
 | Source and period | Finding | Implication for Semli |
