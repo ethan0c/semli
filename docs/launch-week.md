@@ -87,7 +87,7 @@ First-time downloads from App Store Connect → Analytics → Units, Monday to S
 
 | Week (Mon) | What happens | Target | Running target | Actual | Running actual |
 |---|---|---|---|---|---|
-| Oct 26 | Launch Tue; launch emails Wed; first clips | 12 | 12 | | |
+| Oct 26 | Launch Tue; launch emails Wed; first clips | 12 | 12 | 14 (Oct 25–31; Nov 1 not yet in) | 14 |
 | Nov 2 | r/StudentNurse post Tue; ten creator DMs | 18 | 30 | | |
 | Nov 9 | r/college post Tue; Discord; creator video 1 | 20 | 50 | | |
 | Nov 16 | r/GetStudying; creator video 2; `spring-schedule` email Tue | 30 | 80 | | |
