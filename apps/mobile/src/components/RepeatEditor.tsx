@@ -13,6 +13,11 @@ import { enter, exit, layout } from '@/lib/motion';
 import { radius, useTheme, space } from '@/theme';
 
 export type Break = { label?: string; start: string; end: string };
+/**
+ * For a store selector when no breaks are saved. A fresh `[]` each read made zustand see a new
+ * value every time, which threw before Repeat and Create could draw (Nov 3, 2026).
+ */
+export const NO_BREAKS: Break[] = [];
 
 const DAY_LABEL: Record<Weekday, string> = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const EVERY: { key: 'never' | '1' | '2' | '0'; label: string }[] = [

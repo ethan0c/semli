@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { RepeatEditor } from '@/components/RepeatEditor';
+import { NO_BREAKS, RepeatEditor } from '@/components/RepeatEditor';
 import { Button, Sheet } from '@/components/Sheet';
 import { T } from '@/components/Text';
 import { feedback } from '@/lib/feedback';
@@ -24,7 +24,7 @@ export function RepeatDetail({ id }: { id?: string }) {
   const item = useStore((s) => (id ? s.items[id] : undefined));
   const items = useItemList();
   const storedRule = useStore((s) => (item?.seriesId ? s.series[item.seriesId] : undefined));
-  const breaks = useStore((s) => s.settings.breaks ?? []);
+  const breaks = useStore((s) => s.settings.breaks ?? NO_BREAKS);
   const applySeries = useStore((s) => s.applySeries);
   const startSeries = useStore((s) => s.startSeries);
   const updateItem = useStore((s) => s.updateItem);

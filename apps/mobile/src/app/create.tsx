@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { CategoryDot, Chip, FieldRow, GroupLabel, PickerPill } from '@/components/Controls';
 import { InlinePicker, NativeToggle } from '@/components/Native';
-import { RepeatEditor } from '@/components/RepeatEditor';
+import { NO_BREAKS, RepeatEditor } from '@/components/RepeatEditor';
 import { RingingAlarmInfo } from '@/components/RingingAlarmInfo';
 import { Press } from '@/components/Press';
 import { Segmented } from '@/components/Segmented';
@@ -33,7 +33,7 @@ export default function CreateScreen() {
   const { c } = useTheme();
   const params = useLocalSearchParams<{ kind?: string; date?: string }>();
   const courses = useCourseList();
-  const breaks = useStore((s) => s.settings.breaks ?? []);
+  const breaks = useStore((s) => s.settings.breaks ?? NO_BREAKS);
   const [draft, setDraft] = useState<ManualDraft>(() => ({
     kind: params.kind === 'event' ? 'event' : 'task', title: '', category: 'personal',
     date: params.date && isLocalDate(params.date) ? params.date : localParts(new Date()).date,
