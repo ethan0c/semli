@@ -1,0 +1,137 @@
+{
+  "name": "2026-11",
+  "timezone": "America/New_York",
+  "status": "draft",
+  "posts": [
+    {
+      "date": "2026-11-02",
+      "time": "11:00",
+      "preset": "batch-closing",
+      "pillar": "work-school",
+      "hook": "closing shift at 11pm. exam at 8am.",
+      "caption": "closing shift at 11pm. exam at 8am."
+    },
+    {
+      "date": "2026-11-04",
+      "time": "19:00",
+      "preset": "batch-alibis",
+      "pillar": "work-school",
+      "hook": "when your shift and exam both start at 2",
+      "caption": "when your shift and exam both start at 2"
+    },
+    {
+      "date": "2026-11-06",
+      "time": "11:00",
+      "preset": "batch-email",
+      "pillar": "college",
+      "hook": "six days to send a three-sentence email",
+      "caption": "six days to send a three-sentence email"
+    },
+    {
+      "date": "2026-11-08",
+      "time": "19:00",
+      "preset": "batch-twenty",
+      "pillar": "college",
+      "hook": "getting ready to study counts as studying",
+      "caption": "getting ready to study counts as studying"
+    },
+    {
+      "date": "2026-11-09",
+      "time": "19:00",
+      "preset": "batch-clinical",
+      "pillar": "work-school",
+      "hook": "clinicals at 6am, care plan due at 11:59pm",
+      "caption": "clinicals at 6am, care plan due at 11:59pm"
+    },
+    {
+      "date": "2026-11-11",
+      "time": "11:00",
+      "preset": "batch-swap",
+      "pillar": "work-school",
+      "hook": "swapping a shift to study for 20 minutes",
+      "caption": "swapping a shift to study for 20 minutes"
+    },
+    {
+      "date": "2026-11-13",
+      "time": "19:00",
+      "preset": "batch-group",
+      "pillar": "college",
+      "hook": "“we all worked really hard on this”",
+      "caption": "“we all worked really hard on this”"
+    },
+    {
+      "date": "2026-11-15",
+      "time": "11:00",
+      "preset": "batch-eightam",
+      "pillar": "college",
+      "hook": "all that for a zoom lecture",
+      "caption": "all that for a zoom lecture"
+    },
+    {
+      "date": "2026-11-16",
+      "time": "19:00",
+      "preset": "batch-availability",
+      "pillar": "work-school",
+      "hook": "“did you send us your class schedule?”",
+      "caption": "“did you send us your class schedule?”"
+    },
+    {
+      "date": "2026-11-18",
+      "screen_date": "2026-11-21",
+      "time": "11:00",
+      "preset": "batch-weekend",
+      "pillar": "work-school",
+      "hook": "“you don’t have class on weekends though”",
+      "caption": "“you don’t have class on weekends though”"
+    },
+    {
+      "date": "2026-11-20",
+      "time": "19:00",
+      "preset": "batch-readings",
+      "pillar": "college",
+      "hook": "when the syllabus says “a little reading”",
+      "caption": "when the syllabus says “a little reading”"
+    },
+    {
+      "date": "2026-11-22",
+      "time": "11:00",
+      "preset": "batch-comeback",
+      "pillar": "college",
+      "hook": "planning the academic comeback instead of doing the assignment",
+      "caption": "planning the academic comeback instead of doing the assignment"
+    },
+    {
+      "date": "2026-11-23",
+      "time": "11:00",
+      "preset": "batch-breakshift",
+      "pillar": "work-school",
+      "hook": "“enjoy your week off”",
+      "caption": "“enjoy your week off”"
+    },
+    {
+      "date": "2026-11-25",
+      "screen_date": "2026-11-27",
+      "time": "19:00",
+      "preset": "batch-blackfriday",
+      "pillar": "work-school",
+      "hook": "black friday shift at 5am. paper due at midnight.",
+      "caption": "black friday shift at 5am. paper due at midnight."
+    },
+    {
+      "date": "2026-11-27",
+      "time": "11:00",
+      "preset": "batch-discussion",
+      "pillar": "college",
+      "hook": "trying to turn “i agree” into 100 words",
+      "caption": "trying to turn “i agree” into 100 words"
+    },
+    {
+      "date": "2026-11-29",
+      "time": "19:00",
+      "preset": "batch-finals",
+      "pillar": "college",
+      "hook": "checking the grade calculator like the answer’s going to change",
+      "caption": "checking the grade calculator like the answer’s going to change"
+    }
+  ]
+}

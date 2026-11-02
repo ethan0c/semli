@@ -46,6 +46,8 @@ function TodayScreen() {
   const { c, dark } = useTheme();
   const topInset = useTopInset();
   const now = useNow();
+  const devToday = useDevToday();
+  const meme = devToday.meme;
   // The sky is the phone's greeting; a laptop opens on plain paper (docs/headers.md).
   const { sidebar, twoPane } = useWebLayout();
   // A wide web window opens an item in the pane in place of the hours; the X or Esc brings them back.
@@ -55,10 +57,14 @@ function TodayScreen() {
   useScreenShortcuts({ Escape: () => setOpenId(null) }, !!openId);
   // The plan, and the plan with the iPhone's calendar beside it: the day and its overlaps read both,
   // while suggestions, nudges and the first-run checks read only what is Semli's.
-  const stored = useItemList();
-  const items = useWithPhoneCalendar(stored);
-  const schedules = useScheduleList();
-  const courses = useCourseList();
+  const savedItems = useItemList();
+  const stored = meme?.items ?? savedItems;
+  const withPhoneCalendar = useWithPhoneCalendar(stored);
+  const items = meme ? stored : withPhoneCalendar;
+  const savedSchedules = useScheduleList();
+  const schedules = useMemo(() => meme ? [] : savedSchedules, [meme, savedSchedules]);
+  const savedCourses = useCourseList();
+  const courses = meme ? [] : savedCourses;
   const breaks = useStore((s) => s.settings.breaks);
   const workDates = useStore((s) => s.taskWorkDates);
   const dismissals = useStore((s) => s.suggestionDismissals);
@@ -71,7 +77,7 @@ function TodayScreen() {
   const undoBatch = useStore((s) => s.undoBatch);
   const signedIn = useSession((s) => !!accountOf(s.session));
   const offerSave = useStore((s) => ACCOUNTS_ENABLED && s.settings.onboarded && !s.settings.savePlanDismissed)
-    && !signedIn && stored.some((i) => i.batchId !== sampleBatchId);
+    && !meme && !signedIn && stored.some((i) => i.batchId !== sampleBatchId);
   const planTasks = useStore((s) => s.planTasks);
   const unplanTask = useStore((s) => s.unplanTask);
   const dismissSuggestion = useStore((s) => s.dismissSuggestion);
@@ -79,7 +85,7 @@ function TodayScreen() {
   // Once a term: the classes have all met for the last time and nothing from the next term is in.
   const isStudent = useStore((s) => s.settings.isStudent);
   const termOverSeen = useStore((s) => s.settings.termOverSeen ?? null);
-  const term = useMemo(() => (isStudent ? termOver(stored, now.date) : null), [isStudent, stored, now.date]);
+  const term = useMemo(() => (!meme && isStudent ? termOver(stored, now.date) : null), [meme, isStudent, stored, now.date]);
   const askTerm = term && term.lastClass !== termOverSeen ? term : null;
   // Open by default: seeing the green tick land is the reward for checking something off.
   const [completedExpanded, setCompletedExpanded] = useState(true);
@@ -89,8 +95,8 @@ function TodayScreen() {
   const dismissed = useMemo(() => dismissals.date === now.date ? dismissals.ids : [], [dismissals, now.date]);
   // Friday afternoon: work due by Monday and a free evening. "Not this weekend" is Friday's own dismissal.
   const weekend = useMemo(() => dismissed.includes('weekend') ? null : weekendNudge(stored, now, workDates), [stored, now, workDates, dismissed]);
-  const suggestions = useMemo(() => startTodaySuggestions(stored, now, workDates, dismissed)
-    .filter((s) => !weekend?.items.some((i) => i.id === s.item.id)), [stored, now, workDates, dismissed, weekend]);
+  const suggestions = useMemo(() => (meme ? [] : startTodaySuggestions(stored, now, workDates, dismissed))
+    .filter((s) => !weekend?.items.some((i) => i.id === s.item.id)), [meme, stored, now, workDates, dismissed, weekend]);
   const tomorrow = useMemo(() => tomorrowSummary(items, now, workDates), [items, now, workDates]);
   const upcoming = useMemo(() => items.filter((item) => !item.done && item.isDeadline && item.date > now.date && diffDays(now.date, item.date) <= 14
     && !suggestions.some((suggestion) => suggestion.item.id === item.id)).slice(0, 5), [items, now.date, suggestions]);
@@ -117,7 +123,6 @@ function TodayScreen() {
     return { date: first.date, title: 'Next in your plan', sub: `${first.title} · ${weekdayLong(first.date)}, ${monthDay(first.date)}` };
   }, [stored, now.date]);
   const isSample = items.some((item) => item.sourceId === SAMPLE_SOURCE);
-  const devToday = useDevToday();
   const moment = useMemo(() => (__DEV__ && devToday.noMoment ? null : momentFor(stored, breaks ?? [], now.date)), [stored, breaks, now.date, devToday.noMoment]);
   // A dark sky under a light page (night): the header and the day bar take the dark palette, the
   // sky stays dark behind them down to the end of the bar, and the status bar turns light until
@@ -197,7 +202,7 @@ function TodayScreen() {
     useStore.getState().showDoneToast(open);
   }
 
-  if (items.length === 0 && courses.length === 0 && schedules.length === 0) return (
+  if (!meme && items.length === 0 && courses.length === 0 && schedules.length === 0) return (
     <ScrollView style={{ backgroundColor: c.canvas }} contentContainerStyle={{ paddingBottom: NAV_INSET }} contentInsetAdjustmentBehavior="never">
       <TodayStart date={now.date} />
     </ScrollView>
@@ -206,7 +211,7 @@ function TodayScreen() {
   // The number first, then the sentence that finishes it.
   const line = featured && state ? countdownLine(featured, state) : featured?.title ?? null;
   const parts = featured && state ? countdownParts(featured, state) : featured ? { text: featured.title, time: null } : null;
-  const hours = todayView === 'hours' && !twoPane;
+  const hours = !meme && todayView === 'hours' && !twoPane;
   const viewToggle = (
     <Animated.View key={hours ? 'list' : 'chart'} entering={enter.fade} exiting={exit.fade}>
       <IconButton icon={hours ? 'list' : 'chart'} tone="glass" size={44} haptic="select"
@@ -262,12 +267,12 @@ function TodayScreen() {
         value={moment ? (big ? <Ticker value={big} token="display" /> : <T token="display" accessibilityRole="header">{featured ? 'Now' : 'Clear'}</T>)
           : big ? <Ticker value={big} token="displayXl" /> : undefined}
         trailing={moment || twoPane ? undefined : <View style={styles.toggleSpace} />}
-        onPress={featured ? () => openItem(featured.id) : undefined}
+        onPress={featured && !meme ? () => openItem(featured.id) : undefined}
         accessibilityLabel={featured ? [big, line].filter(Boolean).join(' ') : undefined}
         details={featured ? <>
-          <T token={moment ? 'body' : 'lead'} numberOfLines={2}>{parts?.text}</T>
+          <T token={moment ? 'body' : 'lead'} numberOfLines={3}>{parts?.text}</T>
           {/* The time leads the grey line, so a long title wraps alone and never strands "· 2:45 pm". */}
-          {!moment && (parts?.time || featuredWhere) ? <T token="callout" color={skyGrey} numberOfLines={1}>{[parts?.time, featuredWhere].filter(Boolean).join(' · ')}</T>
+          {!moment && (parts?.time || featuredWhere) ? <T token="callout" color={skyGrey} numberOfLines={2}>{[parts?.time, featuredWhere].filter(Boolean).join(' · ')}</T>
             : moment && parts?.time ? <T token="callout" color={c.inkSecondary}>{parts.time}</T> : null}
         </> : <T token="callout" color={skyGrey}>{todays.length ? 'Nothing timed left today.' : 'Nothing scheduled today.'}</T>} />
       </View>
@@ -294,9 +299,9 @@ function TodayScreen() {
       {skyDark && !hours ? <View style={{ height: DARK_FADE }} /> : null}
 
       {/* One thing explained at the moment it first matters, in place of a tour (see components/Firsts). */}
-      <TodayFirst items={items} now={now} timedToday={timedToday} style={styles.section} />
+      {meme ? null : <TodayFirst items={items} now={now} timedToday={timedToday} style={styles.section} />}
 
-      {sampleBatchId ? (
+      {sampleBatchId && !meme ? (
         <Animated.View layout={layout} entering={enter.fade} exiting={exit.fade} style={[styles.section, styles.sampleLine]}>
           <T token="callout" color={c.inkSecondary} style={{ flex: 1 }}>This is a sample week.</T>
           <TextButton label="Remove" tone="muted" accessibilityLabel="Remove the sample week" onPress={() => {
@@ -314,7 +319,7 @@ function TodayScreen() {
           return (
             <Animated.View key={item.id} layout={layout} entering={enter.fade} exiting={exit.sink}>
               <ItemRow item={item} today={now.date} planned={planned} conflict={conflictSet.has(item.id)} last={i === openItems.length - 1 && !completed.length}
-                onPress={() => openItem(item.id)} onToggle={() => complete(item)} onDelete={() => removeItem(item.id)} />
+                onPress={meme ? undefined : () => openItem(item.id)} onToggle={meme ? undefined : () => complete(item)} onDelete={meme ? undefined : () => removeItem(item.id)} />
               {planned ? <View style={styles.inlineAction}><TextButton label="Remove from today" tone="muted" onPress={() => unplanTask(item.id)} accessibilityLabel={`Remove ${item.title} from today's work plan`} /></View> : null}
             </Animated.View>
           );
@@ -410,8 +415,8 @@ function TodayScreen() {
           {tomorrow ? <ListRow title="Tomorrow" sub={tomorrow} onPress={() => router.push('/plan')} /> : null}
           {upcoming.map((item, i) => (
             <Animated.View key={item.id} layout={layout} entering={enter.fade} exiting={exit.fade}>
-              <ItemRow item={item} today={now.date} last={i === upcoming.length - 1 && !nextWeekPending} onPress={() => openItem(item.id)}
-                onToggle={() => { feedback('complete'); toggleDone(item.id); }} onDelete={() => removeItem(item.id)} />
+              <ItemRow item={item} today={now.date} last={i === upcoming.length - 1 && !nextWeekPending} onPress={meme ? undefined : () => openItem(item.id)}
+                onToggle={meme ? undefined : () => { feedback('complete'); toggleDone(item.id); }} onDelete={meme ? undefined : () => removeItem(item.id)} />
             </Animated.View>
           ))}
           {upcoming.filter((item) => tightDeadlines.has(item.id)).slice(0, 1).map((item) => (
@@ -421,13 +426,13 @@ function TodayScreen() {
         </View>
       ) : null}
 
-      <ResumeReview style={styles.section} />
+      {meme ? null : <ResumeReview style={styles.section} />}
 
       {askTerm ? <TermOverRow term={askTerm} onDone={() => setSettings({ termOverSeen: askTerm.lastClass })} /> : null}
 
       {offerSave ? <SavePlanRow onDismiss={() => setSettings({ savePlanDismissed: true })} /> : null}
 
-      {isSample ? (
+      {isSample && !meme ? (
         <View style={styles.section}>
           <ListRow title="This is a sample week" sub="Clear it any time in Your data" last onPress={() => router.push('/settings/data')} />
         </View>
@@ -441,7 +446,7 @@ function TodayScreen() {
       {list}
       {/* Dark like the header while it sits on a dark sky; the page's own look once the sky has scrolled away. */}
       <ForceAppearance.Provider value={skyDark && !pastSky ? 'dark' : null}>
-        <View style={[styles.floatToggle, { top: topInset + 20 }]}>{viewToggle}</View>
+        {meme ? null : <View style={[styles.floatToggle, { top: topInset + 20 }]}>{viewToggle}</View>}
       </ForceAppearance.Provider>
     </View>
   );

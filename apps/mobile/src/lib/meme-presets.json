@@ -1,0 +1,115 @@
+[
+  {"id":"batch-closing","label":"Closing shift, morning exam","items":[
+    {"title":"lecture (physically present)","start":"10:00","end":"11:00","category":"school"},
+    {"title":"study before work","start":"11:00","end":"11:10"},
+    {"title":"recover from studying","start":"11:10","end":"15:00"},
+    {"title":"closing shift","start":"15:00","end":"23:00","category":"work"},
+    {"title":"study for the 8am exam","start":"23:00","end":"23:59","category":"school"}
+  ]},
+  {"id":"batch-alibis","label":"Manager and professor","items":[
+    {"title":"tell manager there’s an exam","start":"10:00","end":"10:15"},
+    {"title":"tell professor there’s a shift","start":"10:15","end":"10:30"},
+    {"title":"exam","start":"14:00","end":"16:00","category":"school"},
+    {"title":"shift","start":"14:00","end":"22:00","category":"work"},
+    {"title":"be in two places","start":"14:00","end":"16:00"}
+  ]},
+  {"id":"batch-email","label":"Email professor, day six","items":[
+    {"title":"read professor’s email again","start":"10:00","end":"10:15","category":"school"},
+    {"title":"draft “sorry for the delay”","start":"10:15","end":"11:00"},
+    {"title":"ask group chat if it sounds rude","start":"11:00","end":"12:00"},
+    {"title":"remove one exclamation mark","start":"12:00","end":"12:30"},
+    {"title":"send it tomorrow","start":"12:30","end":"13:00"}
+  ]},
+  {"id":"batch-twenty","label":"Locked in for twenty minutes","items":[
+    {"title":"make coffee","start":"10:00","end":"10:30"},
+    {"title":"find the study playlist","start":"10:30","end":"11:15"},
+    {"title":"adjust desk lighting","start":"11:15","end":"12:00"},
+    {"title":"actually study","start":"12:00","end":"12:20","category":"school"},
+    {"title":"well-earned break","start":"12:20","end":"18:00"}
+  ]},
+  {"id":"batch-clinical","label":"The clinical-day meal plan","items":[
+    {"title":"clinicals","start":"06:00","end":"14:00","category":"school"},
+    {"title":"sit in car in silence","start":"14:00","end":"14:30"},
+    {"title":"start care plan","start":"15:00","end":"15:05","category":"school"},
+    {"title":"stare at care plan","start":"15:05","end":"23:58","category":"school"},
+    {"title":"care plan due","start":"23:59","kind":"task","category":"school"},
+    {"title":"eat (rescheduled)","start":"23:59","end":null}
+  ]},
+  {"id":"batch-swap","label":"Swapped a shift to study","items":[
+    {"title":"swap shift to study","start":"10:00","end":"10:15","category":"work"},
+    {"title":"celebrate the free afternoon","start":"10:15","end":"12:00"},
+    {"title":"study","start":"12:00","end":"12:20","category":"school"},
+    {"title":"quick nap","start":"12:20","end":"17:00"},
+    {"title":"ask for the shift back","start":"17:00","end":"17:15","category":"work"}
+  ]},
+  {"id":"batch-group","label":"Split the group project evenly","items":[
+    {"title":"group project meeting","start":"10:00","end":"10:30","category":"school"},
+    {"title":"wait for everyone","start":"10:00","end":"10:30"},
+    {"title":"write everyone’s section","start":"11:00","end":"15:00","category":"school"},
+    {"title":"add everyone’s names","start":"15:00","end":"15:05"},
+    {"title":"“we cooked” — group chat","start":"15:05","end":"15:10"}
+  ]},
+  {"id":"batch-eightam","label":"Romanticizing the 8am","items":[
+    {"title":"pick the perfect outfit","start":"06:00","end":"06:45"},
+    {"title":"coffee for the walk","start":"06:45","end":"07:15"},
+    {"title":"take one photo of campus","start":"07:15","end":"07:55"},
+    {"title":"8am lecture","start":"08:00","end":"09:00","category":"school"},
+    {"title":"find out it was on Zoom","start":"09:00","end":"09:05"}
+  ]},
+  {"id":"batch-availability","label":"Open availability","items":[
+    {"title":"submit class schedule","start":"10:00","end":"10:15","category":"school"},
+    {"title":"set work availability","start":"10:15","end":"10:30","category":"work"},
+    {"title":"lecture","start":"13:00","end":"15:00","category":"school"},
+    {"title":"shift (surprise)","start":"13:00","end":"21:00","category":"work"},
+    {"title":"send the same screenshot again","start":"15:00","end":"15:15"}
+  ]},
+  {"id":"batch-weekend","label":"Finally a free weekend","items":[
+    {"title":"sleep in","start":"09:00","end":"09:05"},
+    {"title":"cover someone’s shift","start":"09:05","end":"17:00","category":"work"},
+    {"title":"catch up on laundry","start":"17:00","end":"17:15"},
+    {"title":"remember the Sunday deadline","start":"17:15","end":"17:16"},
+    {"title":"catch up on the entire course","start":"17:16","end":"23:59","category":"school"}
+  ]},
+  {"id":"batch-readings","label":"Just a little reading","items":[
+    {"title":"read chapter 1","start":"10:00","end":"11:00","category":"school"},
+    {"title":"highlight entire chapter","start":"11:00","end":"12:00"},
+    {"title":"realize nothing stood out","start":"12:00","end":"12:05"},
+    {"title":"read chapter 1 again","start":"12:05","end":"13:00","category":"school"},
+    {"title":"chapters 2–12 (optimistic)","start":"13:00","end":"13:30","category":"school"}
+  ]},
+  {"id":"batch-comeback","label":"The comeback planning session","items":[
+    {"title":"plan academic comeback","start":"10:00","end":"11:00"},
+    {"title":"color-code academic comeback","start":"11:00","end":"12:00"},
+    {"title":"rename academic comeback","start":"12:00","end":"13:00"},
+    {"title":"lunch","start":"13:00","end":"14:00"},
+    {"title":"move academic comeback to Monday","start":"14:00","end":"14:05"}
+  ]},
+  {"id":"batch-breakshift","label":"Thanksgiving break shift","items":[
+    {"title":"start Thanksgiving break","start":"10:00","end":"10:01"},
+    {"title":"“can you come in?”","start":"10:01","end":"10:02","category":"work"},
+    {"title":"shift","start":"11:00","end":"19:00","category":"work"},
+    {"title":"“break is a great time to catch up”","start":"19:00","end":"19:01","category":"school"},
+    {"title":"catch up","start":"19:01","end":"23:59","category":"school"}
+  ]},
+  {"id":"batch-blackfriday","label":"Black Friday and the paper","items":[
+    {"title":"Black Friday shift","start":"05:00","end":"13:00","category":"work"},
+    {"title":"hear phantom checkout beeps","start":"13:00","end":"14:00"},
+    {"title":"paper due at midnight","start":"14:00","end":"14:01","category":"school"},
+    {"title":"write the title","start":"14:01","end":"14:05","category":"school"},
+    {"title":"2500 words to go","start":"14:05","end":"23:59","category":"school"}
+  ]},
+  {"id":"batch-discussion","label":"Reply to two classmates","items":[
+    {"title":"write discussion post","start":"10:00","end":"11:00","category":"school"},
+    {"title":"reply “great point”","start":"11:00","end":"11:01"},
+    {"title":"find 99 more words","start":"11:01","end":"12:00"},
+    {"title":"reply to second classmate","start":"12:00","end":"13:00","category":"school"},
+    {"title":"“I also agree with your point”","start":"13:00","end":"13:01"}
+  ]},
+  {"id":"batch-finals","label":"Finals are approaching","items":[
+    {"title":"check final exam schedule","start":"10:00","end":"10:05","category":"school"},
+    {"title":"check it again in case it changed","start":"10:05","end":"10:10"},
+    {"title":"calculate minimum passing grade","start":"10:10","end":"12:00"},
+    {"title":"try a different calculator","start":"12:00","end":"13:00"},
+    {"title":"study (last resort)","start":"13:00","end":"14:00","category":"school"}
+  ]}
+]

@@ -29,6 +29,7 @@ import { COLUMN, useWebLayout } from '@/lib/layout';
 import { useScreenShortcuts } from '@/lib/shortcuts';
 import { enter, exit, layout } from '@/lib/motion';
 import { useNow } from '@/lib/now';
+import { setDevMemeDate, useDevToday } from '@/lib/dev';
 import { defaultTimes } from '@/lib/times';
 import { useReschedule } from '@/lib/use-reschedule';
 import { useSettling } from '@/lib/use-settling';
@@ -109,15 +110,21 @@ const PlanWeek = memo(function PlanWeek({ start, items, now, selected, onSelect,
 function PlanScreen() {
   const { c } = useTheme();
   const now = useNow();
+  const meme = useDevToday().meme;
   // The week and the day show the iPhone's calendar beside the plan, and count it for overlaps.
-  const stored = useItemList();
-  const items = useWithPhoneCalendar(stored);
-  const schedules = useScheduleList();
-  const courses = useCourseList();
+  const savedItems = useItemList();
+  const stored = meme?.items ?? savedItems;
+  const withPhoneCalendar = useWithPhoneCalendar(stored);
+  const items = meme ? stored : withPhoneCalendar;
+  const savedSchedules = useScheduleList();
+  const schedules = useMemo(() => meme ? [] : savedSchedules, [meme, savedSchedules]);
+  const savedCourses = useCourseList();
+  const courses = useMemo(() => meme ? [] : savedCourses, [meme, savedCourses]);
   const toggleDone = useStore((s) => s.toggleDone);
   const removeItem = useStore((s) => s.removeItem);
   const updateItem = useStore((s) => s.updateItem);
-  const [selected, updateSelected] = useState(useStore.getState().selectedPlanDate ?? now.date);
+  const [savedSelected, updateSelected] = useState(useStore.getState().selectedPlanDate ?? now.date);
+  const selected = meme?.selectedDate ?? savedSelected;
   const [calendarOpen, setCalendarOpen] = useState(false);
   // The chart answers the tap at once; the agenda below follows as a deferred render.
   const shown = useDeferredValue(selected);
@@ -129,9 +136,10 @@ function PlanScreen() {
   // (each store write re-serialises the whole plan).
   useEffect(() => () => useStore.getState().setSelectedPlanDate(selectedRef.current), []);
   const setSelected = useCallback((date: string) => {
-    updateSelected(date);
+    if (meme) setDevMemeDate(date);
+    else updateSelected(date);
     setCalendarOpen(false);
-  }, []);
+  }, [meme]);
   /** Untimed shifts being given a time, and which of their pickers is open under the row. */
   const [timing, setTiming] = useState<Record<string, 'start' | 'end' | null>>({});
   const week = useMemo(() => weekOf(selected), [selected]);
@@ -149,11 +157,12 @@ function PlanScreen() {
   // The swipe hint under the chart shows until the person has moved by week once; the key stays.
   const legendSeen = useStore((s) => s.settings.firsts.week);
   const moveWeek = useCallback((step: number) => {
-    updateSelected((date) => addDays(date, step * 7));
+    if (meme) setDevMemeDate(addDays(meme.selectedDate, step * 7));
+    else updateSelected((date) => addDays(date, step * 7));
     setCalendarOpen(false);
     const { settings, setSettings } = useStore.getState();
-    if (!settings.firsts.week) setSettings({ firsts: { ...settings.firsts, week: true } });
-  }, []);
+    if (!meme && !settings.firsts.week) setSettings({ firsts: { ...settings.firsts, week: true } });
+  }, [meme]);
   // A wide web window opens an item beside the list instead of on its own screen.
   const { sidebar, twoPane } = useWebLayout();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -354,9 +363,9 @@ function PlanScreen() {
             <Animated.View key={it.id} layout={layout} entering={enter.fade} exiting={exit.fade}>
               {isUntimedEvent(it) || it.id in timing ? renderShift(it) : (
                 <ItemRow item={it} today={now.date} conflict={conflicts.has(it.id)} selected={twoPane && openId === it.id}
-                  onPress={() => openItem(it.id)}
-                  onToggle={() => { feedback(it.done ? 'uncomplete' : 'complete'); if (!it.done) settle(it.id); toggleDone(it.id); }}
-                  onDelete={() => removeItem(it.id)} />
+                  onPress={meme ? undefined : () => openItem(it.id)}
+                  onToggle={meme ? undefined : () => { feedback(it.done ? 'uncomplete' : 'complete'); if (!it.done) settle(it.id); toggleDone(it.id); }}
+                  onDelete={meme ? undefined : () => removeItem(it.id)} />
               )}
             </Animated.View>
           )) : (

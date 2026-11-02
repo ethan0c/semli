@@ -39,6 +39,9 @@ Start with the [repository README](../README.md) for the current implementation 
 | [Milestones](milestones.md) | Business targets and timeline assumptions |
 | [Launch guide](launch-guide.md) | Apple setup and marketing guidance |
 | [Marketing budget](marketing-500.md) | Acquisition experiments and budget |
+| [TikTok plan](tiktok-plan.md) | What to post, how often, and the checks through the January push |
+| [Social research and Sunday batches](tiktok-research-2026-11.md) | Current trend candidates, sourced account examples, posting-time pilot, and the November production workflow |
+| [Instagram research](instagram-research-2026-11.md) | Instagram-specific evidence, current trend candidates, and a proposed Reel/carousel pilot; posting remains deferred |
 | [Survey follow-up emails](emails/survey-follow-up.txt) | Gift-card winner and participant email drafts |
 | [Email templates](beta-copy.md#other-email-templates) | Branded beta invite, feedback reply, App Store launch, spring schedule and semester reminder; the welcome email; groups, HTML, plain text, and sending notes |
 

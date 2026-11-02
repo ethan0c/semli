@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Item } from '@dayli/schema';
-import { CANVAS_MESSAGES, canvasEntries, courseCodeOf, feedName, feedSystem, fetchCanvasFeed, normalizeFeedUrl, parseIcs, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
+import { CANVAS_MESSAGES, canvasEntries, courseCodeOf, feedName, feedSystem, fetchCanvasFeed, normalizeFeedUrl, parseIcs, pastedSystem, planCanvasSync, syncSummary, type FeedLoader } from './canvas';
 
 const FEED = [
   'BEGIN:VCALENDAR',
@@ -30,6 +30,17 @@ const item = (over: Partial<Item>): Item => ({
   id: 'a', kind: 'task', title: 'Essay 2: Argument, draft', category: 'school', icon: 'pen', date: '2026-10-23', start: null, end: null,
   isDeadline: true, done: false, completedAt: null, courseId: 'eng', employer: null, sourceId: 'Canvas', batchId: null,
   externalId: 'canvas:event-assignment-101', notes: null, createdAt: '2026-10-01T00:00:00Z', ...over,
+});
+
+describe('pastedSystem', () => {
+  it('follows the link, whichever way it was copied', () => {
+    expect(pastedSystem('webcal://school.instructure.com/feeds/calendars/user_abc.ics')).toBe('canvas');
+    expect(pastedSystem(' https://uga.view.usg.edu/d2l/le/calendar/feed/user/feed.ics?token=abc ')).toBe('brightspace');
+  });
+  it('stays out of it until the link is whole', () => {
+    expect(pastedSystem('https://school.instructure.com/feeds')).toBeNull();
+    expect(pastedSystem('')).toBeNull();
+  });
 });
 
 describe('feed link', () => {

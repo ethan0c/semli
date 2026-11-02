@@ -9,7 +9,7 @@ import { T } from '@/components/Text';
 import { Ticker, useDateDirection } from '@/components/Ticker';
 import { calendarDays, calendarMonthLabel, moveCalendarMonth } from '@/lib/calendar';
 import { feedback } from '@/lib/feedback';
-import { useTheme, radius, size, fade, iconSize, space } from '@/theme';
+import { MAX_TEXT_SCALE, useTheme, radius, size, fade, iconSize, space } from '@/theme';
 
 /** "October", or "January 2027" when the selected month is not in this year. */
 function monthTitle(selected: string, today: string): string {
@@ -40,7 +40,7 @@ export function TodayPill({ onPress }: { onPress: () => void }) {
   return (
     <Press accessibilityRole="button" accessibilityLabel="Go to today" haptic="select" onPress={onPress}
       style={[styles.pill, { backgroundColor: c.row }]}>
-      <T token="subhead">Today</T>
+      <T token="subhead" maxFontSizeMultiplier={MAX_TEXT_SCALE}>Today</T>
     </Press>
   );
 }
@@ -60,7 +60,7 @@ export function PlanMonthCalendar({ selected, today, onSelect }: { selected: str
         <IconButton icon="chevronRight" label="Next month" tone="glass" size={44} haptic="select" onPress={() => setMonth((m) => moveCalendarMonth(m, 1))} />
       </View>
       <View style={styles.weekdays} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, i) => <T key={i} token="caption" color={c.inkSecondary} style={styles.weekday}>{label}</T>)}
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, i) => <T key={i} token="caption" color={c.inkSecondary} maxFontSizeMultiplier={MAX_TEXT_SCALE} style={styles.weekday}>{label}</T>)}
       </View>
       <View>
         {weeks.map((week) => (
@@ -77,7 +77,7 @@ export function PlanMonthCalendar({ selected, today, onSelect }: { selected: str
                     backgroundColor: on ? c.controlFill : 'transparent',
                     borderColor: isToday && !on ? c.accent : 'transparent',
                   }]}>
-                    <T token="subhead" tabular color={on ? c.controlInk : inMonth ? c.inkPrimary : c.inkSecondary}>{Number(date.slice(8))}</T>
+                    <T token="subhead" tabular maxFontSizeMultiplier={MAX_TEXT_SCALE} color={on ? c.controlInk : inMonth ? c.inkPrimary : c.inkSecondary}>{Number(date.slice(8))}</T>
                   </View>
                 </Press>
               );

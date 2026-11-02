@@ -14,6 +14,8 @@ import { friendlyError } from '@/lib/errors';
 import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
 import { useNow } from '@/lib/now';
+import { setDevMeme, setDevMemeDate, useDevToday } from '@/lib/dev';
+import { memeLabel, MEME_VERSIONS } from '@/lib/meme-demo';
 import { accountOf, useSession } from '@/lib/supabase';
 import { useCourseList, useItemList, useScheduleList, useStore, type Batch } from '@/store';
 import { THIS_DEVICE } from '@/lib/web';
@@ -38,6 +40,7 @@ function fromSource(source: string | null | undefined): string | null {
 export default function DataScreen() {
   const { c } = useTheme();
   const now = useNow();
+  const meme = useDevToday().meme;
   const items = useItemList();
   const courses = useCourseList();
   const schedules = useScheduleList();
@@ -149,6 +152,20 @@ export default function DataScreen() {
       {__DEV__ ? (
         <Group title="Development" footer="Two weeks of classes, shifts and deadlines from today, as one import. Undo it from Recent changes.">
           <Row label="Fill the next two weeks" onPress={() => { const t = testFortnight(now.date); applyPlan(t.plan, 'Test data · next two weeks', { source: 'Test data', courses: t.courses }); feedback('success'); }} last />
+        </Group>
+      ) : null}
+
+      {__DEV__ ? (
+        <Group title="Meme screenshots" footer="Temporary data for Today and Plan. Your saved plan stays as it is. You can scroll the lists to capture every row.">
+          {MEME_VERSIONS.map((version) => (
+            <Row key={version} label={memeLabel(version)}
+              onPress={() => { setDevMeme(version, now.date); feedback('select'); router.dismissTo('/'); }} />
+          ))}
+          {meme?.version === 'comeback' ? <Row label="Show tomorrow’s 23 deadlines" onPress={() => {
+            setDevMemeDate(meme.items[0]!.date);
+            router.dismissTo('/plan');
+          }} /> : null}
+          <Row label="Show my saved plan" onPress={meme ? () => { setDevMeme(null, now.date); router.dismissTo('/'); } : undefined} last />
         </Group>
       ) : null}
 

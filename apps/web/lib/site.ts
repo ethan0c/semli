@@ -9,6 +9,12 @@ export const SITE_URL = 'https://www.semli.app';
 export const APP_URL = 'https://app.semli.app';
 /** Flip once the web planner is deployed (docs/web.md); until then the header links nowhere new. */
 export const WEB_APP_LIVE = true;
+/**
+ * The oldest iPhone version that may still open, served at /api/app-version; older ones see a full
+ * screen asking them to update. Null blocks nobody. Raise it only once that version is live on the
+ * App Store, or people are sent to an update that isn't there yet (apps/mobile/README.md).
+ */
+export const MIN_IOS_VERSION: string | null = null;
 export const SITE_NAME = 'Semli';
 /** The App Store record (not live yet); the listing name is "Semli: AI Student Planner". */
 export const APP_STORE_ID = '6824600264';

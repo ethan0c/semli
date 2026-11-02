@@ -50,6 +50,16 @@ export function textStyle(token: TypeToken, color: string): TextStyle {
   };
 }
 
+/**
+ * How far the phone's text size may grow type with no room to grow: the 56 and 34 numbers and titles,
+ * and chart labels in their fixed columns. This is the largest standard size; the accessibility
+ * sizes past it reach 3.6x and would push these off the screen. All other text keeps growing.
+ */
+export const MAX_TEXT_SCALE = 1.35;
+export function textScaleCap(token: TypeToken): number | undefined {
+  return token === 'displayXl' || token === 'display' || token === 'axis' ? MAX_TEXT_SCALE : undefined;
+}
+
 /** The system header's title on every pushed screen: the headline face in ink. */
 export function headerTitle(color: string) {
   const t = typeScale.headline;

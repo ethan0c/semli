@@ -9,7 +9,7 @@ import { Icon } from '@/components/Icon';
 import { FieldRow, Group, Row } from '@/components/Settings';
 import { Button } from '@/components/Sheet';
 import { T } from '@/components/Text';
-import { CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, normalizeFeedUrl, type FeedSystem } from '@/lib/canvas';
+import { CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, normalizeFeedUrl, pastedSystem, type FeedSystem } from '@/lib/canvas';
 import { syncCanvas } from '@/lib/canvas-sync';
 import { feedback } from '@/lib/feedback';
 import { enter, exit, layout } from '@/lib/motion';
@@ -35,11 +35,19 @@ export default function CanvasScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const connected = !!canvas.feedUrl;
-  // Canvas or Brightspace (UGA's eLC): the connected one names itself; the connect form asks which.
+  // Canvas or Brightspace (UGA's eLC): the connected one names itself; the connect form follows the
+  // link once there is one, and the chips only choose which steps show before that.
   const [system, setSystem] = useState<FeedSystem>('canvas');
   const name = connected ? feedName(canvas.feedUrl) : system === 'canvas' ? 'Canvas' : 'eLC or Brightspace';
   // A sync already happened on this phone, so the free one is used: connecting again is Plus.
   const freeSyncUsed = !!canvas.lastSyncedAt;
+
+  const enterLink = (value: string) => {
+    setLink(value);
+    setError(null);
+    const found = pastedSystem(value);
+    if (found) setSystem(found);
+  };
 
   const connect = async () => {
     const url = normalizeFeedUrl(link);
@@ -131,7 +139,7 @@ export default function CanvasScreen() {
           </View>
           <Group title="Paste your calendar link"
             footer={`${FEED_STEPS[system].join(' ')} Semli reads your calendar without changing it.`}>
-            <FieldRow label="Calendar link" value={link} onChange={(v) => { setLink(v); setError(null); }} placeholder={FEED_PLACEHOLDER[system]} last />
+            <FieldRow label="Calendar link" value={link} onChange={enterLink} placeholder={FEED_PLACEHOLDER[system]} last />
           </Group>
           {error ? (
             <Animated.View entering={enter.drop} exiting={exit.fade} accessibilityRole="alert" style={styles.status}>

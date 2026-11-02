@@ -1,9 +1,9 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View, type TextStyle } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions, type TextStyle } from 'react-native';
 import Animated, { LayoutAnimationConfig, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { durations, ease, enter, exit, layout, springs } from '@/lib/motion';
-import { textStyle, useTheme, type TypeToken } from '@/theme';
+import { textScaleCap, textStyle, useTheme, type TypeToken } from '@/theme';
 
 /** Each digit's strip: 0 to 9 and 0 again, so a roll past 9 has a cell to land on. */
 const CELLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -27,18 +27,28 @@ export function Ticker({ value, direction, reserveValues, token = 'body', color,
   reserveValues?: readonly string[];
 }) {
   const { c } = useTheme();
+  const { fontScale } = useWindowDimensions();
   const base = useMemo<TextStyle>(() => ({ ...textStyle(token, color ?? c.inkPrimary), fontVariant: ['tabular-nums'], ...style }), [token, color, c.inkPrimary, style]);
   const line = lineOf(base);
+  const cap = maxFontSizeMultiplier ?? textScaleCap(token);
+  // The phone's text size grows a Text and its line height but not a View's height, so the digit
+  // columns use the grown line. On the plain one, a step up showed half a 4 over half a 5 for "5"
+  // (iPhone 15, Nov 1, 2026).
+  const cell = line * Math.min(fontScale, cap ?? fontScale);
   const dir = useDirection(value, direction);
   const content = (
     <LayoutAnimationConfig skipEntering>
       {/* Wraps between words when the line outgrows its space, so a long readout is never cut off. */}
       <View style={styles.line} accessible accessibilityRole="text" accessibilityLabel={accessibilityLabel ?? value}>
-        {pieces(value).map((p, i) => (
-          <Animated.View key={`${i}-${p.kind}`} layout={layout} entering={enter.fade} exiting={exit.fade}>
-            {p.kind === 'number'
-              ? <Digits text={p.text} dir={dir} line={line} style={base} maxFontSizeMultiplier={maxFontSizeMultiplier} />
-              : <Slide text={p.text} dir={dir} line={line} style={base} maxFontSizeMultiplier={maxFontSizeMultiplier} />}
+        {words(value).map((word, w) => (
+          <Animated.View key={w} layout={layout} entering={enter.fade} exiting={exit.fade} style={styles.line}>
+            {word.map((p, i) => (
+              <Animated.View key={`${i}-${p.kind}`} layout={layout} entering={enter.fade} exiting={exit.fade}>
+                {p.kind === 'number'
+                  ? <Digits text={p.text} dir={dir} line={line} cell={cell} style={base} maxFontSizeMultiplier={cap} />
+                  : <Slide text={p.text} dir={dir} line={line} style={base} maxFontSizeMultiplier={cap} />}
+              </Animated.View>
+            ))}
           </Animated.View>
         ))}
       </View>
@@ -47,41 +57,45 @@ export function Ticker({ value, direction, reserveValues, token = 'body', color,
   if (!reserveValues?.length) return content;
   return (
     <View>
-      <TickerMeasurements key={JSON.stringify(reserveValues)} values={reserveValues} line={line} style={base} maxFontSizeMultiplier={maxFontSizeMultiplier} />
+      <TickerMeasurements key={JSON.stringify(reserveValues)} values={reserveValues} line={line} cell={cell} style={base} maxFontSizeMultiplier={cap} />
       <View style={styles.overlaid}>{content}</View>
     </View>
   );
 }
 
 /** Static copies use the ticker's word boundaries and digit boxes, without animation work. */
-const TickerMeasurements = memo(function TickerMeasurements({ values, line, style, maxFontSizeMultiplier }: {
-  values: readonly string[]; line: number; style: TextStyle; maxFontSizeMultiplier?: number;
+const TickerMeasurements = memo(function TickerMeasurements({ values, line, cell, style, maxFontSizeMultiplier }: {
+  values: readonly string[]; line: number; cell: number; style: TextStyle; maxFontSizeMultiplier?: number;
 }) {
   const [heights, setHeights] = useState<Record<number, number>>({});
   return (
-    <View style={{ opacity: 0, minHeight: Math.max(line, ...Object.values(heights)) }}
+    <View style={{ opacity: 0, minHeight: Math.max(cell, ...Object.values(heights)) }}
       pointerEvents="none" aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       {values.map((value, index) => (
         <View key={index} style={[styles.overlaid, styles.line]} onLayout={({ nativeEvent: { layout: { height } } }) => {
           setHeights((previous) => previous[index] === height ? previous : { ...previous, [index]: height });
         }}>
-          {pieces(value).map((p, i) => (
-            <View key={`${i}-${p.kind}`}>
-              {p.kind === 'number' ? (
-                <View style={styles.row}>
-                  {[...p.text].map((digit, j) => (
-                    <View key={j} style={{ height: line, overflow: 'hidden' }}>
-                      <Text maxFontSizeMultiplier={maxFontSizeMultiplier} style={[style, { lineHeight: line }]}>{digit}</Text>
+          {words(value).map((word, w) => (
+            <View key={w} style={styles.line}>
+              {word.map((p, i) => (
+                <View key={`${i}-${p.kind}`}>
+                  {p.kind === 'number' ? (
+                    <View style={styles.row}>
+                      {[...p.text].map((digit, j) => (
+                        <View key={j} style={{ height: cell, overflow: 'hidden' }}>
+                          <Text maxFontSizeMultiplier={maxFontSizeMultiplier} style={[style, { lineHeight: line }]}>{digit}</Text>
+                        </View>
+                      ))}
                     </View>
-                  ))}
+                  ) : (
+                    <View style={styles.clip}>
+                      <View style={styles.staying}>
+                        <Text maxFontSizeMultiplier={maxFontSizeMultiplier} style={[style, { lineHeight: line }]}>{p.text}</Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
-              ) : (
-                <View style={styles.clip}>
-                  <View style={styles.staying}>
-                    <Text maxFontSizeMultiplier={maxFontSizeMultiplier} style={[style, { lineHeight: line }]}>{p.text}</Text>
-                  </View>
-                </View>
-              )}
+              ))}
             </View>
           ))}
         </View>
@@ -109,6 +123,11 @@ type Piece = { kind: 'number' | 'text'; text: string };
 /** "5 plans · 12 work hours" → numbers, words and the spaces between, so each can change alone. */
 function pieces(value: string): Piece[] {
   return value.split(/(\d+|\s+)/).filter(Boolean).map((text) => ({ kind: /^\d+$/.test(text) ? 'number' : 'text', text }));
+}
+
+/** Pieces by word, each with the space after it, so a wrap falls between words and "12h 30m" never strands its "m". */
+function words(value: string): Piece[][] {
+  return (value.match(/\S+\s*/g) ?? []).map(pieces);
 }
 
 /** The way the text moved: the given direction, else the first number that changed, else up. */
@@ -139,13 +158,13 @@ function numberDirection(before: string, after: string): Direction {
 }
 
 /** A run of digits. Columns are keyed from the right, so the ones column stays put when a tens column arrives. */
-function Digits({ text, dir, line, style, maxFontSizeMultiplier }: { text: string; dir: Direction; line: number; style: TextStyle; maxFontSizeMultiplier?: number }) {
+function Digits({ text, dir, line, cell, style, maxFontSizeMultiplier }: { text: string; dir: Direction; line: number; cell: number; style: TextStyle; maxFontSizeMultiplier?: number }) {
   const digits = [...text];
   return (
     <View style={styles.row}>
       {digits.map((d, i) => (
         <Animated.View key={`c${digits.length - i}`} layout={layout} entering={enter.fade} exiting={exit.fade}>
-          <Digit digit={+d} dir={dir} line={line} style={style} maxFontSizeMultiplier={maxFontSizeMultiplier} />
+          <Digit digit={+d} dir={dir} line={line} cell={cell} style={style} maxFontSizeMultiplier={maxFontSizeMultiplier} />
         </Animated.View>
       ))}
     </View>
@@ -156,7 +175,7 @@ function Digits({ text, dir, line, style, maxFontSizeMultiplier }: { text: strin
  * One digit column on the gentle spring. Its position counts cells without wrapping, so a roll
  * can go either way any number of times; the strip shows that position modulo ten.
  */
-function Digit({ digit, dir, line, style, maxFontSizeMultiplier }: { digit: number; dir: Direction; line: number; style: TextStyle; maxFontSizeMultiplier?: number }) {
+function Digit({ digit, dir, line, cell, style, maxFontSizeMultiplier }: { digit: number; dir: Direction; line: number; cell: number; style: TextStyle; maxFontSizeMultiplier?: number }) {
   const at = useRef(digit);
   const y = useSharedValue(digit);
   useEffect(() => {
@@ -165,12 +184,12 @@ function Digit({ digit, dir, line, style, maxFontSizeMultiplier }: { digit: numb
     at.current += dir > 0 ? (digit - from + 10) % 10 : -((from - digit + 10) % 10);
     y.value = withSpring(at.current, springs.gentle);
   }, [digit, dir, y]);
-  const strip = useAnimatedStyle(() => ({ transform: [{ translateY: -(((y.value % 10) + 10) % 10) * line }] }));
+  const strip = useAnimatedStyle(() => ({ transform: [{ translateY: -(((y.value % 10) + 10) % 10) * cell }] }));
   return (
-    <View style={{ height: line, overflow: 'hidden' }}>
+    <View style={{ height: cell, overflow: 'hidden' }}>
       <Animated.View style={strip}>
         {CELLS.map((d, i) => (
-          <Text key={i} maxFontSizeMultiplier={maxFontSizeMultiplier} style={[style, { lineHeight: line }]}>{d}</Text>
+          <Text key={i} maxFontSizeMultiplier={maxFontSizeMultiplier} style={[style, { lineHeight: line, height: cell }]}>{d}</Text>
         ))}
       </Animated.View>
     </View>

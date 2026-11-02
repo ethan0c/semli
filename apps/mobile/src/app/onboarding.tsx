@@ -41,7 +41,7 @@ import { purchaseErrorMessage } from "@/lib/revenuecat";
 import { syncCanvas } from "@/lib/canvas-sync";
 import { WORK_STEPS, WORK_SYSTEMS, normalizeWorkFeedUrl, type WorkSystem } from "@/lib/work-feed";
 import { WORK_FEED_AVAILABLE, syncWorkFeed } from "@/lib/work-feed-sync";
-import { normalizeFeedUrl, CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, type FeedSystem } from "@/lib/canvas";
+import { normalizeFeedUrl, pastedSystem, CANVAS_MESSAGES, FEED_PLACEHOLDER, FEED_STEPS, feedName, type FeedSystem } from "@/lib/canvas";
 import { useCourseList, useItemList, useStore, type DeadlineSource, type Pending, type Plate } from "@/store";
 import { sampleWeek } from "@/store/sample";
 import { motion, palettes } from "@dayli/tokens";
@@ -837,7 +837,7 @@ function CanvasStep({ onConnected, onInstead }: { onConnected: () => void; onIns
       </View>
       <TextInput
         value={link}
-        onChangeText={(v) => { setLink(v); setError(null); }}
+        onChangeText={(v) => { setLink(v); setError(null); const found = pastedSystem(v); if (found) setSystem(found); }}
         placeholder={FEED_PLACEHOLDER[system]}
         placeholderTextColor={c.inkTertiary}
         autoCapitalize="none"
