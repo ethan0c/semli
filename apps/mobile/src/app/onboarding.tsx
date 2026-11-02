@@ -23,7 +23,7 @@ import { Button } from "@/components/Sheet";
 import { T } from "@/components/Text";
 import { profile as setProfile, track } from "@/lib/analytics";
 import { requestExtraction } from "@/lib/api";
-import { requestImport } from "@/lib/import-auth";
+import { afterPlusRetry, requestImport } from "@/lib/import-auth";
 import { IMPORT_MESSAGES } from "@dayli/schema";
 import { InputError, extractionContext, inputFromFile, pickImageInput, pickPdfInput } from "@/lib/capture-input";
 import { QrCode } from "@/components/QrCode";
@@ -390,7 +390,7 @@ function OwnStep({ source, job, onSample, onWork }: { source: DeadlineSource; jo
       // Rows appear on the reading screen as they're read: a new student's first import shouldn't feel like a wait.
       const hooks = { onItem: (item: StreamedItem) => setFound((rows) => [...rows, item]), onReset: () => setFound([]) };
       let res = await requestImport(apiUrl, req, hooks);
-      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota", { onError: setError }))) res = await requestImport(apiUrl, req, hooks);
+      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus("quota", { onError: setError }))) res = afterPlusRetry(await requestImport(apiUrl, req, hooks));
       if (!res.ok) {
         track("import_failed", { kind: input.kind, where: "onboarding" });
         setError(res.error);

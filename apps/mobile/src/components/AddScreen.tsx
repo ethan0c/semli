@@ -14,7 +14,7 @@ import { RecentShots } from '@/components/RecentShots';
 import { T } from '@/components/Text';
 import { TabHeader } from '@/components/TabHeader';
 import { track } from '@/lib/analytics';
-import { requestImport } from '@/lib/import-auth';
+import { afterPlusRetry, requestImport } from '@/lib/import-auth';
 import { InputError, extractionContext, inputFromFile, pickImageInput, pickPdfInput } from '@/lib/capture-input';
 import { feedback } from '@/lib/feedback';
 import { reportError } from '@/lib/errors';
@@ -78,7 +78,7 @@ export function AddScreen() {
       const hooks = { onItem: (item: StreamedItem) => setFound((rows) => [...rows, item]), onReset: () => setFound([]) };
       let res = await requestImport(apiUrl, req, hooks);
       // The server's count wins over this phone's (a reinstall resets the local one).
-      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota', { onError: setError }))) res = await requestImport(apiUrl, req, hooks);
+      if (!res.ok && res.error === IMPORT_MESSAGES.quota && (await requirePlus('quota', { onError: setError }))) res = afterPlusRetry(await requestImport(apiUrl, req, hooks));
       if (!res.ok) {
         track('import_failed', { kind: input.kind });
         setError(res.error);

@@ -36,17 +36,30 @@ export type Access =
 
 const free = async () => {};
 
-/** RevenueCat is the source of truth for Plus; the secret key never leaves the server. */
+/**
+ * RevenueCat is the source of truth for Plus; the secret key never leaves the server. Every way
+ * this says no is logged by code (Nov 2, 2026: a subscriber was refused and nothing said why).
+ * A missing key, or a v2 key on this v1 endpoint, refuses every subscriber.
+ */
 async function hasPlus(appUserId: string | null): Promise<boolean> {
   const secret = process.env.REVENUECAT_SECRET_KEY;
-  if (!secret || !appUserId) return false;
+  if (!appUserId) return false;
+  if (!secret) {
+    console.error('[import.plus_check]', { code: 'no_secret_key' });
+    return false;
+  }
   const res = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}`, {
     headers: { authorization: `Bearer ${secret}` },
-  });
-  if (!res.ok) return false;
-  const data = (await res.json()) as { subscriber?: { entitlements?: Record<string, { expires_date: string | null }> } };
-  const ent = data.subscriber?.entitlements?.[PLUS_ENTITLEMENT];
-  return !!ent && (ent.expires_date === null || Date.parse(ent.expires_date) > Date.now());
+  }).catch(() => null);
+  if (!res?.ok) {
+    console.error('[import.plus_check]', { code: 'revenuecat_error', status: res?.status ?? 0 });
+    return false;
+  }
+  const data = (await res.json().catch(() => null)) as { subscriber?: { entitlements?: Record<string, { expires_date: string | null }> } } | null;
+  const ent = data?.subscriber?.entitlements?.[PLUS_ENTITLEMENT];
+  const active = !!ent && (ent.expires_date === null || Date.parse(ent.expires_date) > Date.now());
+  if (!active) console.info('[import.plus_check]', { code: ent ? 'entitlement_expired' : 'no_entitlement' });
+  return active;
 }
 
 /**
@@ -105,7 +118,11 @@ export async function checkImportAccess(request: Request, kind: 'text' | 'image'
   const who = (await user.json().catch(() => null)) as { id?: string; is_anonymous?: boolean } | null;
   const userId = who?.id ?? null;
 
-  if (await hasPlus(purchaserFor(userId, request.headers.get('x-revenuecat-app-user-id')))) return { ok: true, refund: free, plus: true };
+  const header = request.headers.get('x-revenuecat-app-user-id');
+  const purchaser = purchaserFor(userId, header);
+  // The phone's purchases are keyed to another account than this session's: its Plus can't count here.
+  if (header && !purchaser) console.warn('[import.plus_check]', { code: 'purchaser_mismatch', anonymous: !!who?.is_anonymous });
+  if (await hasPlus(purchaser)) return { ok: true, refund: free, plus: true };
 
   // A guest's syllabus PDF also counts against its network's daily allowance, before its own.
   const guest = who?.is_anonymous && kind === 'pdf' ? await claimGuest(request) : null;

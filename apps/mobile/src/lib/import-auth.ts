@@ -1,4 +1,4 @@
-import type { ExtractRequest, ExtractResponse } from '@dayli/schema';
+import { IMPORT_MESSAGES, type ExtractRequest, type ExtractResponse } from '@dayli/schema';
 import Purchases from 'react-native-purchases';
 
 import { requestExtraction, type StreamHooks } from './api';
@@ -43,4 +43,15 @@ export async function requestImport(apiUrl: string, req: ExtractRequest, hooks?:
     if (sample) return sample;
   }
   return requestExtraction(apiUrl, req, await importHeaders(), hooks);
+}
+
+/**
+ * The answer to an import retried after the store confirmed Plus. A second "free imports used"
+ * means the server couldn't see the subscription (Nov 2, 2026: a subscriber was told to buy
+ * Plus), so it says that instead, and is reported so the cause shows up.
+ */
+export function afterPlusRetry(res: ExtractResponse): ExtractResponse {
+  if (res.ok || res.error !== IMPORT_MESSAGES.quota) return res;
+  reportError('import.plus_unconfirmed', { code: 'server_refused_plus' });
+  return { ok: false, error: IMPORT_MESSAGES.plusUnconfirmed };
 }

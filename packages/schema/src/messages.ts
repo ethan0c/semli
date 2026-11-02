@@ -13,6 +13,8 @@ export const IMPORT_MESSAGES = {
   tooMuch: 'There is too much to read at once. Try a shorter message or send a few pages at a time.',
   incomplete: "We couldn't read this. Try sending it again, or type the details instead.",
   quota: "You've used this month's free imports. Semli Plus has unlimited imports, or add things by hand for free.",
+  /** The store says Plus, but the server couldn't confirm it; never ask a subscriber to buy Plus again. */
+  plusUnconfirmed: "Semli couldn't confirm your Plus subscription for this import. Try again in a moment. If it keeps happening, open You → Semli Plus and tap Restore.",
   demoLimit: "That's the limit for previews today. Get the iPhone app to keep going.",
   session: "Semli couldn't confirm this phone. Close and reopen Semli, then try again.",
   /** Many guest imports from one network today; signing in (free) lifts it. Never shown to a signed-in user. */
