@@ -12,6 +12,8 @@ The goal is installs. Likes only tell us a post landed, so every check below use
 
 ## 2. What we know so far
 
+The [Nov 2 screenshot snapshot](tiktok-results.md) adds a practical work/classes post at 311 views and 12 likes, a new app screenshot at 111 / 0, and updated counts for the older posts. This is an early reason to keep testing useful student content alongside memes. The Nov 1 figures below remain a historical snapshot, not current totals. Actual publication times and copy differ from the proposed manifest.
+
 Numbers from TikTok Studio, Nov 1, 2026.
 
 | Post | Format | Views | Likes | Like rate |
