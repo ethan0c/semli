@@ -136,3 +136,38 @@ The install targets and the mid-November check in [launch-week.md](launch-week.m
 - [ ] Confirm the 19K post is the Promote.
 - [ ] Check the TikTok bio still uses `semli.app/get?r=tiktok`.
 - [ ] Send the creator DMs in launch-week. Creators are the real version of UGC: videos live the weeks of Nov 9 and Nov 16, two more for Jan 5, no script.
+
+## 9. Series pilot: until my manager stops changing my shifts
+
+Added Nov 3, 2026. A founder-on-camera series beside the scheduled memes, modeled on the "Day 41, packing my dad's lunch until he rates one a 10/10" format: a day count makes it a series, and a goal someone else decides keeps the ending open. It is the only format here with a face and a voice, which the memes lack.
+
+**It only works if it's real.** The founder works campus jobs scheduled in When to Work, so the premise is true. Film what actually happened that day. If nothing changed, post the "no changes" episode or skip the day; never stage a change. The day number counts days since Day 1, so gaps (Day 1, 3, 4, 7) are normal and honest.
+
+**Protect the job.** Don't name the employer or the manager, and blur coworkers' names on every schedule. Keep it affectionate: the manager is the running joke, not the villain. Check whether your job has a rule about posting schedules before Day 1.
+
+**Show only what's live.** Schedule comparison, unlimited imports and ringing alarms are Plus; overlap warnings are free. Don't say or imply a Plus feature is free. The When to Work link isn't in a store build until 1.2, so it stays out of this pilot.
+
+### Every episode
+
+- First frame: the series line as on-screen text, "day N of planning my week with an app until my manager stops changing my shifts". Same wording every time.
+- 15 to 25 seconds, vertical, your voice, filmed on the phone. One take is fine.
+- A running counter on screen from Day 3: "changes so far: N".
+- Caption: short and plain, no call to action, no prices. The bio link stays `semli.app/get?r=tiktok`.
+
+### The seven episodes
+
+| # | When | Hook (on screen) | What you film | Caption |
+|---|---|---|---|---|
+| 1 | Start the day your next schedule is posted | "day 1 of planning my week with an app until my manager stops changing my shifts" | You, to camera: you go to class and work on campus, and the schedule never sits still. Screenshot this week's schedule (names blurred), add it in Semli, show the review list, then Today by the hour with classes and shifts together. End on "changes so far: 0". | day 1. the count starts at zero |
+| 2 | The next coverage request in the group chat | "day N: someone needs their shift covered" | The request (names blurred). Screenshot it into Semli and show the overlap warning against your class, or show it fits. Say what you actually answered. | the group chat strikes again |
+| 3 | The first real schedule change | "day N: the schedule changed" | Screenshot the new schedule, add it, and show Semli's comparison: what moved, what's new, what's gone. Pick what to keep. Counter goes up. | changes so far: 1 |
+| 4 | When a shift lands on a class or exam | "day N: my shift is now during my lab" | The overlap on Today, then what you did about it (asked to swap, talked to the manager). Only film the outcome you really got. | we have a situation |
+| 5 | A quiet day with no changes | "day N: no changes today" | Open Semli, nothing moved, a short reaction. Ten seconds is plenty. | manager rested. suspicious |
+| 6 | Before an early shift or an exam you can't miss | "day N: making my shift ring like an alarm" | Mark the item urgent, then the alarm going off the next morning. Only if you actually use it; needs iOS 26. | not missing this one |
+| 7 | One week after Day 1 | "day N: week one results" | The scoreboard to camera: changes this week, clashes caught, shifts missed. Ask what the worst schedule change anyone's gotten was. | week one. tell me yours |
+
+Episodes 2, 4 and 6 depend on events. If they don't happen, move on to the next one that did; don't recreate them. Comments that tell a story ("my manager scheduled me during my final") are the next episodes, as video replies.
+
+### How to judge it
+
+Log each episode in [tiktok-results.md](tiktok-results.md) as its own format, separate from the memes, with 48-hour and seven-day numbers. After two weeks, compare the series' median with the memes' on saves plus shares per 100 views and on `tiktok` link clicks. Keep the series if it sends at least as many clicks per view as the memes. Likes alone don't decide it. If people comment with their own schedule stories, that's evidence the working-student problem is real, worth more than the views.
