@@ -100,6 +100,8 @@ First-time downloads from App Store Connect → Analytics → Units, Monday to S
 | Jan 4 | Product Hunt + two creator videos Tue Jan 5; `semester-reminder` email | 120 | 310 | | |
 | Jan 11 | Campus cards at York, Pomona and UGA; ambassadors | 90 | 400 | | |
 
+**Nov 9 checkpoint:** user-supplied App Store Connect Sales and Trends text shows 31 lifetime app units for Semli. [App units count first-time acquisitions](https://developer.apple.com/help/app-store-connect/reference/reporting/sales-and-trends-metrics-and-dimensions/). This is roughly on the cumulative pace of 30 through Nov 8, with 19 more needed to reach 50 by Nov 15. No weekly breakdown or exact reporting cutoff was supplied, so the weekly Actual cells remain blank. Two production trial conversions already meet the Nov 15 first-conversion milestone. Activation and the rest of the purchase test remain unverified; details are in [the Nov 9 actuals](milestones.md#actuals--nov-9-2026).
+
 If two weeks in a row land under half their target before Thanksgiving, run the mid-November check below early: the message, not the channel, is what to change.
 
 ## What good looks like now

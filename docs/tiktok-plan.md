@@ -1,6 +1,6 @@
 # TikTok plan: memes through the January push
 
-Status: Nov 1, 2026. Replaces the weekly clip schedule in [marketing-500.md](marketing-500.md) §3.3 and §5, [launch-playbook.md](launch-playbook.md) §4 and [launch-week.md](launch-week.md). Those pages still cover creators, Reddit, email, campus and the install targets.
+Status: Nov 9, 2026; latest results added, scheduled mix retained. Replaces the weekly clip schedule in [marketing-500.md](marketing-500.md) §3.3 and §5, [launch-playbook.md](launch-playbook.md) §4 and [launch-week.md](launch-week.md). Those pages still cover creators, Reddit, email, campus and the install targets.
 
 Updated after [additional research](tiktok-research-2026-11.md): a [16-post November batch](../design/social/README.md) now has reusable presets, captions, proposed dates and a capture/export workflow. The user confirmed on Nov 1 that all November TikToks are scheduled. The local files retain the proposed captions and times; actual scheduler entries have not been read back. TikTok is the active channel. [Separate Instagram research](instagram-research-2026-11.md) is complete, with its first batch still to be produced. Four posts a week stays. November tests posting times and uses screenshot jokes in the Sunday slots while original photos are unavailable.
 
@@ -12,7 +12,9 @@ The goal is installs. Likes only tell us a post landed, so every check below use
 
 ## 2. What we know so far
 
-The [Nov 2 screenshot snapshot](tiktok-results.md) adds a practical work/classes post at 311 views and 12 likes, a new app screenshot at 111 / 0, and updated counts for the older posts. This is an early reason to keep testing useful student content alongside memes. The Nov 1 figures below remain a historical snapshot, not current totals. Actual publication times and copy differ from the proposed manifest.
+The [Nov 9 totals](tiktok-results.md) cover 11 posts: 24,410 views, 459 likes, 5 comments and 6 shares. “Catch the clash” accounts for 77.7% of views and is still only suspected to be the Promote. Excluding it, the median post has 576 views. The three earlier memes have a weighted 6.42% like rate; the Oct 31 “sorry” post leads at 9.08%. The practical work/classes post is now at 650 views / 33 likes / 3 comments, and the Nov 2 app screenshot has reached 626 views / 15 likes / 2 shares after its initial zero-like snapshot. The syllabus and four-app posts have barely grown since Nov 2. Keep the scheduled mix while collecting saves, watch data and clicks; these totals cannot establish an acquisition winner. The supplied list contains no Nov 8 entry, so publication needs checking against the actual queue.
+
+The Nov 1 figures below remain a historical snapshot, not current totals. Actual publication times and copy differ from the proposed manifest. The Nov 9 table supplies dates but no exact times, saves, watch behavior or conversion data.
 
 Numbers from TikTok Studio, Nov 1, 2026.
 

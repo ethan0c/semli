@@ -4,6 +4,37 @@ Status: Oct 20, 2026. Built on [marketing-500.md](marketing-500.md) (the channel
 
 Public copy never gives the survey's exact count. Say "more than 50 students" on the site, in the founder post and in creator briefs; the n=66 stays in the internal docs.
 
+## Actuals — Nov 9, 2026
+
+User-supplied RevenueCat Overview text, recorded alongside the [Nov 9 TikTok results](tiktok-results.md). The user confirmed that “Sandbox data” was off: the subscription and revenue figures show production purchases. The projections below remain the Oct 20 model; this snapshot does not validate its acquisition or conversion assumptions.
+
+| Metric | Reported value | Period |
+|---|---:|---|
+| Active trials | 0 | Current total |
+| Active subscriptions | 2 | Current total |
+| MRR | $5 | Current monthly equivalent, as displayed |
+| Revenue | $40 | Last 28 days |
+| New customers | 76 | Last 28 days |
+| Active customers | 91 | Last 28 days |
+
+### App Store download checkpoint
+
+The user subsequently supplied App Store Connect Sales and Trends text showing **31 lifetime units** for “Semli: AI Student Planner,” type **App**, iOS, Apple ID `6824600264`, with the report range displayed as April 2003–November 2026 in UTC. Recorded Nov 9; exact capture time and the latest included sales date were not supplied. [Apple defines app units](https://developer.apple.com/help/app-store-connect/reference/reporting/sales-and-trends-metrics-and-dimensions/) as first-time acquisitions, excluding updates and redownloads. The app row identifies these as app units rather than subscription units.
+
+Against the revised [launch schedule](launch-week.md#weekly-installs-target-and-actual), this is roughly on the cumulative download pace: 30 were targeted through Nov 8, and 50 by Nov 15. There are **19 more app units** needed to reach the Nov 15 target. Keep the 31 as a dated lifetime checkpoint rather than assigning it to a weekly Actual cell; the snapshot supplies no weekly breakdown. The two production trial conversions already meet the Nov 15 first-conversion milestone. First-import completion, reviews, creator publication and acquisition attribution still need checking. RevenueCat's 76 new customers remains a separate metric.
+
+### Subscription details
+
+The recent transaction list shows two distinct masked App User IDs converting trials: one student yearly subscription at $24.99, two hours before capture, and one student semester subscription at $14.99, six days before capture. Their listed charges total **$39.98**, consistent with the displayed $40. Earlier “Trial Ended” rows refer to those same two IDs and are not additional subscribers. A third ID has a monthly trial cancellation with no revenue listed. Relative times are preserved because the exact capture time was not supplied.
+
+[RevenueCat's Overview definitions](https://www.revenuecat.com/docs/dashboard-and-metrics/overview) describe revenue as gross, before store fees and taxes. New customers are newly created App User IDs; active customers are IDs that contacted RevenueCat during the window. Aliases are deduplicated. These counts can include testing and do not change with the sandbox toggle. They are not verified installs or a retention cohort.
+
+The two plans' monthly equivalents total **$4.58** (`24.99 / 12 + 14.99 / 6`), consistent with the displayed $5 MRR under [RevenueCat's duration normalization](https://www.revenuecat.com/docs/dashboard-and-metrics/charts/monthly-recurring-revenue-mrr-chart). The $40 revenue card is not $40 MRR or a verified bank payout.
+
+Two production trials have converted to paid by Nov 9, ahead of the model's Nov 20 first-subscription date. The snapshot does not establish that they are the first purchases, exclude founder/test purchases made in production, or meet the ten-paying-tester purchase test. Do not report `2 / 76` as install-to-paid conversion, `2 / 3` as the overall trial conversion rate, or attribute either purchase to TikTok: cohorts, complete trial history and acquisition sources are missing. Zero current trials does not establish that new users have stopped arriving.
+
+Next checks: establish the two subscribers' acquisition sources and whether either purchase was a founder/test purchase; get the App Store weekly app-unit breakdown and PostHog onboarding, first-import and paywall counts for a common cohort; inspect RevenueCat trial starts and outcomes for that cohort; and check tracked TikTok clicks separately. No live billing, subscription or marketing settings were changed.
+
 ## 1. The milestones
 
 Dates assume the beta opens the week of Nov 3, 2026 and the purchase test passes by Dec 15. "Base" is the $500 plan run as written, with revenue reinvested only into creator videos. "Push" is the same plan with performance-paid creators from February and twice the campus and creator volume at each semester start.
