@@ -1,6 +1,6 @@
 # Revenue milestones: dates, the creator engine, and what to watch
 
-Status: Oct 20, 2026. Built on [marketing-500.md](marketing-500.md) (the channels and the $500), [strategy.md](strategy.md) §1 and §2 (the $20K MRR goal and the purchase test), [pricing-and-positioning.md](pricing-and-positioning.md) (prices and the survey) and outside benchmarks listed in §2. The model that produced the tables is 60 lines of Python; rerun it when a real number replaces an assumption.
+Status: Nov 9, 2026. Actuals and the founder's revised $200K MRR long-term goal are recorded below; the dated projections retain the Oct 20 model. Built on [marketing-500.md](marketing-500.md) (the channels and the $500), [strategy.md](strategy.md) §1 and §2 (the goal and the purchase test), [pricing-and-positioning.md](pricing-and-positioning.md) (prices and the survey) and outside benchmarks listed in §2. The model that produced the historical tables is 60 lines of Python; its assumptions have not been recalibrated from the two paid subscriptions.
 
 Public copy never gives the survey's exact count. Say "more than 50 students" on the site, in the founder post and in creator briefs; the n=66 stays in the internal docs.
 
@@ -37,7 +37,9 @@ Next checks: establish the two subscribers' acquisition sources and whether eith
 
 ## 1. The milestones
 
-Dates assume the beta opens the week of Nov 3, 2026 and the purchase test passes by Dec 15. "Base" is the $500 plan run as written, with revenue reinvested only into creator videos. "Push" is the same plan with performance-paid creators from February and twice the campus and creator volume at each semester start.
+**Long-term goal, revised Nov 9: $200K MRR.** $20K is an intermediate milestone. The [updated strategy scenarios](strategy.md#1-the-goal-in-our-numbers) put $200K at about 58,620 active payers under an illustrative 40/40/20 student plan mix, or 96,039 if all pay student yearly prices. These are subscriber-count calculations, not growth forecasts. There is no target date yet. Track $1K, $10K, $20K, $50K and $100K MRR along the way; retain the near-term launch and purchase-test targets.
+
+The Base and Push dates below are historical Oct 20 projections. They assumed the beta would open the week of Nov 3, 2026 and the purchase test would pass by Dec 15; the app instead launched Oct 27. "Base" is the $500 plan run as written, with revenue reinvested only into creator videos. "Push" is the same plan with performance-paid creators from February and twice the campus and creator volume at each semester start. None of these dates establishes when $200K MRR can be reached.
 
 | Milestone | Base | Push | What has to be true | Paid for by |
 |---|---|---|---|---|
@@ -49,7 +51,8 @@ Dates assume the beta opens the week of Nov 3, 2026 and the purchase test passes
 | $500 MRR | Jan 31, 2028 | Aug 31, 2027 | Push case: 12 videos in August, 4 campuses in January 2028 | ~$900 from fall |
 | $1,000 MRR | Fall 2028 (extrapolated) | Jan 31, 2028 | 260 active payers; the spring 2028 push at 2,000+ installs | Revenue only |
 | $5,000 MRR | 2029 (extrapolated) | Jan 2029 | 1,300 active payers; a creator affiliate program and 6+ campuses | Revenue plus Apple Search Ads |
-| $20,000 MRR (the strategy memo's goal) | 2030 (extrapolated) | 2029 to 2030 | 5,200 active payers at $3.83 blended; about 105,000 installs a year at 5% install-to-payer; 10 to 15 campuses at real penetration | A real marketing budget |
+| $20,000 MRR (now an intermediate milestone) | 2030 (historical extrapolation) | 2029 to 2030 (historical extrapolation) | Original model: 5,200 active payers at $3.83 blended; about 105,000 installs a year at 5% install-to-payer; 10 to 15 campuses at real penetration. These assumptions are unvalidated. | A real marketing budget |
+| $200,000 MRR (revised long-term goal) | Unset | Unset | Illustrative student mix: 58,620 active payers at $3.4118 monthly equivalent; conversion, retention, plan mix and acquisition costs must establish the growth path | Budget to be set from measured economics |
 
 Two honest readings of that table:
 

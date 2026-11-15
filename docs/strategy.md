@@ -1,19 +1,25 @@
 # Strategy: goal, competition, and what we do about it
 
-Status: Oct 19, 2026. Reconciles [goal.md](goal.md) and [structured.md](structured.md) (two outside memos) with our plan, plus review-mining data pulled from the App Store on Oct 19, 2026.
+Status: Nov 9, 2026. The founder raised the long-term goal to $200K MRR; pricing arithmetic and the purchase-test status below are updated. The competitor review data and other strategic observations remain historical findings from Oct 19, 2026.
 
 ## 1. The goal, in our numbers
 
-The goal memo targets **$20K MRR** and prices it at $5/month = 4,000 subscribers. Our actual price mix (see [pricing-and-positioning.md](pricing-and-positioning.md)) is lower per month because most students will take the semester or yearly plan:
+The founder's long-term goal is **$200,000 MRR**, updated Nov 9, 2026. That is **$2.4 million in annualized recurring revenue**, before store fees, taxes and operating costs. $20K MRR is now an intermediate milestone. The goal has no committed completion date.
 
-| If the mix is… | Blended $/mo | Payers for $20K MRR |
-|---|---|---|
-| All monthly ($4.99) | $4.99 | 4,000 |
-| Mostly semester ($14.99 / 4 mo) | $3.75 | 5,300 |
-| Mostly yearly ($29.99) | $2.50 | 8,000 |
-| Realistic mix (40/40/20) | ~$3.60 | ~5,600 |
+Using the student prices in [pricing-and-positioning.md](pricing-and-positioning.md) and [the product setup brief](revenuecat-offerings-brief.md), the subscriber requirements are:
 
-So the honest target is **5–6k paying students**, or ~110–170k free users at a 3–5% conversion. That is 10–15 campuses at real penetration, not a viral hit. Plan acquisition campus by campus.
+| Pricing scenario | Monthly revenue per active payer | Payers for $20K MRR | Payers for $200K MRR |
+|---|---:|---:|---:|
+| All student monthly ($4.99) | $4.99 | 4,009 | 40,081 |
+| All student semester ($14.99 / 6 months) | $2.4983 | 8,006 | 80,054 |
+| All student yearly ($24.99 / year) | $2.0825 | 9,604 | 96,039 |
+| Illustrative student mix: 40% monthly, 40% semester, 20% yearly | $3.4118 | 5,862 | 58,620 |
+
+These are arithmetic scenarios, not forecasts of plan mix or demand. Counts use unrounded monthly values and round up to whole subscribers. Regular-price subscriptions would change the average. The previous table used an obsolete four-month semester term and yearly price; this table uses six months and $24.99 yearly. Two current paid subscriptions are too few to establish the eventual mix.
+
+The revised goal needs tens of thousands of simultaneously active paying subscribers. Plan growth around measured acquisition, first-import completion, retention, renewals and contribution after fees and service costs. Campus cohorts are an initial audience to learn from; the current $500 launch plan does not yet establish a distribution path to that scale. An install-to-paid assumption alone cannot determine the required active user base or annual downloads without retention and churn.
+
+Use $1K, $10K, $20K, $50K and $100K MRR as intermediate checkpoints on the way to $200K. Set later budgets and dates from observed conversion, renewals and acquisition costs. Keep the current November targets and Dec 15 purchase test as the next evidence to collect.
 
 The memo's reading of the survey ("45 of 66 willing to pay") is off. The tallies from the CSV: **17 yes, 35 maybe, 14 no**. 17 firm yeses is the honest base; the 35 maybes are the trial's job.
 
@@ -21,7 +27,7 @@ The memo's reading of the survey ("45 of 66 willing to pay") is off. The tallies
 
 The goal memo is right that stated willingness is not purchasing. The test: **50 engaged testers, a short free trial, then the real $4.99 / $14.99 offer. 10–15 subscribers (20–30%) is a strong signal; 5 is still informative.**
 
-That test is impossible today because buying is not switched on. Roadmap change: **in-app purchases (StoreKit via RevenueCat) move from "after launch" into milestone 9**, before TestFlight, so the beta measures payment, not opinions. Web checkout (Stripe) follows for the semester and yearly plans.
+The app launched Oct 27, and the test now runs in production through Dec 15 under [launch-week.md](launch-week.md). By Nov 9, the user reported 31 lifetime App Store app units and two production trial conversions totaling $39.98; see [the actuals](milestones.md#actuals--nov-9-2026). First-import completion and the matched engaged-user cohort remain unverified. Keep the goal of at least 10 paid conversions among the first 50 engaged users; two purchases do not establish repeatable acquisition or renewal behavior.
 
 ## 3. What the competitors' own users say (last 250 reviews each, Oct 2026)
 
