@@ -1,20 +1,37 @@
 # TikTok plan: memes through the January push
 
-Status: Nov 9, 2026; latest results added, scheduled mix retained. Replaces the weekly clip schedule in [marketing-500.md](marketing-500.md) §3.3 and §5, [launch-playbook.md](launch-playbook.md) §4 and [launch-week.md](launch-week.md). Those pages still cover creators, Reddit, email, campus and the install targets.
+Status: Nov 15, 2026; [latest results](tiktok-results.md) and Studio screenshots reviewed. Replaces the weekly clip schedule in [marketing-500.md](marketing-500.md) §3.3 and §5, [launch-playbook.md](launch-playbook.md) §4 and [launch-week.md](launch-week.md). Those pages still cover creators, Reddit, email, campus and the install targets.
 
-Updated after [additional research](tiktok-research-2026-11.md): a [16-post November batch](../design/social/README.md) now has reusable presets, captions, proposed dates and a capture/export workflow. The user confirmed on Nov 1 that all November TikToks are scheduled. The local files retain the proposed captions and times; actual scheduler entries have not been read back. TikTok is the active channel. [Separate Instagram research](instagram-research-2026-11.md) is complete, with its first batch still to be produced. Four posts a week stays. November tests posting times and uses screenshot jokes in the Sunday slots while original photos are unavailable.
+Updated after [additional research](tiktok-research-2026-11.md): a [16-post November batch](../design/social/README.md) has reusable presets, captions, proposed dates and a capture/export workflow. The user confirmed on Nov 1 that all November TikToks are scheduled. Later Studio screenshots show actual November entries and formats; several published captions differ from the local proposal. TikTok is the active channel. [Separate Instagram research](instagram-research-2026-11.md) is complete, with its first batch still to be produced. Four posts a week stays.
 
 ## 1. The decision
 
-Memes are the main format on the brand accounts. Rendered slide decks stop. The eight simulator clips stay unscheduled for now. Post 4 times a week, drop to 2 over the break, and go to 5 in January, when students actually buy.
+Memes are the main format on the brand accounts. Rendered slide decks stop. The current queue mixes screenshot photos with eight-second videos made from screenshots. Post 4 times a week, drop to 2 over the break, and go to 5 in January, when students actually buy.
 
 The goal is installs. Likes only tell us a post landed, so every check below uses saves, shares, watch time and link clicks.
 
 ## 2. What we know so far
 
-The [Nov 9 totals](tiktok-results.md) cover 11 posts: 24,410 views, 459 likes, 5 comments and 6 shares. “Catch the clash” accounts for 77.7% of views and is still only suspected to be the Promote. Excluding it, the median post has 576 views. The three earlier memes have a weighted 6.42% like rate; the Oct 31 “sorry” post leads at 9.08%. The practical work/classes post is now at 650 views / 33 likes / 3 comments, and the Nov 2 app screenshot has reached 626 views / 15 likes / 2 shares after its initial zero-like snapshot. The syllabus and four-app posts have barely grown since Nov 2. Keep the scheduled mix while collecting saves, watch data and clicks; these totals cannot establish an acquisition winner. The supplied list contains no Nov 8 entry, so publication needs checking against the actual queue.
+The [Nov 15 totals](tiktok-results.md) cover 14 posts: 25,612 views, 493 likes, 5 comments and 6 shares. “Catch the clash” accounts for 74.1% of views and is still only suspected to be the Promote. Excluding it, the other 13 posts average 511 views. The Oct 31 “sorry” meme leads on like rate at 9.08%. The Nov 4 eight-second video has 715 views / 25 likes; the Nov 13 video has no supplied metrics, and a Nov 20 video is scheduled. Photos include both raw and fitted exports, but the published-post mapping is incomplete. Keep the scheduled mix while collecting saves, video watch data, profile visits and clicks. These totals cannot identify a format or acquisition winner.
 
-The Nov 1 figures below remain a historical snapshot, not current totals. Actual publication times and copy differ from the proposed manifest. The Nov 9 table supplies dates but no exact times, saves, watch behavior or conversion data.
+The Nov 1 figures below remain a historical snapshot, not current totals. Actual publication times and copy differ from the proposed manifest. The Nov 15 table supplies dates but no matched observation ages, saves, watch behavior or conversion data.
+
+### Nov 16–30 operating plan
+
+The user's Studio screenshots show the eight remaining November slots below. Times are Eastern. These are scheduled entries, not fresh recommendations to add eight more posts. Keep the slot balance while checking the actual post before it goes live; several queued captions shown in Studio begin with hashtags rather than the plain-language hooks in the local manifest.
+
+| Date and time | Scheduled idea | Review before publication |
+|---|---|---|
+| Mon Nov 16, 7 pm | Class schedule and work availability | Make the conflict clear in the first visible line. |
+| Wed Nov 18, 11 am | Working through a supposed free weekend | Check that the image's Saturday date is clear; this is a look-ahead post. |
+| Fri Nov 20, 7 pm | “A little reading” on the syllabus; eight-second video | Keep it as the next video observation. Record watch time and completion alongside views and saves. |
+| Sun Nov 22, 11 am | Planning an academic comeback | Make the procrastination joke legible without relying on hashtags. |
+| Mon Nov 23, 11 am | Thanksgiving break with a shift | Check that the holiday reference and fictional schedule make sense together. |
+| Wed Nov 25, 7 pm | Black Friday shift and paper due Friday | Check that Friday's screen date is legible in this Wednesday look-ahead post. |
+| Fri Nov 27, 11 am | Discussion-post word count | Keep if the week's posts are bringing profile visits or clicks; otherwise use this slot for one short real app demonstration with a specific student conflict. Verify the replacement in Studio if changed. |
+| Sun Nov 29, 7 pm | Checking the final grade calculator | Keep the joke short and readable as finals approach. |
+
+On Nov 16, pull the Nov 13 video's results and label the published screenshot photos by `raw.png` or `tiktok.png` from their upload sources. Record each post's actual publication time and observation age, plus saves, shares, profile visits and any watch data. Check whether the Oct 28 high-reach post was promoted. On Nov 22, review the first mature posts and the `?r=tiktok` bio clicks before deciding whether to change Nov 27. On Nov 30, assess the funnel and prepare December. Wait until Dec 7 for seven-day observations on all November slots before choosing 11 am or 7 pm; Nov 29 will be too young on Nov 30. A video/photo choice also needs more comparable posts than the single video with supplied metrics.
 
 Numbers from TikTok Studio, Nov 1, 2026.
 
@@ -131,10 +148,8 @@ The install targets and the mid-November check in [launch-week.md](launch-week.m
 
 ## 8. Do first
 
-- [ ] Open tonight's 6:50 pm scheduled post. If it's a deck, swap it for a meme.
-- [ ] Pin "catch the clash", so anyone tapping through from a meme can see what Semli does.
-- [ ] If nobody on the account is in clinicals, delete the Oct 28 "classes and clinicals" post. Photo text can't be edited after posting.
-- [ ] Pull View data for "explain my screen time" and the 524-view "sorry i have a lot going on": average watch, full watches, saves, shares and traffic source.
-- [ ] Confirm the 19K post is the Promote.
-- [ ] Check the TikTok bio still uses `semli.app/get?r=tiktok`.
-- [ ] Send the creator DMs in launch-week. Creators are the real version of UGC: videos live the weeks of Nov 9 and Nov 16, two more for Jan 5, no script.
+- [ ] Pull the Nov 13 video's metrics and confirm which published posts used `raw.png` and `tiktok.png`.
+- [ ] Check the November scheduled entries against their actual captions, images, dates and formats before each goes live.
+- [ ] Check that the TikTok bio uses `semli.app/get?r=tiktok` and read its click count.
+- [ ] Confirm whether the Oct 28 “catch the clash” post received Promote spend.
+- [ ] Record November's results at known observation ages; keep video and photo watch measures separate.
