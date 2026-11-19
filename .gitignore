@@ -5,6 +5,9 @@ node_modules/
 dist/
 evals/inputs/public/
 evals/reports/
+design/faceless/.recipient
+design/faceless/state/
+design/faceless/out/
 
 # Supabase CLI link cache
 supabase/.temp/

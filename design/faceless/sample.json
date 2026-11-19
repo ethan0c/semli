@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-19",
+  "decks": [
+    {
+      "slug": "study-reset",
+      "caption": "If you sit down to study and spend the first hour deciding where to start, try this tonight. Pick one assignment, write the first small step, and stop when you know what you'll do next. #studytips #collegeproductivity #studyhabits",
+      "slides": [
+        {"text": "How to actually start studying when your list feels too long", "photo": "apps/mobile/assets/showcase/demo.jpg", "source": "https://unsplash.com/photos/HNjWq8WPyoY"},
+        {"text": "Pick one assignment.\nNot the whole course.", "photo": "apps/web/public/photos/table.jpg", "source": "https://unsplash.com/photos/omeaHbEFlN4"},
+        {"text": "Write the first action:\n'Open the reading and find page 12.'", "photo": "apps/web/public/photos/library.jpg", "source": "https://unsplash.com/photos/PjpRF0LhBB8"},
+        {"text": "Give it 25 minutes.\nPut your phone where you can't reach it.", "photo": "apps/mobile/assets/showcase/demo.jpg", "focus": [0.6, 0.5], "source": "https://unsplash.com/photos/HNjWq8WPyoY"},
+        {"text": "Before you stop, write tomorrow's first step.\nStarting again gets easier.", "photo": "apps/web/public/photos/table.jpg", "focus": [0.2, 0.5], "source": "https://unsplash.com/photos/omeaHbEFlN4"}
+      ]
+    },
+    {
+      "slug": "shift-reset",
+      "caption": "When your work schedule changes, take five minutes to check the rest of your week. Put shifts and class dates together, spot clashes, and choose one time to work on what's due. #workingstudent #collegeplanning #studentproductivity",
+      "slides": [
+        {"text": "A 5-minute reset for a week with classes and shifts", "photo": "apps/web/public/photos/cafe-shift.jpg", "source": "https://unsplash.com/photos/barista-working-behind-a-coffee-counter-H7PLuaYW6UQ"},
+        {"text": "Put your shifts and classes in one place.", "photo": "apps/web/public/photos/table.jpg", "source": "https://unsplash.com/photos/omeaHbEFlN4"},
+        {"text": "Check for clashes before the week starts.", "photo": "apps/web/public/photos/campus.jpg", "source": "https://unsplash.com/photos/MUiv880yORo"},
+        {"text": "Choose one real study block.\n'Sometime Sunday' doesn't count.", "photo": "apps/mobile/assets/showcase/demo.jpg", "source": "https://unsplash.com/photos/HNjWq8WPyoY"},
+        {"text": "If something won't fit, move it now.\nDon't wait until you're exhausted.", "photo": "apps/web/public/photos/cafe-shift.jpg", "focus": [0.7, 0.5], "source": "https://unsplash.com/photos/barista-working-behind-a-coffee-counter-H7PLuaYW6UQ"}
+      ]
+    }
+  ]
+}

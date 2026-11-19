@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-20-preview",
+  "decks": [
+    {
+      "slug": "next-on-the-list",
+      "style": "plain",
+      "caption": "For the days that get away from you: pick one thing that still matters and give it ten minutes. You can move the rest. #productivity #dailyroutine #gettingthingsdone",
+      "slides": [
+        {"text": "the 10-minute reset for when your day goes off track", "photo": "apps/mobile/assets/showcase/demo.jpg", "source": "https://unsplash.com/photos/HNjWq8WPyoY"},
+        {"text": "don't rewrite your whole to-do list.", "photo": "design/faceless/photos/pexels-4050302.jpg", "source": "https://www.pexels.com/photo/faceless-lady-with-notebook-and-laptop-on-floor-at-home-4050302/"},
+        {"text": "pick the one thing that still matters today.", "photo": "design/faceless/photos/pexels-6392972.jpg", "source": "https://www.pexels.com/photo/faceless-ethnic-female-freelancer-using-netbook-near-notepad-at-table-6392972/"},
+        {"text": "set a 10-minute timer. start with the rough version.", "photo": "design/faceless/photos/pexels-6347906.jpg", "source": "https://www.pexels.com/photo/unrecognizable-ethnic-woman-taking-notes-in-notebook-near-laptop-6347906/"},
+        {"text": "move the rest to tomorrow. today doesn't need a full comeback.", "photo": "apps/web/public/photos/table.jpg", "source": "https://unsplash.com/photos/omeaHbEFlN4"}
+      ]
+    },
+    {
+      "slug": "her-better-hours",
+      "style": "her",
+      "caption": "being 'that girl' is mostly doing the little things you said you'd do, on a normal day. start with two. #productivity #thatgirl #habits",
+      "slides": [
+        {"text": "how to be the girl who actually follows through", "photo": "design/faceless/photos/pexels-19153042.jpg", "source": "https://www.pexels.com/photo/woman-with-a-large-white-ribbonlooking-in-the-mirror-and-fixing-her-hair-19153042/"},
+        {"text": "stop building a routine for a version of you who wakes up at 5.", "photo": "design/faceless/photos/pexels-5591659.jpg", "source": "https://www.pexels.com/photo/crop-woman-with-breakfast-in-bed-5591659/"},
+        {"text": "pick 2 things you can do on a normal Tuesday.", "photo": "design/faceless/photos/pexels-6001390.jpg", "source": "https://www.pexels.com/photo/faceless-female-journalist-writing-in-notebook-and-drinking-coffee-6001390/"},
+        {"text": "put your phone across the room for the first 20 minutes.", "photo": "design/faceless/photos/pexels-4126732.jpg", "source": "https://www.pexels.com/photo/anonymous-young-woman-sitting-on-floor-and-using-laptop-placed-on-armchair-4126732/"},
+        {"text": "consistency looks kind of boring. that's the point.", "photo": "design/faceless/photos/pexels-5591723.jpg", "source": "https://www.pexels.com/photo/crop-woman-with-book-and-breakfast-5591723/"}
+      ]
+    }
+  ]
+}
