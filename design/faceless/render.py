@@ -46,10 +46,67 @@ def render_slide(slide: dict, number: int, style: str = "warm") -> Image.Image:
                              centering=tuple(slide.get("focus", [0.5, 0.5]))).convert("RGBA")
     shade = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     shade_draw = ImageDraw.Draw(shade)
-    shade_draw.rectangle((0, 0, W, H), fill=(8, 8, 10, 100 if style == "her" else 112))
-    shade_draw.rectangle((0, 490, W, 1510), fill=(22, 5, 12, 80) if style == "her" else (8, 8, 10, 65))
+    shade_draw.rectangle((0, 0, W, H), fill=(8, 8, 10, 50 if style == "her_detail" else 100 if style == "her" else 112))
+    if style != "her_detail":
+        shade_draw.rectangle((0, 490, W, 1510), fill=(22, 5, 12, 80) if style == "her" else (8, 8, 10, 65))
     image = Image.alpha_composite(image, shade)
     draw = ImageDraw.Draw(image)
+    if style == "her_detail":
+        bold = str(FONT if FONT.exists() else FONT_FALLBACK)
+        if number == 1:
+            font, lines, line_h = fit_lines(draw, slide["text"], 900)
+            y = 1010
+            for line in lines:
+                x = (W - draw.textlength(line, font=font)) / 2
+                draw.text((x, y), line, font=font, fill="white", stroke_width=5, stroke_fill="#151515")
+                y += line_h
+        else:
+            title = f"{number - 1}) {slide['title']}"
+            title_font, title_lines, title_h = fit_lines(draw, title, 845)
+            title_font = ImageFont.truetype(bold, min(title_font.size, 72))
+            # Reflow at the capped font size so the white card stays compact.
+            title_lines = []
+            current = ""
+            for word in title.split():
+                candidate = f"{current} {word}".strip()
+                if current and draw.textlength(candidate, font=title_font) > 845:
+                    title_lines.append(current)
+                    current = word
+                else:
+                    current = candidate
+            if current:
+                title_lines.append(current)
+            title_h = int(title_font.size * 1.14)
+            card_h = len(title_lines) * title_h + 64
+            card_y = 250
+            draw.rounded_rectangle((72, card_y, W - 72, card_y + card_h), radius=22, fill="white")
+            y = card_y + 32
+            for line in title_lines:
+                x = (W - draw.textlength(line, font=title_font)) / 2
+                draw.text((x, y), line, font=title_font, fill="#111111")
+                y += title_h
+            explanation = slide["explanation"]
+            body_font, body_lines, body_h = fit_lines(draw, explanation, 850)
+            body_font = ImageFont.truetype(bold, min(body_font.size, 70))
+            # The explanation sits lower, with space around the real photo.
+            body_lines = []
+            current = ""
+            for word in explanation.split():
+                candidate = f"{current} {word}".strip()
+                if current and draw.textlength(candidate, font=body_font) > 850:
+                    body_lines.append(current)
+                    current = word
+                else:
+                    current = candidate
+            if current:
+                body_lines.append(current)
+            body_h = int(body_font.size * 1.18)
+            y = 1120
+            for line in body_lines:
+                x = (W - draw.textlength(line, font=body_font)) / 2
+                draw.text((x, y), line, font=body_font, fill="white", stroke_width=4, stroke_fill="#171717")
+                y += body_h
+        return image.convert("RGB")
     font, lines, line_h = fit_lines(draw, slide["text"], 840)
     block_h = len(lines) * line_h
     y = max(610, min(1280 - block_h, 970 - block_h // 2))

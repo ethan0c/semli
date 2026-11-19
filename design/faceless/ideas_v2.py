@@ -14,7 +14,7 @@ def parse(text: str) -> list[tuple[str, str, str, str, str]]:
 
 
 GENERAL = parse("""
-the 10-minute reset for when your day goes off track | don't rewrite your whole to-do list. | pick the one thing that still matters today. | set a 10-minute timer. start with the rough version. | move the rest to tomorrow. today doesn't need a full comeback.
+what to do when your whole day gets away from you | don't rewrite your entire to-do list. | look at what's actually due today. | set a 10-minute timer and get the first bit done. | move the rest to tomorrow. then close the list.
 if your to-do list has 30 things on it, read this | only a few of those things are due today. | write down the real deadlines first. | choose one thing you can finish before lunch. | the rest can stay on the list, not in your head.
 how to start a task you've been avoiding for weeks | open the file or find the form. | write down what 'done' actually means. | do the first ugly five minutes. | you can improve it after you have something to work with.
 your inbox doesn't need to run your whole day | check for anything truly time-sensitive. | turn the rest into tasks or archive it. | reply to one message you've been avoiding. | then close the tab and do the work you opened it for.

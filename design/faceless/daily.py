@@ -9,7 +9,8 @@ from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from ideas_v2 import GENERAL, HER
+from ideas_v2 import GENERAL
+from her_detail import HER
 from render import HERE, render_deck
 
 
@@ -24,13 +25,16 @@ GENERAL_PHOTOS = [
     ("design/faceless/photos/pexels-6347906.jpg", "https://www.pexels.com/photo/unrecognizable-ethnic-woman-taking-notes-in-notebook-near-laptop-6347906/"),
 ]
 HER_PHOTOS = [
-    ("design/faceless/photos/pexels-19153042.jpg", "https://www.pexels.com/photo/woman-with-a-large-white-ribbonlooking-in-the-mirror-and-fixing-her-hair-19153042/"),
-    ("design/faceless/photos/pexels-5591659.jpg", "https://www.pexels.com/photo/crop-woman-with-breakfast-in-bed-5591659/"),
+    ("design/faceless/photos/pexels-8085261.jpg", "https://www.pexels.com/photo/woman-in-black-shirt-reading-a-book-8085261/"),
+    ("design/faceless/photos/pexels-7594142.jpg", "https://www.pexels.com/photo/unrecognizable-student-with-laptop-studying-in-library-7594142/"),
     ("design/faceless/photos/pexels-6001390.jpg", "https://www.pexels.com/photo/faceless-female-journalist-writing-in-notebook-and-drinking-coffee-6001390/"),
     ("design/faceless/photos/pexels-4126732.jpg", "https://www.pexels.com/photo/anonymous-young-woman-sitting-on-floor-and-using-laptop-placed-on-armchair-4126732/"),
-    ("design/faceless/photos/pexels-5591723.jpg", "https://www.pexels.com/photo/crop-woman-with-book-and-breakfast-5591723/"),
+    ("design/faceless/photos/pexels-26093502.jpg", "https://www.pexels.com/photo/hands-of-a-woman-writing-in-a-note-pad-in-front-of-a-laptop-26093502/"),
+    ("design/faceless/photos/pexels-8085259.jpg", "https://www.pexels.com/photo/a-woman-writing-on-a-notebook-8085259/"),
     ("design/faceless/photos/pexels-4916548.jpg", "https://www.pexels.com/photo/unrecognizable-female-sitting-in-cafe-with-coffee-4916548/"),
-    ("design/faceless/photos/pexels-6874189.jpg", "https://www.pexels.com/photo/crop-faceless-woman-resting-on-bed-and-drinking-coffee-6874189/"),
+    ("design/faceless/photos/pexels-6392972.jpg", "https://www.pexels.com/photo/faceless-ethnic-female-freelancer-using-netbook-near-notepad-at-table-6392972/"),
+    ("design/faceless/photos/pexels-6347906.jpg", "https://www.pexels.com/photo/unrecognizable-ethnic-woman-taking-notes-in-notebook-near-laptop-6347906/"),
+    ("design/faceless/photos/pexels-4050302.jpg", "https://www.pexels.com/photo/faceless-lady-with-notebook-and-laptop-on-floor-at-home-4050302/"),
 ]
 TAGS = {
     "general": "#productivity #dailyroutine #gettingthingsdone",
@@ -48,20 +52,29 @@ def make_deck(account: str, ideas: list[tuple[str, ...]], day: date) -> dict:
         raise ValueError(f"The daily queue starts {START}")
     index = day_number % len(ideas)
     cycle = day_number // len(ideas)
-    lines = ideas[index]
+    idea = ideas[index]
     photo_pool = GENERAL_PHOTOS if account == "general" else HER_PHOTOS
     photo_start = (index * 2 + cycle) % len(photo_pool)
     photos = [photo_pool[(photo_start + offset) % len(photo_pool)] for offset in range(5)]
-    slides = [
-        {"text": line, "photo": photo, "source": source}
-        for line, (photo, source) in zip(lines, photos)
-    ]
+    if account == "general":
+        slides = [
+            {"text": line, "photo": photo, "source": source}
+            for line, (photo, source) in zip(idea, photos)
+        ]
+        caption = f"{idea[0]} {TAGS[account]}"
+    else:
+        slides = [{"text": idea["hook"], "photo": photos[0][0], "source": photos[0][1]}]
+        slides += [
+            {**step, "photo": photo, "source": source}
+            for step, (photo, source) in zip(idea["steps"], photos[1:])
+        ]
+        caption = f"{idea['hook']} #studyhabits #productivity #studytok"
     return {
         "account": account,
-        "style": "plain" if account == "general" else "her",
+        "style": "plain" if account == "general" else "her_detail",
         "idea_number": index + 1,
         "cycle": cycle + 1,
-        "caption": f"{lines[0]} {TAGS[account]}",
+        "caption": caption,
         "slides": slides,
     }
 

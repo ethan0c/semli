@@ -1,6 +1,6 @@
 # Daily faceless posts
 
-Two five-slide photo posts are prepared for 9 a.m. Eastern each day: one broad, practical productivity page and one softer, more aspirational page. The working names are **Next on the List** and **Her Better Hours**. The 30 original ideas in each account's bank cycle after 30 days, with a different photo order on later cycles. Review the first month of posts and refresh the ideas before treating this as a long-term content strategy.
+Two five-slide photo posts are prepared for 9 a.m. Eastern each day. **Next on the List** covers broad, practical productivity. **Her Better Hours** uses candid study photos, a specific routine hook, and four numbered actions with short explanations. The 30 original ideas in each account's bank cycle after 30 days, with a different photo order on later cycles. Review the first month of posts and refresh the ideas before treating this as a long-term content strategy.
 
 Photos came from Unsplash and Pexels; each rendered deck includes `sources.json`. The renderer makes 1080×1920 JPEG slides and a short caption. It does not pick or add sounds. The Pexels files are in `photos/` and their source pages label them free under the Pexels license.
 
